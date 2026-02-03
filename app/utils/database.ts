@@ -287,6 +287,11 @@ function initDatabase() {
       disclaimer_agreed_at DATETIME,
       default_share_level TEXT DEFAULT 'normal',
       confirm_before_viewing INTEGER DEFAULT 1,
+      notify_on_view INTEGER DEFAULT 0,
+      notify_on_download INTEGER DEFAULT 1,
+      notify_on_share INTEGER DEFAULT 1,
+      daily_digest INTEGER DEFAULT 0,
+      weekly_report INTEGER DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -307,17 +312,34 @@ function initDatabase() {
     )
   `);
 
-  // Sharing history/audit table
+  // Sharing history/audit table (enhanced)
   db.exec(`
     CREATE TABLE IF NOT EXISTS sharing_audit_log (
       id TEXT PRIMARY KEY,
       permission_id TEXT NOT NULL,
+      viewer_id TEXT NOT NULL,
       action TEXT NOT NULL,
-      actor_id TEXT NOT NULL,
+      data_type TEXT,
+      items_accessed INTEGER DEFAULT 0,
       details TEXT,
       ip_address TEXT,
+      user_agent TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (permission_id) REFERENCES sharing_permissions(id) ON DELETE CASCADE
+    )
+  `);
+
+  // Sharing category settings table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS sharing_category_settings (
+      id TEXT PRIMARY KEY,
+      permission_id TEXT NOT NULL,
+      category_id TEXT NOT NULL,
+      shared INTEGER DEFAULT 1,
+      min_sensitivity_level TEXT DEFAULT 'normal',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (permission_id) REFERENCES sharing_permissions(id) ON DELETE CASCADE,
+      UNIQUE(permission_id, category_id)
     )
   `);
 
@@ -335,6 +357,43 @@ function initDatabase() {
   // Add 2FA enabled column
   try {
     db.exec(`ALTER TABLE users ADD COLUMN two_factor_enabled INTEGER DEFAULT 0`);
+  } catch (e) {
+    // Column may already exist
+  }
+
+  // Add watermark column to sharing_permissions
+  try {
+    db.exec(`ALTER TABLE sharing_permissions ADD COLUMN watermark TEXT`);
+  } catch (e) {
+    // Column may already exist
+  }
+  try {
+    db.exec(`ALTER TABLE sharing_permissions ADD COLUMN max_views INTEGER`);
+  } catch (e) {
+    // Column may already exist
+  }
+  try {
+    db.exec(`ALTER TABLE sharing_permissions ADD COLUMN max_downloads INTEGER`);
+  } catch (e) {
+    // Column may already exist
+  }
+  try {
+    db.exec(`ALTER TABLE sharing_permissions ADD COLUMN require_verification INTEGER DEFAULT 0`);
+  } catch (e) {
+    // Column may already exist
+  }
+  try {
+    db.exec(`ALTER TABLE sharing_permissions ADD COLUMN grace_period_hours INTEGER DEFAULT 24`);
+  } catch (e) {
+    // Column may already exist
+  }
+  try {
+    db.exec(`ALTER TABLE sharing_permissions ADD COLUMN revoked_at DATETIME`);
+  } catch (e) {
+    // Column may already exist
+  }
+  try {
+    db.exec(`ALTER TABLE sharing_permissions ADD COLUMN grace_until DATETIME`);
   } catch (e) {
     // Column may already exist
   }
