@@ -70,7 +70,7 @@ function parseAncestryDNA(content: string): SNP[] {
 /**
  * Detect the source format of genetic data
  */
-function detectSource(content: string): '23andme' | 'ancestry' | 'myheritage' | 'other' {
+export function detectSource(content: string): '23andme' | 'ancestry' | 'myheritage' | 'other' {
   const firstLines = content.split('\n').slice(0, 20).join('\n');
 
   if (firstLines.includes('23andMe') || firstLines.includes('rsid\tchromosome\tposition\tgenotype')) {

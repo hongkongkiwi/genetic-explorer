@@ -108,16 +108,16 @@ function UploadPage() {
   return (
     <div className="min-h-screen bg-slate-50">
       <Navbar />
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="min-h-[calc(100vh-4rem)] py-12">
+      <main className="max-w-4xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-8 pb-safe">
+        <div className="min-h-[calc(100vh-4rem)] py-6 sm:py-12">
           <div className="max-w-3xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
+          className="text-center mb-8 sm:mb-12"
         >
-          <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-4">Upload Your Genome</h1>
-          <p className="text-slate-600 dark:text-slate-400 max-w-xl mx-auto">
+          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-3 sm:mb-4">Upload Your Genome</h1>
+          <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 max-w-xl mx-auto px-2 sm:px-0">
             Upload your raw genetic data file from 23andMe, AncestryDNA, or other providers. 
             We support most major genotyping services.
           </p>
@@ -149,26 +149,26 @@ function UploadPage() {
               )}
 
               {/* Info cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
-                <div className="glass-panel p-4 flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center flex-shrink-0">
-                    <FileText className="w-5 h-5 text-blue-400" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 mt-6 sm:mt-8">
+                <div className="glass-panel p-3 sm:p-4 flex items-start gap-3">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+                    <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" />
                   </div>
                   <div>
-                    <h3 className="font-medium text-slate-900 dark:text-slate-200 mb-1">Supported Formats</h3>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">
+                    <h3 className="font-medium text-slate-900 dark:text-slate-200 mb-0.5 sm:mb-1 text-sm sm:text-base">Supported Formats</h3>
+                    <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
                       23andMe (.txt), AncestryDNA (.txt), MyHeritage, and more.
                     </p>
                   </div>
                 </div>
 
-                <div className="glass-panel p-4 flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
-                    <Info className="w-5 h-5 text-emerald-400" />
+                <div className="glass-panel p-3 sm:p-4 flex items-start gap-3">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                    <Info className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400" />
                   </div>
                   <div>
-                    <h3 className="font-medium text-slate-900 dark:text-slate-200 mb-1">Privacy First</h3>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">
+                    <h3 className="font-medium text-slate-900 dark:text-slate-200 mb-0.5 sm:mb-1 text-sm sm:text-base">Privacy First</h3>
+                    <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
                       Your data is stored locally and never shared with third parties.
                     </p>
                   </div>
@@ -176,17 +176,17 @@ function UploadPage() {
               </div>
 
               {/* How to get your data */}
-              <div className="glass-panel p-6 mt-8">
-                <h3 className="font-semibold text-slate-900 dark:text-slate-200 mb-4">How to Get Your Raw DNA Data</h3>
-                <div className="space-y-4">
+              <div className="glass-panel p-4 sm:p-6 mt-6 sm:mt-8">
+                <h3 className="font-semibold text-slate-900 dark:text-slate-200 mb-3 sm:mb-4 text-sm sm:text-base">How to Get Your Raw DNA Data</h3>
+                <div className="space-y-2 sm:space-y-4">
                   {[
                     { service: '23andMe', steps: 'Sign in → Browse Raw Data → Download' },
                     { service: 'AncestryDNA', steps: 'DNA → Settings → Download Raw DNA Data' },
                     { service: 'MyHeritage', steps: 'Manage DNA Kits → Download Raw Data' },
                   ].map((item) => (
-                    <div key={item.service} className="flex items-center justify-between p-3 bg-slate-100 dark:bg-slate-900/50 rounded-lg">
-                      <span className="font-medium text-slate-700 dark:text-slate-300">{item.service}</span>
-                      <span className="text-sm text-slate-500 dark:text-slate-500">{item.steps}</span>
+                    <div key={item.service} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 bg-slate-100 dark:bg-slate-900/50 rounded-lg gap-1 sm:gap-0">
+                      <span className="font-medium text-slate-700 dark:text-slate-300 text-sm">{item.service}</span>
+                      <span className="text-xs sm:text-sm text-slate-500 dark:text-slate-500">{item.steps}</span>
                     </div>
                   ))}
                 </div>

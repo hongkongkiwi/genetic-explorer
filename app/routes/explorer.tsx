@@ -328,29 +328,29 @@ function SNPExplorerPage() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       <Navbar />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-8 pb-safe">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-4 sm:mb-8">
           <Link
             to="/"
-            className="inline-flex items-center text-sm text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 mb-4 transition-colors"
+            className="inline-flex items-center text-sm text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 mb-3 sm:mb-4 transition-colors touch-target"
           >
             <ArrowLeft className="w-4 h-4 mr-1" />
             Back to Dashboard
           </Link>
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div className="flex items-center space-x-4">
-              <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                <Dna className="w-7 h-7 text-white" />
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
+                <Dna className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
               </div>
-              <div>
-                <h1 className="text-3xl font-bold text-slate-900 dark:text-white">SNP Explorer</h1>
-                <p className="text-slate-600 dark:text-slate-400">Search, filter, and analyze your genetic variants</p>
+              <div className="min-w-0">
+                <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">SNP Explorer</h1>
+                <p className="text-sm text-slate-600 dark:text-slate-400 truncate">Search, filter, and analyze your genetic variants</p>
               </div>
             </div>
             <Link
               to="/whats-new"
-              className="flex items-center gap-2 px-4 py-2 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors border border-amber-200 dark:border-amber-800"
+              className="flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors border border-amber-200 dark:border-amber-800 touch-target"
             >
               <Sparkles className="w-4 h-4" />
               <span className="text-sm font-medium">Recent Updates</span>
@@ -359,7 +359,7 @@ function SNPExplorerPage() {
         </div>
 
         {/* Genome Selection */}
-        <Card className="p-6 mb-6">
+        <Card className="p-4 sm:p-6 mb-4 sm:mb-6">
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
             Select Genome to Explore
           </label>
@@ -369,7 +369,7 @@ function SNPExplorerPage() {
               setSelectedGenome(e.target.value)
               setCurrentPage(1)
             }}
-            className="block w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            className="block w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base py-2.5"
           >
             <option value="">Choose a genome...</option>
             {genomes.map((genome: any) => (
@@ -380,10 +380,10 @@ function SNPExplorerPage() {
           </select>
         </Card>
 
-        {/* Filters */}
+        {/* Filters - Stack on mobile */}
         {selectedGenome && (
-          <Card className="p-6 mb-6">
-            <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+          <Card className="p-4 sm:p-6 mb-4 sm:mb-6">
+            <div className="flex flex-col gap-3 sm:gap-4">
               {/* Search */}
               <div className="flex-1 relative">
                 <label htmlFor="snp-search" className="sr-only">Search SNPs</label>
@@ -397,21 +397,24 @@ function SNPExplorerPage() {
                     setSearchQuery(e.target.value)
                     setCurrentPage(1)
                   }}
-                  className="w-full pl-10 pr-4 py-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full pl-10 pr-4 py-2.5 sm:py-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base touch-target"
                   aria-label="Search SNPs by RSID, gene, or description"
                 />
               </div>
 
+              {/* Filter controls row */}
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+
               {/* Category Filter */}
-              <div className="flex items-center space-x-2">
-                <Filter className="w-5 h-5 text-slate-400" />
+              <div className="flex items-center gap-2">
+                <Filter className="w-5 h-5 text-slate-400 hidden sm:block" />
                 <select
                   value={selectedCategory}
                   onChange={(e) => {
                     setSelectedCategory(e.target.value)
                     setCurrentPage(1)
                   }}
-                  className="border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm touch-target"
                 >
                   <option value="all">All Categories</option>
                   {categories.map((cat: string) => (
@@ -427,7 +430,7 @@ function SNPExplorerPage() {
                   setSelectedChromosome(e.target.value)
                   setCurrentPage(1)
                 }}
-                className="border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm touch-target"
               >
                 <option value="all">All Chromosomes</option>
                 {chromosomes.map((chr: string) => (
@@ -442,7 +445,7 @@ function SNPExplorerPage() {
                   setSelectedImpact(e.target.value)
                   setCurrentPage(1)
                 }}
-                className="border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm touch-target"
               >
                 <option value="all">All Impacts</option>
                 <option value="high">High Impact</option>
@@ -457,7 +460,7 @@ function SNPExplorerPage() {
                   setShowFavoritesOnly(!showFavoritesOnly)
                   setCurrentPage(1)
                 }}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg transition-colors touch-target ${
                   showFavoritesOnly
                     ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
                     : 'border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
@@ -468,23 +471,24 @@ function SNPExplorerPage() {
               </button>
 
               {/* Export */}
-              <div className="flex gap-2">
+              <div className="flex gap-2 ml-auto">
                 <button
                   onClick={exportToCSV}
                   disabled={!sortedAndFilteredSNPs.length}
-                  className="inline-flex items-center px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="inline-flex items-center px-3 sm:px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-target"
                 >
-                  <Download className="w-4 h-4 mr-2" />
-                  CSV
+                  <Download className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">CSV</span>
                 </button>
                 <button
                   onClick={exportToPDF}
                   disabled={!sortedAndFilteredSNPs.length}
-                  className="inline-flex items-center px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="inline-flex items-center px-3 sm:px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-target"
                 >
-                  <Download className="w-4 h-4 mr-2" />
-                  PDF
+                  <Download className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">PDF</span>
                 </button>
+              </div>
               </div>
             </div>
 
@@ -544,40 +548,43 @@ function SNPExplorerPage() {
         ) : selectedGenome && sortedAndFilteredSNPs.length > 0 ? (
           <>
             <Card className="overflow-hidden">
-              <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex flex-wrap justify-between items-center gap-4">
-                <span className="text-sm text-slate-600 dark:text-slate-400">
+              <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex flex-wrap justify-between items-center gap-2 sm:gap-4">
+                <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
                   Showing {paginatedSNPs.length} of {sortedAndFilteredSNPs.length} variants
                   {favorites.size > 0 && ` • ${favorites.size} favorites`}
                 </span>
-                {/* Pagination */}
+                {/* Mobile Pagination - Compact */}
                 {totalPages > 1 && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 sm:gap-2">
                     <button
                       onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                       disabled={currentPage === 1}
-                      className="p-2 rounded-lg border border-slate-300 dark:border-slate-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-800"
+                      className="p-2 sm:p-2.5 rounded-lg border border-slate-300 dark:border-slate-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-800 touch-target"
+                      aria-label="Previous page"
                     >
                       <ChevronLeft className="w-4 h-4" />
                     </button>
-                    <span className="text-sm text-slate-600 dark:text-slate-400 px-2">
-                      Page {currentPage} of {totalPages}
+                    <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 px-1 sm:px-2">
+                      {currentPage} / {totalPages}
                     </span>
                     <button
                       onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                       disabled={currentPage === totalPages}
-                      className="p-2 rounded-lg border border-slate-300 dark:border-slate-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-800"
+                      className="p-2 sm:p-2.5 rounded-lg border border-slate-300 dark:border-slate-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-800 touch-target"
+                      aria-label="Next page"
                     >
                       <ChevronRight className="w-4 h-4" />
                     </button>
                   </div>
                 )}
               </div>
-              <div className="overflow-x-auto">
+              {/* Horizontally scrollable table for mobile */}
+              <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-thin">
                 <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
                   <thead className="bg-slate-50 dark:bg-slate-800/50">
                     <tr>
                       <th 
-                        className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        className="px-3 sm:px-6 py-2.5 sm:py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors whitespace-nowrap"
                         onClick={() => handleSort('rsid')}
                       >
                         <div className="flex items-center gap-1">
@@ -586,7 +593,7 @@ function SNPExplorerPage() {
                         </div>
                       </th>
                       <th 
-                        className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        className="px-3 sm:px-6 py-2.5 sm:py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors whitespace-nowrap"
                         onClick={() => handleSort('gene')}
                       >
                         <div className="flex items-center gap-1">
@@ -595,7 +602,7 @@ function SNPExplorerPage() {
                         </div>
                       </th>
                       <th 
-                        className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        className="px-3 sm:px-6 py-2.5 sm:py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors whitespace-nowrap"
                         onClick={() => handleSort('chromosome')}
                       >
                         <div className="flex items-center gap-1">
@@ -603,11 +610,11 @@ function SNPExplorerPage() {
                           <ArrowUpDown className="w-3 h-3" />
                         </div>
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                      <th className="px-3 sm:px-6 py-2.5 sm:py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap">
                         Genotype
                       </th>
                       <th 
-                        className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        className="px-3 sm:px-6 py-2.5 sm:py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors whitespace-nowrap"
                         onClick={() => handleSort('category')}
                       >
                         <div className="flex items-center gap-1">
@@ -616,7 +623,7 @@ function SNPExplorerPage() {
                         </div>
                       </th>
                       <th 
-                        className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        className="px-3 sm:px-6 py-2.5 sm:py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors whitespace-nowrap"
                         onClick={() => handleSort('impact')}
                       >
                         <div className="flex items-center gap-1">
@@ -624,10 +631,10 @@ function SNPExplorerPage() {
                           <ArrowUpDown className="w-3 h-3" />
                         </div>
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                      <th className="px-3 sm:px-6 py-2.5 sm:py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap">
                         Updates
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                      <th className="px-3 sm:px-6 py-2.5 sm:py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap">
                         Actions
                       </th>
                     </tr>
@@ -635,49 +642,50 @@ function SNPExplorerPage() {
                   <tbody className="bg-white dark:bg-slate-900 divide-y divide-slate-200 dark:divide-slate-700">
                     {paginatedSNPs.map((snp: SNPResult) => (
                       <tr key={snp.rsid} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                           <a
                             href={`https://www.ncbi.nlm.nih.gov/snp/${snp.rsid}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium"
+                            className="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium text-sm"
                           >
                             {snp.rsid}
                           </a>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="font-mono text-sm text-slate-900 dark:text-slate-300">
+                        <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                          <span className="font-mono text-xs sm:text-sm text-slate-900 dark:text-slate-300">
                             {snp.gene || 'N/A'}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
+                        <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-slate-600 dark:text-slate-400">
                           Chr{snp.chromosome}:{snp.position}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-mono">
+                        <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                          <span className="inline-flex items-center px-2 py-0.5 sm:px-2.5 sm:py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-mono">
                             {snp.genotype}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                           <CategoryBadge category={snp.category as any} />
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                           <ImpactBadge impact={snp.clinicalImpact as any} />
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                           {snpUpdates[snp.rsid] && (
                             <SNPBadge status={snpUpdates[snp.rsid].status} size="sm" />
                           )}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                           <button
                             onClick={() => toggleFavorite(snp.rsid)}
-                            className={`p-2 rounded-lg transition-colors ${
+                            className={`p-2 rounded-lg transition-colors touch-target ${
                               favorites.has(snp.rsid)
                                 ? 'text-amber-500 hover:text-amber-600 bg-amber-50 dark:bg-amber-900/20'
                                 : 'text-slate-400 hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-slate-800'
                             }`}
                             title={favorites.has(snp.rsid) ? 'Remove from favorites' : 'Add to favorites'}
+                            aria-label={favorites.has(snp.rsid) ? 'Remove from favorites' : 'Add to favorites'}
                           >
                             {favorites.has(snp.rsid) ? (
                               <BookmarkCheck className="w-5 h-5" />
@@ -691,23 +699,24 @@ function SNPExplorerPage() {
                   </tbody>
                 </table>
               </div>
-              {/* Bottom Pagination */}
+              {/* Bottom Pagination - Touch-friendly */}
               {totalPages > 1 && (
-                <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex justify-center">
-                  <div className="flex items-center gap-2">
+                <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex justify-center">
+                  <div className="flex items-center gap-1 sm:gap-2">
                     <button
                       onClick={() => setCurrentPage(1)}
                       disabled={currentPage === 1}
-                      className="px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-800"
+                      className="hidden sm:block px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-800 touch-target"
                     >
                       First
                     </button>
                     <button
                       onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                       disabled={currentPage === 1}
-                      className="p-2 rounded-lg border border-slate-300 dark:border-slate-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-800"
+                      className="p-2 sm:p-2.5 rounded-lg border border-slate-300 dark:border-slate-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-800 touch-target"
+                      aria-label="Previous page"
                     >
-                      <ChevronLeft className="w-4 h-4" />
+                      <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
                     </button>
                     <div className="flex items-center gap-1">
                       {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -725,11 +734,13 @@ function SNPExplorerPage() {
                           <button
                             key={pageNum}
                             onClick={() => setCurrentPage(pageNum)}
-                            className={`w-8 h-8 text-sm rounded-lg transition-colors ${
+                            className={`w-8 h-8 sm:w-10 sm:h-10 text-sm rounded-lg transition-colors touch-target ${
                               currentPage === pageNum
                                 ? 'bg-indigo-600 text-white'
                                 : 'border border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800'
                             }`}
+                            aria-label={`Page ${pageNum}`}
+                            aria-current={currentPage === pageNum ? 'page' : undefined}
                           >
                             {pageNum}
                           </button>
@@ -739,14 +750,15 @@ function SNPExplorerPage() {
                     <button
                       onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                       disabled={currentPage === totalPages}
-                      className="p-2 rounded-lg border border-slate-300 dark:border-slate-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-800"
+                      className="p-2 sm:p-2.5 rounded-lg border border-slate-300 dark:border-slate-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-800 touch-target"
+                      aria-label="Next page"
                     >
-                      <ChevronRight className="w-4 h-4" />
+                      <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
                     </button>
                     <button
                       onClick={() => setCurrentPage(totalPages)}
                       disabled={currentPage === totalPages}
-                      className="px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-800"
+                      className="hidden sm:block px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-800 touch-target"
                     >
                       Last
                     </button>

@@ -15,7 +15,15 @@ import {
   Activity,
   Clock,
   Shield,
-  ArrowRight
+  ArrowRight,
+  Globe,
+  Heart,
+  Users2,
+  Dna as DnaIcon,
+  Lightbulb,
+  Palette,
+  CheckCircle,
+  Info
 } from 'lucide-react';
 import { useAuth } from '~/hooks/useAuth';
 import { Card } from '~/components/ui/Card';
@@ -53,6 +61,28 @@ interface DashboardData {
     affectsUser?: boolean;
   }>;
   recommendations: string[];
+  // New feature data
+  ancestry?: {
+    hasReport: boolean;
+    topEthnicity: string;
+    percentage: number;
+    regions: number;
+  };
+  traits?: {
+    hasReport: boolean;
+    interestingTraits: string[];
+    totalTraits: number;
+  };
+  carrierStatus?: {
+    hasReport: boolean;
+    relevantVariants: number;
+    shouldConsultDoctor: boolean;
+  };
+  relatives?: {
+    hasOptedIn: boolean;
+    matchCount: number;
+    closeMatches: number;
+  };
 }
 
 export const Route = createFileRoute('/dashboard')({
@@ -174,6 +204,35 @@ function DashboardPage() {
           />
         </motion.div>
 
+        {/* New Feature Highlights - Ancestry, Traits, Carrier, Relatives */}
+        {data.stats.totalGenomes > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="mb-8"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+                Your Genetic Insights
+              </h2>
+              <Link
+                to="/reports"
+                className="text-sm text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 flex items-center gap-1"
+              >
+                View All Reports
+                <ChevronRight className="w-4 h-4" />
+              </Link>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <AncestryCard ancestry={data.ancestry} />
+              <TraitsCard traits={data.traits} />
+              <CarrierCard carrier={data.carrierStatus} />
+              <RelativesCard relatives={data.relatives} />
+            </div>
+          </motion.div>
+        )}
+
         {/* Main Content Grid */}
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Left Column - Activity & Updates */}
@@ -187,7 +246,7 @@ function DashboardPage() {
               <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
                 Quick Actions
               </h2>
-              <div className="grid sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <QuickActionCard
                   icon={Upload}
                   title="Upload Genome"
@@ -203,11 +262,18 @@ function DashboardPage() {
                   color="blue"
                 />
                 <QuickActionCard
-                  icon={Users}
-                  title="Share Data"
-                  description="Share with family"
-                  href="/sharing"
+                  icon={Globe}
+                  title="View Ancestry"
+                  description="Explore your origins"
+                  href="/ancestry"
                   color="green"
+                />
+                <QuickActionCard
+                  icon={DnaIcon}
+                  title="Your Traits"
+                  description="Discover unique traits"
+                  href="/traits"
+                  color="purple"
                 />
               </div>
             </motion.div>
@@ -505,22 +571,239 @@ function QuickActionCard({
     indigo: 'from-indigo-500 to-purple-600',
     blue: 'from-blue-500 to-cyan-600',
     green: 'from-green-500 to-emerald-600',
+    purple: 'from-purple-500 to-pink-600',
   };
 
   return (
     <Link to={href}>
-      <Card className="p-4 transition-all hover:shadow-md group">
-        <div className="flex items-start gap-3">
-          <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${colors[color]} flex items-center justify-center group-hover:scale-110 transition-transform`}>
+      <Card className="p-4 transition-all hover:shadow-md group h-full">
+        <div className="flex flex-col sm:flex-row sm:items-start gap-3">
+          <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${colors[color]} flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0`}>
             <Icon className="w-5 h-5 text-white" />
           </div>
-          <div className="flex-1">
-            <h3 className="font-medium text-slate-900 dark:text-white">{title}</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400">{description}</p>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-medium text-slate-900 dark:text-white text-sm">{title}</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">{description}</p>
           </div>
         </div>
       </Card>
     </Link>
+  );
+}
+
+// New Feature Cards
+function AncestryCard({ ancestry }: { ancestry?: DashboardData['ancestry'] }) {
+  if (!ancestry?.hasReport) {
+    return (
+      <Card className="p-4 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 border-emerald-200 dark:border-emerald-800">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
+            <Globe className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-medium text-slate-900 dark:text-white">Ancestry</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Discover your ethnic origins</p>
+            <Link 
+              to="/ancestry"
+              className="inline-flex items-center gap-1 mt-3 text-sm font-medium text-emerald-600 hover:text-emerald-700 dark:text-emerald-400"
+            >
+              Explore
+              <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="p-4 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 border-emerald-200 dark:border-emerald-800">
+      <div className="flex items-start gap-3">
+        <div className="w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
+          <Globe className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="font-medium text-slate-900 dark:text-white">Ancestry</h3>
+          <div className="mt-2">
+            <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">
+              {ancestry.percentage}%
+            </p>
+            <p className="text-sm text-slate-600 dark:text-slate-400 truncate">
+              {ancestry.topEthnicity}
+            </p>
+          </div>
+          <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">
+            {ancestry.regions} regions detected
+          </p>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function TraitsCard({ traits }: { traits?: DashboardData['traits'] }) {
+  if (!traits?.hasReport) {
+    return (
+      <Card className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-purple-200 dark:border-purple-800">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center">
+            <Palette className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-medium text-slate-900 dark:text-white">Traits</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Fun facts about your DNA</p>
+            <Link 
+              to="/traits"
+              className="inline-flex items-center gap-1 mt-3 text-sm font-medium text-purple-600 hover:text-purple-700 dark:text-purple-400"
+            >
+              Discover
+              <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-purple-200 dark:border-purple-800">
+      <div className="flex items-start gap-3">
+        <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center">
+          <Palette className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="font-medium text-slate-900 dark:text-white">Traits</h3>
+          <div className="mt-2 space-y-1">
+            {traits.interestingTraits.slice(0, 2).map((trait, i) => (
+              <p key={i} className="text-sm text-slate-600 dark:text-slate-400 flex items-center gap-1">
+                <CheckCircle className="w-3 h-3 text-purple-500" />
+                {trait}
+              </p>
+            ))}
+          </div>
+          <p className="text-xs text-slate-500 dark:text-slate-500 mt-2">
+            {traits.totalTraits} traits analyzed
+          </p>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function CarrierCard({ carrier }: { carrier?: DashboardData['carrierStatus'] }) {
+  if (!carrier?.hasReport) {
+    return (
+      <Card className="p-4 bg-gradient-to-br from-rose-50 to-red-50 dark:from-rose-900/20 dark:to-red-900/20 border-rose-200 dark:border-rose-800">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-lg bg-rose-100 dark:bg-rose-900/50 flex items-center justify-center">
+            <Heart className="w-5 h-5 text-rose-600 dark:text-rose-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-medium text-slate-900 dark:text-white">Carrier Status</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Check carrier variants</p>
+            <Link 
+              to="/carrier"
+              className="inline-flex items-center gap-1 mt-3 text-sm font-medium text-rose-600 hover:text-rose-700 dark:text-rose-400"
+            >
+              View Report
+              <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
+  if (carrier.shouldConsultDoctor) {
+    return (
+      <Card className="p-4 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border-amber-200 dark:border-amber-800">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center">
+            <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-medium text-slate-900 dark:text-white">Carrier Status</h3>
+            <p className="text-sm text-amber-700 dark:text-amber-400 mt-1">
+              {carrier.relevantVariants} variants detected
+            </p>
+            <p className="text-xs text-amber-600 dark:text-amber-500 mt-2 flex items-center gap-1">
+              <Info className="w-3 h-3" />
+              Consult recommended
+            </p>
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="p-4 bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 border-emerald-200 dark:border-emerald-800">
+      <div className="flex items-start gap-3">
+        <div className="w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
+          <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="font-medium text-slate-900 dark:text-white">Carrier Status</h3>
+          <p className="text-sm text-emerald-700 dark:text-emerald-400 mt-1">
+            No carrier variants
+          </p>
+          <p className="text-xs text-slate-500 dark:text-slate-500 mt-2">
+            All clear - review details
+          </p>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function RelativesCard({ relatives }: { relatives?: DashboardData['relatives'] }) {
+  if (!relatives?.hasOptedIn) {
+    return (
+      <Card className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-800">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
+            <Users2 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-medium text-slate-900 dark:text-white">DNA Relatives</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Connect with relatives</p>
+            <Link 
+              to="/relatives"
+              className="inline-flex items-center gap-1 mt-3 text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400"
+            >
+              Learn More
+              <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-800">
+      <div className="flex items-start gap-3">
+        <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
+          <Users2 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="font-medium text-slate-900 dark:text-white">DNA Relatives</h3>
+          <div className="mt-2">
+            <p className="text-2xl font-bold text-blue-700 dark:text-blue-400">
+              {relatives.matchCount}
+            </p>
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+              matches found
+            </p>
+          </div>
+          {relatives.closeMatches > 0 && (
+            <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+              {relatives.closeMatches} close matches
+            </p>
+          )}
+        </div>
+      </div>
+    </Card>
   );
 }
 
@@ -535,6 +818,12 @@ function DashboardSkeleton() {
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-8">
             {[...Array(5)].map((_, i) => (
               <div key={i} className="h-20 bg-slate-200 dark:bg-slate-700 rounded-xl" />
+            ))}
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-32 bg-slate-200 dark:bg-slate-700 rounded-xl" />
             ))}
           </div>
 

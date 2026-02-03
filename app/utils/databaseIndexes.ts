@@ -149,6 +149,134 @@ export const databaseIndexes = [
     table: 'notifications',
     columns: ['created_at'],
   },
+
+  // Ancestry results indexes
+  {
+    name: 'idx_ancestry_results_genome',
+    table: 'ancestry_results',
+    columns: ['genome_id'],
+  },
+  {
+    name: 'idx_ancestry_results_user',
+    table: 'ancestry_results',
+    columns: ['user_id'],
+  },
+  {
+    name: 'idx_ancestry_results_analyzed',
+    table: 'ancestry_results',
+    columns: ['analyzed_at'],
+  },
+
+  // Ancestry matches indexes
+  {
+    name: 'idx_ancestry_matches_user',
+    table: 'ancestry_matches',
+    columns: ['user_id'],
+  },
+  {
+    name: 'idx_ancestry_matches_user_match',
+    table: 'ancestry_matches',
+    columns: ['user_id', 'match_user_id'],
+  },
+  {
+    name: 'idx_ancestry_matches_status',
+    table: 'ancestry_matches',
+    columns: ['status'],
+  },
+
+  // Traits results indexes
+  {
+    name: 'idx_traits_results_genome',
+    table: 'traits_results',
+    columns: ['genome_id'],
+  },
+  {
+    name: 'idx_traits_results_user',
+    table: 'traits_results',
+    columns: ['user_id'],
+  },
+
+  // User traits preferences indexes
+  {
+    name: 'idx_traits_preferences_user',
+    table: 'user_traits_preferences',
+    columns: ['user_id'],
+  },
+  {
+    name: 'idx_traits_preferences_trait',
+    table: 'user_traits_preferences',
+    columns: ['user_id', 'trait_id'],
+  },
+
+  // Carrier results indexes
+  {
+    name: 'idx_carrier_results_genome',
+    table: 'carrier_results',
+    columns: ['genome_id'],
+  },
+  {
+    name: 'idx_carrier_results_user',
+    table: 'carrier_results',
+    columns: ['user_id'],
+  },
+  {
+    name: 'idx_carrier_results_pathogenic',
+    table: 'carrier_results',
+    columns: ['has_pathogenic_variants'],
+  },
+
+  // Carrier sharing indexes
+  {
+    name: 'idx_carrier_sharing_user',
+    table: 'carrier_sharing',
+    columns: ['user_id'],
+  },
+  {
+    name: 'idx_carrier_sharing_token',
+    table: 'carrier_sharing',
+    columns: ['access_token'],
+  },
+
+  // Relative matching preferences indexes
+  {
+    name: 'idx_relative_preferences_user',
+    table: 'relative_matching_preferences',
+    columns: ['user_id'],
+  },
+  {
+    name: 'idx_relative_preferences_opted',
+    table: 'relative_matching_preferences',
+    columns: ['is_opted_in'],
+  },
+
+  // Relative matches indexes
+  {
+    name: 'idx_relative_matches_user',
+    table: 'relative_matches',
+    columns: ['user_id'],
+  },
+  {
+    name: 'idx_relative_matches_user_match',
+    table: 'relative_matches',
+    columns: ['user_id', 'match_user_id'],
+  },
+  {
+    name: 'idx_relative_matches_hidden',
+    table: 'relative_matches',
+    columns: ['is_hidden'],
+  },
+
+  // Hidden matches indexes
+  {
+    name: 'idx_hidden_matches_user',
+    table: 'hidden_matches',
+    columns: ['user_id'],
+  },
+  {
+    name: 'idx_hidden_matches_user_match',
+    table: 'hidden_matches',
+    columns: ['user_id', 'match_user_id'],
+  },
 ];
 
 export function createIndexes(db: Database): void {

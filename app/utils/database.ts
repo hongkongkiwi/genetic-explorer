@@ -344,6 +344,160 @@ function initDatabase() {
     )
   `);
 
+  // ============================================
+  // ANCESTRY TABLES
+  // ============================================
+
+  // Ancestry results table - Store ancestry analysis results
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS ancestry_results (
+      id TEXT PRIMARY KEY,
+      genome_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      ethnicity_json TEXT NOT NULL,
+      y_haplogroup TEXT,
+      mt_haplogroup TEXT,
+      confidence REAL,
+      analyzed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (genome_id) REFERENCES genomes(id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+
+  // Ancestry matches table - Store relative matches
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS ancestry_matches (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      match_user_id TEXT,
+      shared_dna_cm REAL,
+      shared_percentage REAL,
+      relationship_type TEXT,
+      confidence REAL,
+      status TEXT DEFAULT 'pending',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (match_user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+
+  // ============================================
+  // TRAITS TABLES
+  // ============================================
+
+  // Traits results table - Store traits analysis
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS traits_results (
+      id TEXT PRIMARY KEY,
+      genome_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      traits_json TEXT NOT NULL,
+      analyzed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (genome_id) REFERENCES genomes(id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+
+  // User traits preferences table - Store trait visibility preferences
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS user_traits_preferences (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      trait_id TEXT NOT NULL,
+      is_visible INTEGER DEFAULT 1,
+      share_with_family INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      UNIQUE(user_id, trait_id)
+    )
+  `);
+
+  // ============================================
+  // CARRIER TABLES
+  // ============================================
+
+  // Carrier results table - Store carrier screening results
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS carrier_results (
+      id TEXT PRIMARY KEY,
+      genome_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      results_json TEXT NOT NULL,
+      has_pathogenic_variants INTEGER DEFAULT 0,
+      counseling_recommended INTEGER DEFAULT 0,
+      analyzed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (genome_id) REFERENCES genomes(id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+
+  // Carrier sharing table - Track sharing with partners
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS carrier_sharing (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      partner_email TEXT NOT NULL,
+      shared_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      access_token TEXT UNIQUE NOT NULL,
+      expires_at DATETIME,
+      accessed_at DATETIME,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+
+  // ============================================
+  // RELATIVES TABLES
+  // ============================================
+
+  // Relative matching preferences table - User preferences for DNA matching
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS relative_matching_preferences (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL UNIQUE,
+      is_opted_in INTEGER DEFAULT 0,
+      show_real_name INTEGER DEFAULT 0,
+      allow_contact INTEGER DEFAULT 1,
+      show_ancestry INTEGER DEFAULT 1,
+      share_ethnicity INTEGER DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+
+  // Relative matches table - Store match details (more detailed than ancestry_matches)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS relative_matches (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      match_user_id TEXT,
+      relationship_prediction TEXT,
+      shared_segments_json TEXT,
+      ibd_segments_json TEXT,
+      is_hidden INTEGER DEFAULT 0,
+      can_contact INTEGER DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (match_user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+
+  // Hidden matches table - Track hidden matches
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS hidden_matches (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      match_user_id TEXT NOT NULL,
+      hidden_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      reason TEXT,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (match_user_id) REFERENCES users(id) ON DELETE CASCADE,
+      UNIQUE(user_id, match_user_id)
+    )
+  `);
+
   // Add OAuth columns to users table (for quick lookup)
   try {
     db.exec(`ALTER TABLE users ADD COLUMN oauth_provider TEXT`);
@@ -1971,4 +2125,827 @@ export function updateUserAvatar(userId: string, avatarUrl: string): void {
     UPDATE profiles SET avatar_url = ?, updated_at = ?
     WHERE user_id = ?
   `).run(avatarUrl, new Date().toISOString(), userId);
+}
+
+// ============================================================================
+// ANCESTRY FUNCTIONS
+// ============================================================================
+
+export interface AncestryResult {
+  id: string;
+  genomeId: string;
+  userId: string;
+  ethnicity: Array<{ region: string; percentage: number }>;
+  yHaplogroup: string | null;
+  mtHaplogroup: string | null;
+  confidence: number;
+  analyzedAt: Date;
+}
+
+export interface AncestryMatch {
+  id: string;
+  userId: string;
+  matchUserId: string | null;
+  sharedDnaCm: number | null;
+  sharedPercentage: number | null;
+  relationshipType: string | null;
+  confidence: number | null;
+  status: 'pending' | 'accepted' | 'rejected' | 'blocked';
+  createdAt: Date;
+}
+
+export function saveAncestryResult(
+  genomeId: string,
+  userId: string,
+  ethnicity: Array<{ region: string; percentage: number }>,
+  yHaplogroup?: string,
+  mtHaplogroup?: string,
+  confidence?: number
+): AncestryResult {
+  const db = getDb();
+  const id = uuidv4();
+  const now = new Date().toISOString();
+
+  const insert = db.prepare(`
+    INSERT INTO ancestry_results (id, genome_id, user_id, ethnicity_json, y_haplogroup, mt_haplogroup, confidence, analyzed_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  insert.run(
+    id,
+    genomeId,
+    userId,
+    JSON.stringify(ethnicity),
+    yHaplogroup || null,
+    mtHaplogroup || null,
+    confidence || null,
+    now
+  );
+
+  return {
+    id,
+    genomeId,
+    userId,
+    ethnicity,
+    yHaplogroup: yHaplogroup || null,
+    mtHaplogroup: mtHaplogroup || null,
+    confidence: confidence || 0,
+    analyzedAt: new Date(now),
+  };
+}
+
+export function getAncestryResult(genomeId: string): AncestryResult | null {
+  const db = getDb();
+  const result = db.prepare(`
+    SELECT id, genome_id, user_id, ethnicity_json, y_haplogroup, mt_haplogroup, confidence, analyzed_at
+    FROM ancestry_results WHERE genome_id = ?
+  `).get(genomeId) as any;
+
+  if (!result) return null;
+
+  return {
+    id: result.id,
+    genomeId: result.genome_id,
+    userId: result.user_id,
+    ethnicity: JSON.parse(result.ethnicity_json),
+    yHaplogroup: result.y_haplogroup,
+    mtHaplogroup: result.mt_haplogroup,
+    confidence: result.confidence,
+    analyzedAt: new Date(result.analyzed_at),
+  };
+}
+
+export function getUserAncestryResults(userId: string): AncestryResult[] {
+  const db = getDb();
+  const results = db.prepare(`
+    SELECT id, genome_id, user_id, ethnicity_json, y_haplogroup, mt_haplogroup, confidence, analyzed_at
+    FROM ancestry_results WHERE user_id = ? ORDER BY analyzed_at DESC
+  `).all(userId) as any[];
+
+  return results.map(result => ({
+    id: result.id,
+    genomeId: result.genome_id,
+    userId: result.user_id,
+    ethnicity: JSON.parse(result.ethnicity_json),
+    yHaplogroup: result.y_haplogroup,
+    mtHaplogroup: result.mt_haplogroup,
+    confidence: result.confidence,
+    analyzedAt: new Date(result.analyzed_at),
+  }));
+}
+
+export function saveAncestryMatch(
+  userId: string,
+  matchUserId: string | null,
+  sharedDnaCm?: number,
+  sharedPercentage?: number,
+  relationshipType?: string,
+  confidence?: number
+): AncestryMatch {
+  const db = getDb();
+  const id = uuidv4();
+  const now = new Date().toISOString();
+
+  const insert = db.prepare(`
+    INSERT INTO ancestry_matches (id, user_id, match_user_id, shared_dna_cm, shared_percentage, relationship_type, confidence, status, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  insert.run(
+    id,
+    userId,
+    matchUserId || null,
+    sharedDnaCm || null,
+    sharedPercentage || null,
+    relationshipType || null,
+    confidence || null,
+    'pending',
+    now
+  );
+
+  return {
+    id,
+    userId,
+    matchUserId: matchUserId || null,
+    sharedDnaCm: sharedDnaCm || null,
+    sharedPercentage: sharedPercentage || null,
+    relationshipType: relationshipType || null,
+    confidence: confidence || null,
+    status: 'pending',
+    createdAt: new Date(now),
+  };
+}
+
+export function getAncestryMatches(userId: string): AncestryMatch[] {
+  const db = getDb();
+  const results = db.prepare(`
+    SELECT id, user_id, match_user_id, shared_dna_cm, shared_percentage, relationship_type, confidence, status, created_at
+    FROM ancestry_matches WHERE user_id = ? AND status != 'blocked' ORDER BY shared_dna_cm DESC
+  `).all(userId) as any[];
+
+  return results.map(result => ({
+    id: result.id,
+    userId: result.user_id,
+    matchUserId: result.match_user_id,
+    sharedDnaCm: result.shared_dna_cm,
+    sharedPercentage: result.shared_percentage,
+    relationshipType: result.relationship_type,
+    confidence: result.confidence,
+    status: result.status,
+    createdAt: new Date(result.created_at),
+  }));
+}
+
+export function updateAncestryMatchStatus(
+  matchId: string,
+  status: 'pending' | 'accepted' | 'rejected' | 'blocked'
+): boolean {
+  const db = getDb();
+  const result = db.prepare(`
+    UPDATE ancestry_matches SET status = ? WHERE id = ?
+  `).run(status, matchId);
+  return result.changes > 0;
+}
+
+// ============================================================================
+// TRAITS FUNCTIONS
+// ============================================================================
+
+export interface TraitsResult {
+  id: string;
+  genomeId: string;
+  userId: string;
+  traits: Record<string, any>;
+  analyzedAt: Date;
+}
+
+export interface TraitPreference {
+  id: string;
+  userId: string;
+  traitId: string;
+  isVisible: boolean;
+  shareWithFamily: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export function saveTraitsResult(
+  genomeId: string,
+  userId: string,
+  traits: Record<string, any>
+): TraitsResult {
+  const db = getDb();
+  const id = uuidv4();
+  const now = new Date().toISOString();
+
+  const insert = db.prepare(`
+    INSERT INTO traits_results (id, genome_id, user_id, traits_json, analyzed_at)
+    VALUES (?, ?, ?, ?, ?)
+  `);
+
+  insert.run(id, genomeId, userId, JSON.stringify(traits), now);
+
+  return {
+    id,
+    genomeId,
+    userId,
+    traits,
+    analyzedAt: new Date(now),
+  };
+}
+
+export function getTraitsResult(genomeId: string): TraitsResult | null {
+  const db = getDb();
+  const result = db.prepare(`
+    SELECT id, genome_id, user_id, traits_json, analyzed_at
+    FROM traits_results WHERE genome_id = ?
+  `).get(genomeId) as any;
+
+  if (!result) return null;
+
+  return {
+    id: result.id,
+    genomeId: result.genome_id,
+    userId: result.user_id,
+    traits: JSON.parse(result.traits_json),
+    analyzedAt: new Date(result.analyzed_at),
+  };
+}
+
+export function getUserTraitsResults(userId: string): TraitsResult[] {
+  const db = getDb();
+  const results = db.prepare(`
+    SELECT id, genome_id, user_id, traits_json, analyzed_at
+    FROM traits_results WHERE user_id = ? ORDER BY analyzed_at DESC
+  `).all(userId) as any[];
+
+  return results.map(result => ({
+    id: result.id,
+    genomeId: result.genome_id,
+    userId: result.user_id,
+    traits: JSON.parse(result.traits_json),
+    analyzedAt: new Date(result.analyzed_at),
+  }));
+}
+
+export function saveTraitPreference(
+  userId: string,
+  traitId: string,
+  isVisible: boolean,
+  shareWithFamily: boolean
+): TraitPreference {
+  const db = getDb();
+  const id = uuidv4();
+  const now = new Date().toISOString();
+
+  const insert = db.prepare(`
+    INSERT INTO user_traits_preferences (id, user_id, trait_id, is_visible, share_with_family, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(user_id, trait_id) DO UPDATE SET
+      is_visible = excluded.is_visible,
+      share_with_family = excluded.share_with_family,
+      updated_at = excluded.updated_at
+  `);
+
+  insert.run(
+    id,
+    userId,
+    traitId,
+    isVisible ? 1 : 0,
+    shareWithFamily ? 1 : 0,
+    now,
+    now
+  );
+
+  return {
+    id,
+    userId,
+    traitId,
+    isVisible,
+    shareWithFamily,
+    createdAt: new Date(now),
+    updatedAt: new Date(now),
+  };
+}
+
+export function getTraitPreferences(userId: string): TraitPreference[] {
+  const db = getDb();
+  const results = db.prepare(`
+    SELECT id, user_id, trait_id, is_visible, share_with_family, created_at, updated_at
+    FROM user_traits_preferences WHERE user_id = ?
+  `).all(userId) as any[];
+
+  return results.map(result => ({
+    id: result.id,
+    userId: result.user_id,
+    traitId: result.trait_id,
+    isVisible: result.is_visible === 1,
+    shareWithFamily: result.share_with_family === 1,
+    createdAt: new Date(result.created_at),
+    updatedAt: new Date(result.updated_at),
+  }));
+}
+
+export function getTraitPreference(userId: string, traitId: string): TraitPreference | null {
+  const db = getDb();
+  const result = db.prepare(`
+    SELECT id, user_id, trait_id, is_visible, share_with_family, created_at, updated_at
+    FROM user_traits_preferences WHERE user_id = ? AND trait_id = ?
+  `).get(userId, traitId) as any;
+
+  if (!result) return null;
+
+  return {
+    id: result.id,
+    userId: result.user_id,
+    traitId: result.trait_id,
+    isVisible: result.is_visible === 1,
+    shareWithFamily: result.share_with_family === 1,
+    createdAt: new Date(result.created_at),
+    updatedAt: new Date(result.updated_at),
+  };
+}
+
+// ============================================================================
+// CARRIER FUNCTIONS
+// ============================================================================
+
+export interface CarrierResult {
+  id: string;
+  genomeId: string;
+  userId: string;
+  results: Record<string, any>;
+  hasPathogenicVariants: boolean;
+  counselingRecommended: boolean;
+  analyzedAt: Date;
+}
+
+export interface CarrierSharing {
+  id: string;
+  userId: string;
+  partnerEmail: string;
+  sharedAt: Date;
+  accessToken: string;
+  expiresAt: Date | null;
+  accessedAt: Date | null;
+}
+
+export function saveCarrierResult(
+  genomeId: string,
+  userId: string,
+  results: Record<string, any>,
+  hasPathogenicVariants: boolean,
+  counselingRecommended: boolean
+): CarrierResult {
+  const db = getDb();
+  const id = uuidv4();
+  const now = new Date().toISOString();
+
+  const insert = db.prepare(`
+    INSERT INTO carrier_results (id, genome_id, user_id, results_json, has_pathogenic_variants, counseling_recommended, analyzed_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  insert.run(
+    id,
+    genomeId,
+    userId,
+    JSON.stringify(results),
+    hasPathogenicVariants ? 1 : 0,
+    counselingRecommended ? 1 : 0,
+    now
+  );
+
+  return {
+    id,
+    genomeId,
+    userId,
+    results,
+    hasPathogenicVariants,
+    counselingRecommended,
+    analyzedAt: new Date(now),
+  };
+}
+
+export function getCarrierResult(genomeId: string): CarrierResult | null {
+  const db = getDb();
+  const result = db.prepare(`
+    SELECT id, genome_id, user_id, results_json, has_pathogenic_variants, counseling_recommended, analyzed_at
+    FROM carrier_results WHERE genome_id = ?
+  `).get(genomeId) as any;
+
+  if (!result) return null;
+
+  return {
+    id: result.id,
+    genomeId: result.genome_id,
+    userId: result.user_id,
+    results: JSON.parse(result.results_json),
+    hasPathogenicVariants: result.has_pathogenic_variants === 1,
+    counselingRecommended: result.counseling_recommended === 1,
+    analyzedAt: new Date(result.analyzed_at),
+  };
+}
+
+export function getUserCarrierResults(userId: string): CarrierResult[] {
+  const db = getDb();
+  const results = db.prepare(`
+    SELECT id, genome_id, user_id, results_json, has_pathogenic_variants, counseling_recommended, analyzed_at
+    FROM carrier_results WHERE user_id = ? ORDER BY analyzed_at DESC
+  `).all(userId) as any[];
+
+  return results.map(result => ({
+    id: result.id,
+    genomeId: result.genome_id,
+    userId: result.user_id,
+    results: JSON.parse(result.results_json),
+    hasPathogenicVariants: result.has_pathogenic_variants === 1,
+    counselingRecommended: result.counseling_recommended === 1,
+    analyzedAt: new Date(result.analyzed_at),
+  }));
+}
+
+export function shareCarrierResults(
+  userId: string,
+  partnerEmail: string,
+  expiresDays?: number
+): CarrierSharing {
+  const db = getDb();
+  const id = uuidv4();
+  const accessToken = uuidv4();
+  const now = new Date();
+  const expiresAt = expiresDays ? new Date(now.getTime() + expiresDays * 24 * 60 * 60 * 1000) : null;
+
+  const insert = db.prepare(`
+    INSERT INTO carrier_sharing (id, user_id, partner_email, shared_at, access_token, expires_at)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `);
+
+  insert.run(
+    id,
+    userId,
+    partnerEmail,
+    now.toISOString(),
+    accessToken,
+    expiresAt?.toISOString() || null
+  );
+
+  return {
+    id,
+    userId,
+    partnerEmail,
+    sharedAt: now,
+    accessToken,
+    expiresAt,
+    accessedAt: null,
+  };
+}
+
+export function getCarrierSharingByToken(accessToken: string): CarrierSharing | null {
+  const db = getDb();
+  const result = db.prepare(`
+    SELECT id, user_id, partner_email, shared_at, access_token, expires_at, accessed_at
+    FROM carrier_sharing WHERE access_token = ? AND (expires_at IS NULL OR expires_at > datetime('now'))
+  `).get(accessToken) as any;
+
+  if (!result) return null;
+
+  return {
+    id: result.id,
+    userId: result.user_id,
+    partnerEmail: result.partner_email,
+    sharedAt: new Date(result.shared_at),
+    accessToken: result.access_token,
+    expiresAt: result.expires_at ? new Date(result.expires_at) : null,
+    accessedAt: result.accessed_at ? new Date(result.accessed_at) : null,
+  };
+}
+
+export function recordCarrierSharingAccess(accessToken: string): void {
+  const db = getDb();
+  db.prepare(`
+    UPDATE carrier_sharing SET accessed_at = datetime('now') WHERE access_token = ?
+  `).run(accessToken);
+}
+
+export function getUserCarrierSharing(userId: string): CarrierSharing[] {
+  const db = getDb();
+  const results = db.prepare(`
+    SELECT id, user_id, partner_email, shared_at, access_token, expires_at, accessed_at
+    FROM carrier_sharing WHERE user_id = ? ORDER BY shared_at DESC
+  `).all(userId) as any[];
+
+  return results.map(result => ({
+    id: result.id,
+    userId: result.user_id,
+    partnerEmail: result.partner_email,
+    sharedAt: new Date(result.shared_at),
+    accessToken: result.access_token,
+    expiresAt: result.expires_at ? new Date(result.expires_at) : null,
+    accessedAt: result.accessed_at ? new Date(result.accessed_at) : null,
+  }));
+}
+
+export function revokeCarrierSharing(sharingId: string, userId: string): boolean {
+  const db = getDb();
+  const result = db.prepare(`
+    DELETE FROM carrier_sharing WHERE id = ? AND user_id = ?
+  `).run(sharingId, userId);
+  return result.changes > 0;
+}
+
+// ============================================================================
+// RELATIVES FUNCTIONS
+// ============================================================================
+
+export interface MatchingPreferences {
+  id: string;
+  userId: string;
+  isOptedIn: boolean;
+  showRealName: boolean;
+  allowContact: boolean;
+  showAncestry: boolean;
+  shareEthnicity: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface RelativeMatch {
+  id: string;
+  userId: string;
+  matchUserId: string | null;
+  relationshipPrediction: string | null;
+  sharedSegments: any[];
+  ibdSegments: any[];
+  isHidden: boolean;
+  canContact: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface HiddenMatch {
+  id: string;
+  userId: string;
+  matchUserId: string;
+  hiddenAt: Date;
+  reason: string | null;
+}
+
+export function updateMatchingPreferences(
+  userId: string,
+  preferences: Partial<Omit<MatchingPreferences, 'id' | 'userId' | 'createdAt' | 'updatedAt'>>
+): MatchingPreferences {
+  const db = getDb();
+  const id = uuidv4();
+  const now = new Date().toISOString();
+
+  // Check if preferences already exist
+  const existing = db.prepare(`SELECT id FROM relative_matching_preferences WHERE user_id = ?`).get(userId) as any;
+
+  if (existing) {
+    const sets: string[] = [];
+    const values: any[] = [];
+
+    if (preferences.isOptedIn !== undefined) { sets.push('is_opted_in = ?'); values.push(preferences.isOptedIn ? 1 : 0); }
+    if (preferences.showRealName !== undefined) { sets.push('show_real_name = ?'); values.push(preferences.showRealName ? 1 : 0); }
+    if (preferences.allowContact !== undefined) { sets.push('allow_contact = ?'); values.push(preferences.allowContact ? 1 : 0); }
+    if (preferences.showAncestry !== undefined) { sets.push('show_ancestry = ?'); values.push(preferences.showAncestry ? 1 : 0); }
+    if (preferences.shareEthnicity !== undefined) { sets.push('share_ethnicity = ?'); values.push(preferences.shareEthnicity ? 1 : 0); }
+
+    sets.push('updated_at = ?');
+    values.push(now);
+    values.push(userId);
+
+    db.prepare(`UPDATE relative_matching_preferences SET ${sets.join(', ')} WHERE user_id = ?`).run(...values);
+
+    return getMatchingPreferences(userId)!;
+  } else {
+    const insert = db.prepare(`
+      INSERT INTO relative_matching_preferences (id, user_id, is_opted_in, show_real_name, allow_contact, show_ancestry, share_ethnicity, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    insert.run(
+      id,
+      userId,
+      preferences.isOptedIn !== undefined ? (preferences.isOptedIn ? 1 : 0) : 0,
+      preferences.showRealName !== undefined ? (preferences.showRealName ? 1 : 0) : 0,
+      preferences.allowContact !== undefined ? (preferences.allowContact ? 1 : 0) : 1,
+      preferences.showAncestry !== undefined ? (preferences.showAncestry ? 1 : 0) : 1,
+      preferences.shareEthnicity !== undefined ? (preferences.shareEthnicity ? 1 : 0) : 1,
+      now,
+      now
+    );
+
+    return {
+      id,
+      userId,
+      isOptedIn: preferences.isOptedIn || false,
+      showRealName: preferences.showRealName || false,
+      allowContact: preferences.allowContact !== false,
+      showAncestry: preferences.showAncestry !== false,
+      shareEthnicity: preferences.shareEthnicity !== false,
+      createdAt: new Date(now),
+      updatedAt: new Date(now),
+    };
+  }
+}
+
+export function getMatchingPreferences(userId: string): MatchingPreferences | null {
+  const db = getDb();
+  const result = db.prepare(`
+    SELECT id, user_id, is_opted_in, show_real_name, allow_contact, show_ancestry, share_ethnicity, created_at, updated_at
+    FROM relative_matching_preferences WHERE user_id = ?
+  `).get(userId) as any;
+
+  if (!result) {
+    // Return default preferences
+    return {
+      id: '',
+      userId,
+      isOptedIn: false,
+      showRealName: false,
+      allowContact: true,
+      showAncestry: true,
+      shareEthnicity: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+  }
+
+  return {
+    id: result.id,
+    userId: result.user_id,
+    isOptedIn: result.is_opted_in === 1,
+    showRealName: result.show_real_name === 1,
+    allowContact: result.allow_contact === 1,
+    showAncestry: result.show_ancestry === 1,
+    shareEthnicity: result.share_ethnicity === 1,
+    createdAt: new Date(result.created_at),
+    updatedAt: new Date(result.updated_at),
+  };
+}
+
+export function saveRelativeMatch(
+  userId: string,
+  matchUserId: string | null,
+  relationshipPrediction?: string,
+  sharedSegments?: any[],
+  ibdSegments?: any[],
+  canContact?: boolean
+): RelativeMatch {
+  const db = getDb();
+  const id = uuidv4();
+  const now = new Date().toISOString();
+
+  const insert = db.prepare(`
+    INSERT INTO relative_matches (id, user_id, match_user_id, relationship_prediction, shared_segments_json, ibd_segments_json, can_contact, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  insert.run(
+    id,
+    userId,
+    matchUserId || null,
+    relationshipPrediction || null,
+    JSON.stringify(sharedSegments || []),
+    JSON.stringify(ibdSegments || []),
+    canContact !== false ? 1 : 0,
+    now,
+    now
+  );
+
+  return {
+    id,
+    userId,
+    matchUserId: matchUserId || null,
+    relationshipPrediction: relationshipPrediction || null,
+    sharedSegments: sharedSegments || [],
+    ibdSegments: ibdSegments || [],
+    isHidden: false,
+    canContact: canContact !== false,
+    createdAt: new Date(now),
+    updatedAt: new Date(now),
+  };
+}
+
+export function getRelativeMatches(userId: string, includeHidden: boolean = false): RelativeMatch[] {
+  const db = getDb();
+  let query = `
+    SELECT id, user_id, match_user_id, relationship_prediction, shared_segments_json, ibd_segments_json, is_hidden, can_contact, created_at, updated_at
+    FROM relative_matches WHERE user_id = ?
+  `;
+  
+  if (!includeHidden) {
+    query += ` AND is_hidden = 0`;
+  }
+  
+  query += ` ORDER BY created_at DESC`;
+
+  const results = db.prepare(query).all(userId) as any[];
+
+  return results.map(result => ({
+    id: result.id,
+    userId: result.user_id,
+    matchUserId: result.match_user_id,
+    relationshipPrediction: result.relationship_prediction,
+    sharedSegments: JSON.parse(result.shared_segments_json || '[]'),
+    ibdSegments: JSON.parse(result.ibd_segments_json || '[]'),
+    isHidden: result.is_hidden === 1,
+    canContact: result.can_contact === 1,
+    createdAt: new Date(result.created_at),
+    updatedAt: new Date(result.updated_at),
+  }));
+}
+
+export function hideMatch(userId: string, matchUserId: string, reason?: string): HiddenMatch {
+  const db = getDb();
+  const id = uuidv4();
+  const now = new Date().toISOString();
+
+  // Start transaction
+  db.exec('BEGIN TRANSACTION');
+  
+  try {
+    // Insert into hidden_matches
+    const insert = db.prepare(`
+      INSERT INTO hidden_matches (id, user_id, match_user_id, hidden_at, reason)
+      VALUES (?, ?, ?, ?, ?)
+      ON CONFLICT(user_id, match_user_id) DO UPDATE SET
+        hidden_at = excluded.hidden_at,
+        reason = excluded.reason
+    `);
+
+    insert.run(id, userId, matchUserId, now, reason || null);
+
+    // Update relative_matches to mark as hidden
+    db.prepare(`
+      UPDATE relative_matches SET is_hidden = 1, updated_at = ? WHERE user_id = ? AND match_user_id = ?
+    `).run(now, userId, matchUserId);
+
+    db.exec('COMMIT');
+
+    return {
+      id,
+      userId,
+      matchUserId,
+      hiddenAt: new Date(now),
+      reason: reason || null,
+    };
+  } catch (error) {
+    db.exec('ROLLBACK');
+    throw error;
+  }
+}
+
+export function unhideMatch(userId: string, matchUserId: string): boolean {
+  const db = getDb();
+  const now = new Date().toISOString();
+
+  // Start transaction
+  db.exec('BEGIN TRANSACTION');
+  
+  try {
+    // Remove from hidden_matches
+    const deleteResult = db.prepare(`
+      DELETE FROM hidden_matches WHERE user_id = ? AND match_user_id = ?
+    `).run(userId, matchUserId);
+
+    // Update relative_matches to mark as not hidden
+    db.prepare(`
+      UPDATE relative_matches SET is_hidden = 0, updated_at = ? WHERE user_id = ? AND match_user_id = ?
+    `).run(now, userId, matchUserId);
+
+    db.exec('COMMIT');
+
+    return deleteResult.changes > 0;
+  } catch (error) {
+    db.exec('ROLLBACK');
+    throw error;
+  }
+}
+
+export function getHiddenMatches(userId: string): HiddenMatch[] {
+  const db = getDb();
+  const results = db.prepare(`
+    SELECT id, user_id, match_user_id, hidden_at, reason
+    FROM hidden_matches WHERE user_id = ? ORDER BY hidden_at DESC
+  `).all(userId) as any[];
+
+  return results.map(result => ({
+    id: result.id,
+    userId: result.user_id,
+    matchUserId: result.match_user_id,
+    hiddenAt: new Date(result.hidden_at),
+    reason: result.reason,
+  }));
+}
+
+export function isMatchHidden(userId: string, matchUserId: string): boolean {
+  const db = getDb();
+  const result = db.prepare(`
+    SELECT 1 FROM hidden_matches WHERE user_id = ? AND match_user_id = ?
+  `).get(userId, matchUserId);
+  
+  return !!result;
 }

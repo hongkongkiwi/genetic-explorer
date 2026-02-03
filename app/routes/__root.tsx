@@ -25,16 +25,51 @@ export const Route = createRootRoute({
   head: () => ({
     meta: [
       { charSet: 'utf-8' },
-      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+      { name: 'viewport', content: 'width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover' },
+      { name: 'format-detection', content: 'telephone=no' },
+      { name: 'mobile-web-app-capable', content: 'yes' },
+      { name: 'apple-mobile-web-app-capable', content: 'yes' },
+      { name: 'apple-mobile-web-app-status-bar-style', content: 'default' },
+      { name: 'apple-mobile-web-app-title', content: 'Genetic Explorer' },
       { title: 'Genetic Explorer - AI-Powered Genetic Analysis' },
       { name: 'description', content: 'Upload your genetic data and get AI-powered health insights, personalized recommendations, and comprehensive genetic reports.' },
-      { name: 'theme-color', content: '#4f46e5' },
+      { name: 'theme-color', content: '#6366f1' },
       { name: 'color-scheme', content: 'light dark' },
     ],
     links: [
       { rel: 'stylesheet', href: appCss },
       { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
       { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
+      { rel: 'manifest', href: '/manifest.json' },
+    ],
+    scripts: [
+      {
+        type: 'module',
+        children: `
+          // Register service worker for PWA
+          if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+              navigator.serviceWorker.register('/sw.js')
+                .then((registration) => {
+                  console.log('SW registered:', registration.scope);
+                })
+                .catch((error) => {
+                  console.log('SW registration failed:', error);
+                });
+            });
+          }
+          
+          // Prevent zoom on double-tap for iOS
+          let lastTouchEnd = 0;
+          document.addEventListener('touchend', (event) => {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) {
+              event.preventDefault();
+            }
+            lastTouchEnd = now;
+          }, { passive: false });
+        `,
+      },
     ],
   }),
   component: RootComponent,
@@ -119,7 +154,7 @@ function AppContent({ mounted }: { mounted: boolean }) {
         {/* Skip to content link for accessibility */}
         <a
           href="#main-content"
-          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 z-50 px-4 py-2 bg-indigo-600 text-white rounded-lg"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 z-50 px-4 py-2 bg-indigo-600 text-white rounded-lg touch-target"
         >
           Skip to main content
         </a>
