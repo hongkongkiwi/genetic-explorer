@@ -27,7 +27,7 @@ export const APIRoute = createAPIFileRoute('/api/auth/logout')({
       }
 
       if (auth?.user) {
-        logActivity(auth.user.id, 'user_logout', 'user', auth.user.id);
+        logActivity(auth.id, 'user_logout', 'user', auth.id);
       }
 
       return json({ success: true }, {

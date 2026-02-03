@@ -53,7 +53,7 @@ export interface PharmacogenomicFinding {
   gene: string;
   drug: string;
   phenotype: string;
-  recommendation: string;
+  recommendations: string;
 }
 
 export interface CarrierFinding {
@@ -66,7 +66,7 @@ export interface CarrierFinding {
 export interface FollowUpRecommendation {
   priority: 'High' | 'Medium' | 'Low';
   condition: string;
-  recommendation: string;
+  recommendations: string;
   timeline: string;
 }
 
@@ -175,7 +175,7 @@ export function formatDoctorReportForPrint(report: DoctorReportData): string {
     for (const finding of report.pharmacogenomicFindings) {
       lines.push(`Gene/Drug: ${finding.gene} / ${finding.drug}`);
       lines.push(`Phenotype: ${finding.phenotype}`);
-      lines.push(`Recommendation: ${finding.recommendation}`);
+      lines.push(`Recommendation: ${finding.recommendations}`);
       lines.push('');
     }
   }
@@ -206,7 +206,7 @@ export function formatDoctorReportForPrint(report: DoctorReportData): string {
     for (const followUp of report.recommendedFollowUps) {
       lines.push(`[${followUp.priority} PRIORITY] ${followUp.condition}`);
       lines.push(`Timeline: ${followUp.timeline}`);
-      lines.push(`Recommendation: ${followUp.recommendation}`);
+      lines.push(`Recommendation: ${followUp.recommendations}`);
       lines.push('');
     }
   }
@@ -265,7 +265,7 @@ function categorizeClinicallySignificant(variants: any[], snpData: any[]): Clini
       condition: 'Methylenetetrahydrofolate reductase deficiency',
       inheritance: 'Autosomal Recessive',
       clinicalSignificance: 'Uncertain Significance',
-      recommendation: 'Consider folate supplementation. Consult genetics if family history.',
+      recommendations: 'Consider folate supplementation. Consult genetics if family history.',
     },
     'rs1800497': {
       gene: 'DRD2',
@@ -273,7 +273,7 @@ function categorizeClinicallySignificant(variants: any[], snpData: any[]): Clini
       condition: 'Dopamine receptor sensitivity',
       inheritance: 'Autosomal',
       clinicalSignificance: 'Uncertain Significance',
-      recommendation: 'No specific action needed. May inform medication responses.',
+      recommendations: 'No specific action needed. May inform medication responses.',
     },
     'rs4988235': {
       gene: 'LCT',
@@ -281,7 +281,7 @@ function categorizeClinicallySignificant(variants: any[], snpData: any[]): Clini
       condition: 'Lactase persistence/non-persistence',
       inheritance: 'Autosomal Dominant',
       clinicalSignificance: 'Benign',
-      recommendation: 'Inform dietary lactose tolerance.',
+      recommendations: 'Inform dietary lactose tolerance.',
     },
     'rs12913832': {
       gene: 'HERC2',
@@ -289,7 +289,7 @@ function categorizeClinicallySignificant(variants: any[], snpData: any[]): Clini
       condition: 'Eye color determination',
       inheritance: 'Autosomal',
       clinicalSignificance: 'Benign',
-      recommendation: 'No clinical significance.',
+      recommendations: 'No clinical significance.',
     },
     'rs762551': {
       gene: 'CYP1A2',
@@ -297,7 +297,7 @@ function categorizeClinicallySignificant(variants: any[], snpData: any[]): Clini
       condition: 'CYP1A2 enzyme activity',
       inheritance: 'Autosomal',
       clinicalSignificance: 'Uncertain Significance',
-      recommendation: 'May affect caffeine metabolism.',
+      recommendations: 'May affect caffeine metabolism.',
     },
   };
 
@@ -330,25 +330,25 @@ function categorizePharmacogenomic(variants: any[], snpData: any[]): Pharmacogen
       gene: 'CYP2D6',
       drug: 'Codeine, Tramadol, SSRIs',
       phenotype: 'Poor Metabolizer',
-      recommendation: 'Avoid codeine/tramadol. Consider alternatives.',
+      recommendations: 'Avoid codeine/tramadol. Consider alternatives.',
     },
     'rs4986893': {
       gene: 'CYP2C19',
       drug: 'Clopidogrel, PPIs',
       phenotype: 'Poor Metabolizer',
-      recommendation: 'Consider alternative antiplatelets.',
+      recommendations: 'Consider alternative antiplatelets.',
     },
     'rs1057910': {
       gene: 'CYP2C9',
       drug: 'Warfarin, Phenytoin',
       phenotype: 'Reduced Function',
-      recommendation: 'Monitor warfarin closely. Consider reduced dose.',
+      recommendations: 'Monitor warfarin closely. Consider reduced dose.',
     },
     'rs1801133': {
       gene: 'MTHFR',
       drug: 'Folate antagonists',
       phenotype: 'Reduced Activity',
-      recommendation: 'Ensure adequate folate status.',
+      recommendations: 'Ensure adequate folate status.',
     },
   };
 
@@ -360,7 +360,7 @@ function categorizePharmacogenomic(variants: any[], snpData: any[]): Pharmacogen
         gene: pharmacoInfo.gene!,
         drug: pharmacoInfo.drug!,
         phenotype: pharmacoInfo.phenotype!,
-        recommendation: pharmacoInfo.recommendation!,
+        recommendations: pharmacoInfo.recommendation!,
       });
     }
   }
@@ -382,14 +382,14 @@ function generateFollowUps(findings: ClinicalFinding[]): FollowUpRecommendation[
       followUps.push({
         priority: 'High',
         condition: finding.condition,
-        recommendation: `Genetic counseling recommended. Consider referral to medical geneticist. ${finding.recommendations}`,
+        recommendations: `Genetic counseling recommended. Consider referral to medical geneticist. ${finding.recommendations}`,
         timeline: 'Within 4 weeks',
       });
     } else if (finding.clinicalSignificance === 'Uncertain Significance') {
       followUps.push({
         priority: 'Medium',
         condition: finding.condition,
-        recommendation: `Discuss with genetics. ${finding.recommendations}`,
+        recommendations: `Discuss with genetics. ${finding.recommendations}`,
         timeline: 'Within 3 months',
       });
     }

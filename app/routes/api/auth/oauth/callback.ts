@@ -1,5 +1,5 @@
-import { redirect, json } from '@tanstack/react-start';
-import { createAPIFileRoute } from '@tanstack/react-start/api';
+import { redirect, json } from '@tanstack/start';
+import { createAPIFileRoute } from '@tanstack/start/api';
 import {
   exchangeCodeForTokens,
   getOAuthUserInfo,

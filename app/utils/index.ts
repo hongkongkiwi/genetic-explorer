@@ -1,8 +1,7 @@
 // Central exports for utilities
 
 // Database
-export { db, getDatabase, type DatabaseInstance } from './database';
-export { runMigrations } from './databaseMigrations';
+export { getDb, saveGenome, getGenome, deleteGenome, getAllGenomes } from './database';
 
 // Performance
 export { 
@@ -13,46 +12,31 @@ export {
   prefetchOnHover,
 } from './performance';
 
-// React Query
-export {
-  queryKeys,
-  userQueryOptions,
-  genomesQueryOptions,
-  genomeQueryOptions,
-  snpsQueryOptions,
-  snpQueryOptions,
-  reportsQueryOptions,
-  reportQueryOptions,
-  reportCategoriesQueryOptions,
-  researchUpdatesQueryOptions,
-  activityLogQueryOptions,
-  statsQueryOptions,
-  comparisonsQueryOptions,
-  comparisonQueryOptions,
-  searchQueryOptions,
-  snpFavoritesQueryOptions,
-  prefetchQueries,
-} from './queryOptions';
-
-// Session
+// Auth
 export { 
-  sessionManager, 
-  type SessionData, 
-  type SessionContext,
-} from './session';
+  requireAuth, 
+  getAuthUser,
+  getCurrentUser,
+  type AuthResult,
+} from './auth';
 
-// SNP Database
+// Security
 export {
-  snpDatabase,
-  type ParsedSNP,
-  type SNPAnnotation,
-  type CategoryDefinition,
-  type ProcessingProgress,
-} from './snpDatabase';
+  getSecurityHeaders,
+  sanitizeInput,
+  sanitizeFilename,
+  generateNonce,
+  getSecureCookieOptions,
+  logSecurityEvent,
+  detectSuspiciousActivity,
+} from './security';
 
-// VCF Parser
+// Rate Limiting
 export {
-  vcfParser,
-  type VCFSample,
-  type VCFVariant,
-} from './vcfParser';
+  rateLimitByIp,
+  rateLimitByUser,
+  rateLimitAuth,
+  rateLimitSensitive,
+  getClientIp,
+  createRateLimitHeaders,
+} from './rateLimit';

@@ -1,5 +1,5 @@
-import { json } from '@tanstack/react-start';
-import { createAPIFileRoute } from '@tanstack/react-start/api';
+import { json } from '@tanstack/start';
+import { createAPIFileRoute } from '@tanstack/start/api';
 import { getUserByEmail, generatePasswordResetToken, storePasswordResetToken } from '~/utils/database';
 import { sendEmail } from '~/utils/email';
 import PasswordResetEmail from '~/emails/PasswordReset';

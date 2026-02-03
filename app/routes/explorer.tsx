@@ -16,12 +16,20 @@ import {
   BookmarkCheck,
   ChevronLeft,
   ChevronRight,
-  ArrowUpDown
+  ArrowUpDown,
+  Upload
 } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { Card } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
-import type { SNPResult, AnalysisResult } from '../types/genetics'
+import type { SNPResult, SNPListResponse } from '../types/api'
+import type { AnalysisReport, GeneticVariant } from '../types/genetics'
+
+// Extended analysis type that includes SNPs from the API
+interface AnalysisResult extends AnalysisReport {
+  snps?: SNPResult[]
+  filteredSnps?: SNPResult[]
+}
 
 interface SNPUpdate {
   rsid: string
@@ -115,8 +123,8 @@ function SNPExplorerPage() {
   // Get unique chromosomes
   const chromosomes = useMemo(() => {
     if (!analysis?.snps) return []
-    const unique = [...new Set(analysis.snps.map((snp: SNPResult) => snp.chromosome))]
-    return unique.sort((a, b) => {
+    const unique = [...new Set(analysis.snps.map((snp: SNPResult) => snp.chromosome))] as string[]
+    return unique.sort((a: string, b: string) => {
       // Sort numerically, with X, Y, MT at the end
       const numA = parseInt(a)
       const numB = parseInt(b)
@@ -651,10 +659,10 @@ function SNPExplorerPage() {
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <CategoryBadge category={snp.category} />
+                          <CategoryBadge category={snp.category as any} />
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <ImpactBadge impact={snp.clinicalImpact} />
+                          <ImpactBadge impact={snp.clinicalImpact as any} />
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           {snpUpdates[snp.rsid] && (

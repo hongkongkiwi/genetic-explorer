@@ -103,7 +103,7 @@ export function GenomeVisualizer({
 
               {/* Variant markers */}
               <div className="absolute inset-0">
-                {selectedChromosome.variants.slice(0, 100).map((variant, i) => {
+                {selectedChromosome.variants.slice(0, 100).map((variant) => {
                   const yPercent = variant.position / selectedChromosome.length;
                   const yPos = yPercent * 100;
 
@@ -127,7 +127,7 @@ export function GenomeVisualizer({
                 })}
               </div>
             </div>
-          )}
+          </div>
         )}
 
         {/* Hover tooltip */}

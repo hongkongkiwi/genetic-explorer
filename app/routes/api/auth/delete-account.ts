@@ -1,7 +1,8 @@
-import { json } from '@tanstack/react-start';
-import { createAPIFileRoute } from '@tanstack/react-start/api';
+import { json } from '@tanstack/start';
+import { createAPIFileRoute } from '@tanstack/start/api';
 import { requireAuth } from '~/utils/auth';
 import { getDb } from '~/utils/database';
+import { existsSync, unlinkSync } from 'fs';
 import crypto from 'crypto';
 
 function verifyPassword(password: string, hash: string, salt: string): boolean {
@@ -31,7 +32,7 @@ export const APIRoute = createAPIFileRoute('/api/auth/delete-account')({
       const db = getDb();
 
       // Verify password
-      const user = db.prepare(`SELECT password_hash FROM users WHERE id = ?`).get(auth.user.id) as any;
+      const user = db.prepare(`SELECT password_hash FROM users WHERE id = ?`).get(auth.id) as any;
       if (!user) {
         return json({ success: false, error: 'User not found' }, { status: 404 });
       }
@@ -42,14 +43,13 @@ export const APIRoute = createAPIFileRoute('/api/auth/delete-account')({
       }
 
       // Get all user's genomes to delete files
-      const genomes = db.prepare(`SELECT id, storage_path FROM genomes WHERE user_id = ?`).all(auth.user.id) as any[];
+      const genomes = db.prepare(`SELECT id, storage_path FROM genomes WHERE user_id = ?`).all(auth.id) as any[];
 
       // Delete genome files
-      const fs = await import('fs');
       for (const genome of genomes) {
-        if (genome.storage_path && fs.existsSync(genome.storage_path)) {
+        if (genome.storage_path && existsSync(genome.storage_path)) {
           try {
-            fs.unlinkSync(genome.storage_path);
+            unlinkSync(genome.storage_path);
           } catch (err) {
             console.error(`Failed to delete genome file ${genome.id}:`, err);
           }
@@ -57,31 +57,31 @@ export const APIRoute = createAPIFileRoute('/api/auth/delete-account')({
       }
 
       // Delete user's sharing permissions (where they are owner)
-      db.prepare(`DELETE FROM sharing_permissions WHERE owner_id = ?`).run(auth.user.id);
+      db.prepare(`DELETE FROM sharing_permissions WHERE owner_id = ?`).run(auth.id);
 
       // Delete user's sharing invites
-      db.prepare(`DELETE FROM sharing_invites WHERE owner_id = ?`).run(auth.user.id);
+      db.prepare(`DELETE FROM sharing_invites WHERE owner_id = ?`).run(auth.id);
 
       // Delete user's sessions
-      db.prepare(`DELETE FROM sessions WHERE user_id = ?`).run(auth.user.id);
+      db.prepare(`DELETE FROM sessions WHERE user_id = ?`).run(auth.id);
 
       // Delete user's activity logs
-      db.prepare(`DELETE FROM activity_logs WHERE user_id = ?`).run(auth.user.id);
+      db.prepare(`DELETE FROM activity_logs WHERE user_id = ?`).run(auth.id);
 
       // Delete user's password resets
-      db.prepare(`DELETE FROM password_resets WHERE user_id = ?`).run(auth.user.id);
+      db.prepare(`DELETE FROM password_resets WHERE user_id = ?`).run(auth.id);
 
       // Delete user's email verifications
-      db.prepare(`DELETE FROM email_verifications WHERE user_id = ?`).run(auth.user.id);
+      db.prepare(`DELETE FROM email_verifications WHERE user_id = ?`).run(auth.id);
 
       // Delete user's profile
-      db.prepare(`DELETE FROM profiles WHERE user_id = ?`).run(auth.user.id);
+      db.prepare(`DELETE FROM profiles WHERE user_id = ?`).run(auth.id);
 
       // Delete user's genomes (cascades to snps and reports)
-      db.prepare(`DELETE FROM genomes WHERE user_id = ?`).run(auth.user.id);
+      db.prepare(`DELETE FROM genomes WHERE user_id = ?`).run(auth.id);
 
       // Finally, delete the user
-      db.prepare(`DELETE FROM users WHERE id = ?`).run(auth.user.id);
+      db.prepare(`DELETE FROM users WHERE id = ?`).run(auth.id);
 
       return json({ 
         success: true, 

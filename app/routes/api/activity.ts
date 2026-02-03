@@ -1,5 +1,5 @@
-import { json } from '@tanstack/react-start';
-import { createAPIFileRoute } from '@tanstack/react-start/api';
+import { json } from '@tanstack/start';
+import { createAPIFileRoute } from '@tanstack/start/api';
 import { getUserActivity } from '~/utils/database';
 import { requireAuth } from '~/utils/auth';
 
@@ -14,7 +14,7 @@ export const APIRoute = createAPIFileRoute('/api/activity')({
       const url = new URL(request.url);
       const limit = parseInt(url.searchParams.get('limit') || '50', 10);
 
-      const activities = getUserActivity(auth.user.id, limit);
+      const activities = getUserActivity(auth.id, limit);
 
       return json({
         success: true,

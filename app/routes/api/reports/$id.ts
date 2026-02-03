@@ -16,7 +16,7 @@ export const APIRoute = createAPIFileRoute('/api/reports/$id')({
 
       // Check access if user is authenticated
       if (auth) {
-        const access = canAccessGenome(auth.user.id, report.genomeId);
+        const access = canAccessGenome(auth.id, report.genomeId);
         if (!access.canAccess) {
           return json({ success: false, error: 'Access denied' }, { status: 403 });
         }

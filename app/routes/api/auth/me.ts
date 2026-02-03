@@ -1,7 +1,7 @@
 import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
 import { requireAuth } from '~/utils/auth';
-import { getUserProfile } from '~/utils/database';
+import { getUserProfile, getUserById } from '~/utils/database';
 
 export const APIRoute = createAPIFileRoute('/api/auth/me')({
   GET: async ({ request }) => {
@@ -12,16 +12,21 @@ export const APIRoute = createAPIFileRoute('/api/auth/me')({
         return json({ success: false, error: 'Unauthorized' }, { status: 401 });
       }
 
-      const profile = getUserProfile(auth.user.id);
+      const profile = getUserProfile(auth.id);
+      const user = getUserById(auth.id);
+
+      if (!user) {
+        return json({ success: false, error: 'User not found' }, { status: 404 });
+      }
 
       return json({
         success: true,
         user: {
-          id: auth.user.id,
-          email: auth.user.email,
-          displayName: auth.user.displayName,
-          createdAt: auth.user.createdAt,
-          emailVerified: auth.user.emailVerified,
+          id: user.id,
+          email: user.email,
+          displayName: user.displayName,
+          createdAt: user.createdAt,
+          emailVerified: user.emailVerified,
           profile: profile ? {
             bio: profile.bio,
             birthDate: profile.birthDate,

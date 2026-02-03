@@ -41,7 +41,7 @@ export const SENSITIVITY_CATEGORIES: SensitivityCategory[] = [
     level: 'highly_sensitive',
     examples: ['Schizophrenia risk', 'Bipolar disorder markers'],
     requiresDisclaimer: true,
-  ],
+  },
   {
     id: 'neurodegenerative',
     name: 'Neurodegenerative',
@@ -368,11 +368,11 @@ export interface PrivacySettingsSchema {
     type: 'enum';
     label: 'Default Share Level';
     description: 'What information to share when granting access to your data';
-    options: SHARE_LEVELS.map((sl) => ({
-      value: sl.level,
-      label: sl.name,
-      description: sl.description,
-    }));
+    options: Array<{
+      value: SensitivityLevel;
+      label: string;
+      description: string;
+    }>;
   };
 }
 

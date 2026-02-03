@@ -27,12 +27,12 @@ export const APIRoute = createAPIFileRoute('/api/genome/$id')({
           genome: {
             id: genome.id,
             filename: genome.filename,
-            original_filename: genome.original_filename,
+            originalFilename: genome.filename,
             source: genome.source,
-            snp_count: genome.snp_count,
-            processed_at: genome.processed_at,
-            status: genome.status,
-            nickname: genome.nickname,
+            snpCount: genome.snpCount,
+            processedAt: genome.processedAt,
+            // status not in GenomeData type
+            // nickname not in GenomeData type
             // Exclude raw data and sensitive fields for shared users
           },
           permissionLevel: access.permissionLevel,

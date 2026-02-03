@@ -9,6 +9,7 @@ import {
   revokeSharingPermission,
   getUserByEmail,
   getGenome,
+  getDb,
   type SharingPermission
 } from '~/utils/database';
 
@@ -24,12 +25,12 @@ export const APIRoute = createAPIFileRoute('/api/sharing')({
       const type = url.searchParams.get('type');
 
       if (type === 'shared-with-me') {
-        const shared = getSharedWithMe(auth.user.id);
+        const shared = getSharedWithMe(auth.id);
         return json({ success: true, data: shared });
       }
 
       // Default: get my shares
-      const shares = getMyShares(auth.user.id);
+      const shares = getMyShares(auth.id);
       return json({ success: true, data: shares });
     } catch (error) {
       console.error('Get sharing API error:', error);
@@ -69,7 +70,7 @@ export const APIRoute = createAPIFileRoute('/api/sharing')({
         // Note: getGenome doesn't return user_id in the result, need to query directly
         const ownershipCheck = getDb().prepare(`
           SELECT id FROM genomes WHERE id = ? AND user_id = ?
-        `).get(genomeId, auth.user.id);
+        `).get(genomeId, auth.id);
 
         if (!ownershipCheck) {
           return json({ success: false, error: 'You do not own this genome' }, { status: 403 });
@@ -82,7 +83,7 @@ export const APIRoute = createAPIFileRoute('/api/sharing')({
         // Create direct sharing permission
         const expires = expiresAt ? new Date(expiresAt) : undefined;
         result = createSharingPermission(
-          auth.user.id,
+          auth.id,
           targetUser.id,
           permissionLevel,
           genomeId,
@@ -92,7 +93,7 @@ export const APIRoute = createAPIFileRoute('/api/sharing')({
       } else {
         // Create an invite
         const invite = createSharingInvite(
-          auth.user.id,
+          auth.id,
           email,
           permissionLevel,
           genomeId,
@@ -122,7 +123,7 @@ export const APIRoute = createAPIFileRoute('/api/sharing')({
         return json({ success: false, error: 'Permission ID is required' }, { status: 400 });
       }
 
-      const success = revokeSharingPermission(permissionId, auth.user.id);
+      const success = revokeSharingPermission(permissionId, auth.id);
 
       if (!success) {
         return json({ success: false, error: 'Permission not found or you do not have permission to revoke it' }, { status: 404 });

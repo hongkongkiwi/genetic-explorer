@@ -1,5 +1,5 @@
-import { json } from '@tanstack/react-start';
-import { createAPIFileRoute } from '@tanstack/react-start/api';
+import { json } from '@tanstack/start';
+import { createAPIFileRoute } from '@tanstack/start/api';
 import { requireAuth } from '~/utils/auth';
 import { getDb, logActivity } from '~/utils/database';
 import crypto from 'crypto';
@@ -53,7 +53,7 @@ export const APIRoute = createAPIFileRoute('/api/auth/change-password')({
       const db = getDb();
 
       // Get user's current password hash
-      const user = db.prepare(`SELECT password_hash FROM users WHERE id = ?`).get(auth.user.id) as any;
+      const user = db.prepare(`SELECT password_hash FROM users WHERE id = ?`).get(auth.id) as any;
       if (!user) {
         return json({ success: false, error: 'User not found' }, { status: 404 });
       }
@@ -71,10 +71,10 @@ export const APIRoute = createAPIFileRoute('/api/auth/change-password')({
       // Update password
       db.prepare(`
         UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?
-      `).run(newPasswordHash, new Date().toISOString(), auth.user.id);
+      `).run(newPasswordHash, new Date().toISOString(), auth.id);
 
       // Log activity
-      logActivity(auth.user.id, 'password_changed', 'user', auth.user.id);
+      logActivity(auth.id, 'password_changed', 'user', auth.id);
 
       return json({ success: true, message: 'Password changed successfully' });
     } catch (error) {

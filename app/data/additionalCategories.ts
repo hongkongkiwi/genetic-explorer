@@ -491,18 +491,6 @@ export const ADDITIONAL_CATEGORIES_SNPS: Record<string, SNPInfo> = {
     evidenceLevel: 'Strong',
   },
 
-  'rs3827760': {
-    rsid: 'rs3827760',
-    gene: 'EDAR',
-    geneName: 'Ectodysplasin A Receptor',
-    chromosome: '2',
-    position: 109513601,
-    category: 'Dental Health',
-    impact: 'Low',
-    description: 'Also affects tooth morphology.',
-    evidenceLevel: 'Strong',
-  },
-
   'rs1801133': {
     rsid: 'rs1801133',
     gene: 'MTHFR',
@@ -646,37 +634,6 @@ export const ADDITIONAL_CATEGORIES_SNPS: Record<string, SNPInfo> = {
     evidenceLevel: 'Moderate',
   },
 
-  'rs1801133': {
-    rsid: 'rs1801133',
-    gene: 'MTHFR',
-    geneName: 'Methylenetetrahydrofolate Reductase',
-    chromosome: '1',
-    position: 11856378,
-    category: 'Pregnancy & Fertility',
-    impact: 'High',
-    description: 'CRITICAL for pregnancy: affects neural tube development.',
-    conditions: ['Neural tube defects', 'Miscarriage risk', 'Preeclampsia'],
-    recommendations: [
-      'CRITICAL: High-dose methylfolate before conception',
-      '4-5mg methylfolate during first trimester',
-      'Start supplementation 3 months before trying to conceive',
-    ],
-    evidenceLevel: 'Very Strong',
-  },
-
-  'rs1801131': {
-    rsid: 'rs1801131',
-    gene: 'MTHFR',
-    geneName: 'Methylenetetrahydrofolate Reductase',
-    chromosome: '1',
-    position: 11854476,
-    category: 'Pregnancy & Fertility',
-    impact: 'Moderate',
-    description: 'Also important for pregnancy outcomes.',
-    recommendations: ['Consider with C677T', 'Methylfolate supplementation'],
-    evidenceLevel: 'Strong',
-  },
-
   'rs9923871': {
     rsid: 'rs9923871',
     gene: 'SHBG',
@@ -692,20 +649,6 @@ export const ADDITIONAL_CATEGORIES_SNPS: Record<string, SNPInfo> = {
   // ============================================================================
   // INJURY RISK & RECOVERY
   // ============================================================================
-
-  'rs1800012': {
-    rsid: 'rs1800012',
-    gene: 'COL1A1',
-    geneName: 'Collagen Type I Alpha 1 Chain',
-    chromosome: '17',
-    position: 50187946,
-    category: 'Injury Risk',
-    impact: 'Moderate',
-    description: 'Sp1 variant affecting collagen structure and soft tissue injuries.',
-    conditions: ['ACL tears', 'Tendon injuries', 'Fractures'],
-    recommendations: ['Strengthening exercises important', 'Proper warm-up/cool-down', 'Consider collagen supplementation'],
-    evidenceLevel: 'Strong',
-  },
 
   'rs12722': {
     rsid: 'rs12722',
@@ -769,22 +712,6 @@ export const ADDITIONAL_CATEGORIES_SNPS: Record<string, SNPInfo> = {
   // ============================================================================
   // STRESS & RESILIENCE
   // ============================================================================
-
-  'rs4680': {
-    rsid: 'rs4680',
-    gene: 'COMT',
-    geneName: 'Catechol-O-Methyltransferase',
-    chromosome: '22',
-    position: 19951271,
-    category: 'Stress & Resilience',
-    impact: 'Moderate',
-    description: 'Warrior vs Worrier - stress response and resilience.',
-    recommendations: [
-      'AA (Warrior): Excel under pressure but recover slowly, prioritize stress management',
-      'GG (Worrier): Better working memory, benefit from preparation',
-    ],
-    evidenceLevel: 'Strong',
-  },
 
   'rs1801252': {
     rsid: 'rs1801252',
@@ -944,34 +871,6 @@ export const ADDITIONAL_CATEGORIES_SNPS: Record<string, SNPInfo> = {
     conditions: ['Prostate cancer risk', 'Androgen sensitivity'],
     recommendations: ['Longer repeats: Lower androgen sensitivity', 'May affect fertility'],
     evidenceLevel: 'Moderate',
-  },
-
-  'rs4646': {
-    rsid: 'rs4646',
-    gene: 'CYP19A1',
-    geneName: 'Aromatase',
-    chromosome: '15',
-    position: 51166827,
-    category: 'Hormones',
-    impact: 'Low',
-    description: 'Affects estrogen levels in men and women.',
-    evidenceLevel: 'Moderate',
-  },
-
-  // ============================================================================
-  // CHILD DEVELOPMENT
-  // ============================================================================
-
-  'rs4680': {
-    rsid: 'rs4680',
-    gene: 'COMT',
-    geneName: 'Catechol-O-Methyltransferase',
-    chromosome: '22',
-    position: 19951271,
-    category: 'Child Development',
-    impact: 'Moderate',
-    description: 'Affects cognitive development and executive function in children.',
-    evidenceLevel: 'Strong',
   },
 
   'rs16147': {

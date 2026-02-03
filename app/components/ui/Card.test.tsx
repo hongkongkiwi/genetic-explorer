@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { Card } from './Card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './Card';
 
 describe('Card', () => {
   it('renders children correctly', () => {
@@ -21,36 +21,26 @@ describe('Card', () => {
     expect(screen.getByText('Content').parentElement).toHaveClass('custom-class');
   });
 
-  it('renders with hover effect when hoverable is true', () => {
+  it('renders complete card structure', () => {
     render(
-      <Card hoverable>
-        <p>Hoverable card</p>
+      <Card>
+        <CardHeader>
+          <CardTitle>Card Title</CardTitle>
+          <CardDescription>Card Description</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p>Card content goes here</p>
+        </CardContent>
+        <CardFooter>
+          <p>Card footer</p>
+        </CardFooter>
       </Card>
     );
-    expect(screen.getByText('Hoverable card').parentElement).toHaveClass('hover:shadow-md');
-  });
-
-  it('renders with different padding sizes', () => {
-    const { rerender } = render(
-      <Card padding="sm">
-        <p>Small padding</p>
-      </Card>
-    );
-    expect(screen.getByText('Small padding').parentElement).toHaveClass('p-3');
-
-    rerender(
-      <Card padding="md">
-        <p>Medium padding</p>
-      </Card>
-    );
-    expect(screen.getByText('Medium padding').parentElement).toHaveClass('p-5');
-
-    rerender(
-      <Card padding="lg">
-        <p>Large padding</p>
-      </Card>
-    );
-    expect(screen.getByText('Large padding').parentElement).toHaveClass('p-8');
+    
+    expect(screen.getByText('Card Title')).toBeInTheDocument();
+    expect(screen.getByText('Card Description')).toBeInTheDocument();
+    expect(screen.getByText('Card content goes here')).toBeInTheDocument();
+    expect(screen.getByText('Card footer')).toBeInTheDocument();
   });
 
   it('forwards ref correctly', () => {

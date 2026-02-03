@@ -8,9 +8,6 @@ interface CsrfContextType {
 
 const CsrfContext = createContext<CsrfContextType | null>(null);
 
-/**
- * Get CSRF token from cookie
- */
 function getCsrfTokenFromCookie(): string | null {
   const cookies = document.cookie.split(';');
   for (const cookie of cookies) {
@@ -22,9 +19,6 @@ function getCsrfTokenFromCookie(): string | null {
   return null;
 }
 
-/**
- * Fetch new CSRF token from server
- */
 async function fetchCsrfToken(): Promise<string | null> {
   try {
     const response = await fetch('/api/csrf');
@@ -41,13 +35,11 @@ async function fetchCsrfToken(): Promise<string | null> {
 export function CsrfProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
 
-  // Initialize token from cookie on mount
   useEffect(() => {
     const cookieToken = getCsrfTokenFromCookie();
     if (cookieToken) {
       setToken(cookieToken);
     } else {
-      // Fetch from server if not in cookie
       fetchCsrfToken().then(setToken);
     }
   }, []);
@@ -85,9 +77,6 @@ export function useCsrf() {
   return context;
 }
 
-/**
- * Hook for making authenticated API requests with CSRF protection
- */
 export function useSecureFetch() {
   const { getHeaders, refreshToken } = useCsrf();
 
@@ -97,7 +86,6 @@ export function useSecureFetch() {
   ): Promise<Response> => {
     const isMutation = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(options.method || '');
     
-    // Add CSRF header for mutations
     if (isMutation) {
       const csrfHeaders = getHeaders();
       options.headers = {
@@ -108,7 +96,6 @@ export function useSecureFetch() {
 
     const response = await fetch(url, options);
 
-    // If CSRF validation failed, refresh token and retry once
     if (response.status === 403) {
       const errorData = await response.json().catch(() => ({}));
       if (errorData.error?.includes('CSRF')) {

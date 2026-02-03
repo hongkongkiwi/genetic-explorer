@@ -18,6 +18,15 @@ const categoryConfig: Record<VariantCategory, { label: string; icon: string; col
   immune: { label: 'Immune', icon: '🛡️', color: 'bg-teal-500/20 text-teal-400 border-teal-500/30' },
   cognitive: { label: 'Cognitive', icon: '🧠', color: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30' },
   longevity: { label: 'Longevity', icon: '⏳', color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' },
+  'Mental Health': { label: 'Mental Health', icon: '🧠', color: 'bg-violet-500/20 text-violet-400 border-violet-500/30' },
+  'Drug Metabolism': { label: 'Drug Metabolism', icon: '💊', color: 'bg-purple-500/20 text-purple-400 border-purple-500/30' },
+  'Methylation': { label: 'Methylation', icon: '🧬', color: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
+  'Cardiovascular': { label: 'Cardiovascular', icon: '❤️', color: 'bg-red-500/20 text-red-400 border-red-500/30' },
+  'Nutrition': { label: 'Nutrition', icon: '🥗', color: 'bg-green-500/20 text-green-400 border-green-500/30' },
+  'Fitness': { label: 'Fitness', icon: '💪', color: 'bg-orange-500/20 text-orange-400 border-orange-500/30' },
+  'Immune System': { label: 'Immune System', icon: '🛡️', color: 'bg-teal-500/20 text-teal-400 border-teal-500/30' },
+  'Disease Risk': { label: 'Disease Risk', icon: '⚠️', color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' },
+  'Hormonal': { label: 'Hormonal', icon: '⚡', color: 'bg-amber-500/20 text-amber-400 border-amber-500/30' },
 };
 
 export function CategoryBadge({ category, size = 'md' }: CategoryBadgeProps) {

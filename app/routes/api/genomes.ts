@@ -31,14 +31,13 @@ export const APIRoute = createAPIFileRoute('/api/genomes')({
       const auth = requireAuth(request)
 
       // If authenticated, return user's genomes and shared genomes
-      // If not authenticated, return all genomes (legacy mode for backward compatibility)
       let genomes
       if (auth) {
         const url = new URL(request.url)
         const mineOnly = url.searchParams.get('mine') === 'true'
         genomes = mineOnly
-          ? getUserGenomes(auth.user.id)
-          : getAccessibleGenomes(auth.user.id)
+          ? getUserGenomes(auth.id)
+          : getAccessibleGenomes(auth.id)
       } else {
         genomes = getAccessibleGenomes('') // Empty string will return empty array
       }
@@ -183,11 +182,11 @@ export const APIRoute = createAPIFileRoute('/api/genomes')({
         fileBuffer,
         checksum,
         compressionType === 'none' ? null : compressionType,
-        auth.user.id,
+        auth.id,
       )
 
       // Log activity
-      logActivity(auth.user.id, 'genome_uploaded', 'genome', result.id, {
+      logActivity(auth.id, 'genome_uploaded', 'genome', result.id, {
         filename: originalFilename,
         snpCount: result.storedSnps,
       })
@@ -243,7 +242,7 @@ export const APIRoute = createAPIFileRoute('/api/genomes')({
       }
 
       // Check ownership
-      const access = canAccessGenome(auth.user.id, id)
+      const access = canAccessGenome(auth.id, id)
       if (!access.canAccess || access.permissionLevel !== 'owner') {
         return json(
           {
@@ -257,100 +256,13 @@ export const APIRoute = createAPIFileRoute('/api/genomes')({
       deleteGenome(id)
 
       // Log activity
-      logActivity(auth.user.id, 'genome_deleted', 'genome', id)
+      logActivity(auth.id, 'genome_deleted', 'genome', id)
 
       return json({ success: true, message: 'Genome deleted successfully' })
     } catch (error) {
       console.error('Delete error:', error)
       return json(
         { success: false, error: 'Failed to delete genome' },
-        { status: 500 },
-      )
-    }
-  },
-})
-
-// Additional endpoint for setting primary genome
-export const APIRoutePrimary = createAPIFileRoute('/api/genomes')({
-  POST: async ({ request }) => {
-    try {
-      const auth = requireAuth(request)
-      if (!auth) {
-        return json({ success: false, error: 'Unauthorized' }, { status: 401 })
-      }
-
-      const body = await request.json()
-      const { genomeId } = body
-
-      if (!genomeId) {
-        return json(
-          { success: false, error: 'Genome ID is required' },
-          { status: 400 },
-        )
-      }
-
-      // Check ownership
-      const access = canAccessGenome(auth.user.id, genomeId)
-      if (!access.canAccess || access.permissionLevel !== 'owner') {
-        return json(
-          {
-            success: false,
-            error: 'You do not have permission to modify this genome',
-          },
-          { status: 403 },
-        )
-      }
-
-      setPrimaryGenome(auth.user.id, genomeId)
-
-      // Log activity
-      logActivity(auth.user.id, 'genome_set_primary', 'genome', genomeId)
-
-      return json({ success: true })
-    } catch (error) {
-      console.error('Set primary genome error:', error)
-      return json(
-        { success: false, error: 'Failed to set primary genome' },
-        { status: 500 },
-      )
-    }
-  },
-})
-
-// Additional endpoint for integrity verification
-export const APIRouteVerify = createAPIFileRoute('/api/genomes')({
-  GET: async ({ params, request }) => {
-    try {
-      const auth = requireAuth(request)
-      const { id } = params
-
-      // Check access
-      if (auth) {
-        const access = canAccessGenome(auth.user.id, id)
-        if (!access.canAccess) {
-          return json(
-            { success: false, error: 'Access denied' },
-            { status: 403 },
-          )
-        }
-      }
-
-      const isValid = verifyGenomeIntegrity(id)
-
-      return json({
-        success: true,
-        genomeId: id,
-        integrityValid: isValid,
-        message: isValid
-          ? 'File integrity verified'
-          : 'File integrity check failed - file may be corrupted',
-      })
-    } catch (error) {
-      return json(
-        {
-          success: false,
-          error: error instanceof Error ? error.message : 'Verification failed',
-        },
         { status: 500 },
       )
     }

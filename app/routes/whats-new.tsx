@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { Navbar } from '../components/Navbar';
-import { researchUpdatesQueryOptions } from '../utils/queryOptions';
 import { motion } from 'framer-motion';
 import { 
   Sparkles, 
@@ -18,15 +17,24 @@ import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { ReactNode, memo } from 'react';
 
+const researchUpdatesQueryOptions = {
+  queryKey: ['whats-new'],
+  queryFn: async () => {
+    const response = await fetch('/api/whats-new');
+    if (!response.ok) throw new Error('Failed to fetch updates');
+    return response.json();
+  },
+};
+
 export const Route = createFileRoute('/whats-new')({
   component: WhatsNewPage,
-  loader: ({ context }) => {
-    context.queryClient.prefetchQuery(researchUpdatesQueryOptions);
+  loader: ({ context }: { context: any }) => {
+    context.queryClient?.prefetchQuery(researchUpdatesQueryOptions);
   },
 });
 
 // Animation variants
-const containerVariants = {
+const containerVariants: any = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
@@ -34,7 +42,7 @@ const containerVariants = {
   }
 };
 
-const itemVariants = {
+const itemVariants: any = {
   hidden: { opacity: 0, y: 20 },
   visible: { 
     opacity: 1, 
@@ -262,23 +270,26 @@ function WhatsNewPage() {
           </h2>
 
           <div className="space-y-8">
-            {Object.entries(groupedUpdates).map(([month, monthUpdates]) => (
-              <div key={month}>
-                <div className="flex items-center gap-4 mb-4">
-                  <h3 className="text-lg font-medium text-slate-900 dark:text-white">{month}</h3>
-                  <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700" />
-                  <span className="text-sm text-slate-500">
-                    {monthUpdates.length} update{monthUpdates.length !== 1 ? 's' : ''}
-                  </span>
-                </div>
+            {Object.entries(groupedUpdates).map(([month, monthUpdates]) => {
+              const updates = monthUpdates as any[];
+              return (
+                <div key={month}>
+                  <div className="flex items-center gap-4 mb-4">
+                    <h3 className="text-lg font-medium text-slate-900 dark:text-white">{month}</h3>
+                    <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700" />
+                    <span className="text-sm text-slate-500">
+                      {updates.length} update{updates.length !== 1 ? 's' : ''}
+                    </span>
+                  </div>
 
-                <div className="space-y-4">
-                  {(monthUpdates as any[]).map((update) => (
-                    <UpdateCard key={update.id} update={update} />
-                  ))}
+                  <div className="space-y-4">
+                    {updates.map((update) => (
+                      <UpdateCard key={update.id} update={update} />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
 
             {updates.length === 0 && (
               <Card className="p-12 text-center">

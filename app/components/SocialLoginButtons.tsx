@@ -1,4 +1,4 @@
-import { useSearchParams } from '@tanstack/react-router';
+import { useSearch } from '@tanstack/react-router';
 import { useState } from 'react';
 import { Button } from './ui/Button';
 import { cn } from '~/utils/cn';
@@ -67,11 +67,11 @@ const PROVIDER_CONFIGS: ProviderConfig[] = [
 ];
 
 export function SocialLoginButtons({ redirectTo, className, showDivider = true }: SocialLoginButtonsProps) {
-  const [searchParams] = useSearchParams();
+  const searchParams = useSearch({ strict: false });
   const [isLoading, setIsLoading] = useState<OAuthProvider | null>(null);
 
   // Get redirectTo from URL params or use provided value
-  const finalRedirectTo = redirectTo || searchParams.get('redirectTo') || '/dashboard';
+  const finalRedirectTo = redirectTo || (searchParams.redirectTo as string) || '/dashboard';
 
   const handleOAuthLogin = async (provider: OAuthProvider) => {
     setIsLoading(provider);

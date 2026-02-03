@@ -28,6 +28,7 @@ import {
   getUserByEmail,
   getPasskeys,
   verifyAndUseBackupCode,
+  getUserById,
 } from '~/utils/database';
 import { logActivity } from '~/utils/database';
 import { getClientIp } from '~/utils/rateLimit';
@@ -76,12 +77,16 @@ export const APIRouteSetup = createAPIFileRoute('/api/auth/2fa/setup')({
       if (method === 'passkey') {
         // Get existing passkeys for this user
         const existingCredentials = getPasskeys(auth.id).map((p: any) => p.credentialId);
+        
+        // Get user details for display name
+        const user = getUserById(auth.id);
+        const displayName = user?.displayName || auth.email;
 
         // Generate registration options
         const options = getPasskeyRegistrationOptions(
           auth.id,
           auth.email,
-          auth.user?.displayName || auth.email,
+          displayName,
           existingCredentials
         );
 

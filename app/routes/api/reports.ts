@@ -11,7 +11,7 @@ export const APIRoute = createAPIFileRoute('/api/reports')({
       let reports;
       if (auth) {
         // Get reports for genomes the user has access to
-        const accessibleGenomes = getAccessibleGenomes(auth.user.id);
+        const accessibleGenomes = getAccessibleGenomes(auth.id);
         const genomeIds = accessibleGenomes.map(g => g.id);
         
         // Filter reports by accessible genomes

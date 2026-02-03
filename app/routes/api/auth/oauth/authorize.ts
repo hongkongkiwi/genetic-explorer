@@ -1,5 +1,5 @@
-import { redirect } from '@tanstack/react-start';
-import { createAPIFileRoute } from '@tanstack/react-start/api';
+import { redirect } from '@tanstack/start';
+import { createAPIFileRoute } from '@tanstack/start/api';
 import { getOAuthAuthorizationUrl, isOAuthProviderConfigured, OAuthProvider } from '~/utils/oauth';
 
 export const APIRoute = createAPIFileRoute('/api/auth/oauth/authorize')({

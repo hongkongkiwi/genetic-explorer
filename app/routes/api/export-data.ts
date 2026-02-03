@@ -1,5 +1,5 @@
-import { json } from '@tanstack/react-start';
-import { createAPIFileRoute } from '@tanstack/react-start/api';
+import { json } from '@tanstack/start';
+import { createAPIFileRoute } from '@tanstack/start/api';
 import { requireAuth } from '~/utils/auth';
 import { exportUserDataAsZip, deleteAllUserData } from '~/utils/dataExport';
 import { rateLimitSensitive } from '~/utils/rateLimit';

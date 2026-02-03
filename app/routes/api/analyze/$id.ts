@@ -14,7 +14,7 @@ export const APIRoute = createAPIFileRoute('/api/analyze/$id')({
       }
 
       // Check access to genome
-      const access = canAccessGenome(auth.user.id, params.id);
+      const access = canAccessGenome(auth.id, params.id);
       if (!access.canAccess) {
         return json({ success: false, error: 'Access denied' }, { status: 403 });
       }
@@ -36,10 +36,10 @@ export const APIRoute = createAPIFileRoute('/api/analyze/$id')({
       report.genomeId = genome.id;
       
       // Save report with user_id
-      const reportId = saveReport(genome.id, auth.user.id, report);
+      const reportId = saveReport(genome.id, auth.id, report);
 
       // Log activity
-      logActivity(auth.user.id, 'report_generated', 'report', reportId, {
+      logActivity(auth.id, 'report_generated', 'report', reportId, {
         genomeId: genome.id,
       });
 

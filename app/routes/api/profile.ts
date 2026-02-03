@@ -11,7 +11,7 @@ export const APIRoute = createAPIFileRoute('/api/profile')({
         return json({ success: false, error: 'Unauthorized' }, { status: 401 });
       }
 
-      const profile = getUserProfile(auth.user.id);
+      const profile = getUserProfile(auth.id);
 
       return json({
         success: true,
@@ -43,11 +43,11 @@ export const APIRoute = createAPIFileRoute('/api/profile')({
 
       // Update user display name
       if (displayName !== undefined) {
-        updateUser(auth.user.id, { displayName });
+        updateUser(auth.id, { displayName });
       }
 
       // Update profile
-      updateUserProfile(auth.user.id, {
+      updateUserProfile(auth.id, {
         bio,
         birthDate,
         sex,

@@ -1,5 +1,5 @@
-import { json } from '@tanstack/react-start'
-import { createAPIFileRoute } from '@tanstack/react-start/api'
+import { json } from '@tanstack/start'
+import { createAPIFileRoute } from '@tanstack/start/api'
 import { getSharingInviteByToken, acceptSharingInvite } from '~/utils/database'
 import { requireAuth } from '~/utils/auth'
 import { logActivity } from '~/utils/database'
@@ -62,7 +62,7 @@ export const APIRouteAccept = createAPIFileRoute('/api/sharing/invite')({
         )
       }
 
-      const success = acceptSharingInvite(token, auth.user.id)
+      const success = acceptSharingInvite(token, auth.id)
 
       if (!success) {
         return json(
@@ -72,7 +72,7 @@ export const APIRouteAccept = createAPIFileRoute('/api/sharing/invite')({
       }
 
       // Log activity
-      logActivity(auth.user.id, 'sharing_accepted', 'sharing', null, { token })
+      logActivity(auth.id, 'sharing_accepted', 'sharing', null, { token })
 
       return json({
         success: true,

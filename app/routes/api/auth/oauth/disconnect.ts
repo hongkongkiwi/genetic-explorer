@@ -1,5 +1,5 @@
-import { json } from '@tanstack/react-start';
-import { createAPIFileRoute } from '@tanstack/react-start/api';
+import { json } from '@tanstack/start';
+import { createAPIFileRoute } from '@tanstack/start/api';
 import { requireAuth } from '~/utils/auth';
 import { unlinkOAuthAccount, getUserOAuthAccounts } from '~/utils/database';
 import { logActivity } from '~/utils/database';

@@ -24,8 +24,8 @@ export interface SNPInfo {
   rsid: string;
   gene: string;
   geneName?: string;
-  chromosome: string;
-  position: number;
+  chromosome?: string;
+  position?: number;
   category: string;
   impact: 'Very High' | 'High' | 'Moderate' | 'Low' | 'Normal' | 'Protective';
   description: string;
@@ -33,9 +33,9 @@ export interface SNPInfo {
   clinicalSignificance?: string;
   conditions?: string[];
   recommendations?: string[];
-  affectedDrugs?: Array<{ drug: string; effect: string }>;
+  affectedDrugs?: Array<{ drug: string; effect: string }> | string[];
   populationFrequency?: Record<string, number>;
-  evidenceLevel: 'Very Strong' | 'Strong' | 'Moderate' | 'Limited' | 'Weak';
+  evidenceLevel?: 'Very Strong' | 'Strong' | 'Moderate' | 'Limited' | 'Weak';
   pubmedIds?: string[];
 }
 
