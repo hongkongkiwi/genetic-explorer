@@ -8,21 +8,21 @@ export const APIRoute = createAPIFileRoute('/api/search')({
     try {
       const user = requireAuth(request);
       const db = getDb();
-      
+
       const url = new URL(request.url);
       const query = url.searchParams.get('q') || '';
       const limit = parseInt(url.searchParams.get('limit') || '10');
-      
+
       if (!query.trim() || query.length < 2) {
         return json({ success: true, results: [] });
       }
-      
+
       const searchTerm = `%${query}%`;
       const results: any[] = [];
-      
+
       // Search genomes
       const genomes = db.prepare(`
-        SELECT 
+        SELECT
           id,
           original_filename as title,
           stored_snps || ' SNPs' as subtitle,
@@ -34,33 +34,33 @@ export const APIRoute = createAPIFileRoute('/api/search')({
         )
         LIMIT ?
       `).all(user.id, searchTerm, searchTerm, Math.ceil(limit / 4));
-      
+
       genomes.forEach((g: any) => {
         results.push({ ...g, type: 'genome' });
       });
-      
-      // Search SNPs in user's genomes
+
+      // Search SNPs in user's genomes (join with genomes to get user_id)
       const snps = db.prepare(`
         SELECT DISTINCT
-          gs.rsid as id,
-          gs.rsid as title,
-          COALESCE(gs.gene, 'Unknown') || ' - ' || gs.genotype as subtitle,
-          '/explorer?rsid=' || gs.rsid as href
-        FROM genome_snps gs
-        WHERE gs.user_id = ? AND (
-          gs.rsid LIKE ? OR
-          gs.gene LIKE ?
+          s.rsid as id,
+          s.rsid as title,
+          s.genotype as subtitle,
+          '/explorer?rsid=' || s.rsid as href
+        FROM snps s
+        JOIN genomes g ON g.id = s.genome_id
+        WHERE g.user_id = ? AND (
+          s.rsid LIKE ?
         )
         LIMIT ?
-      `).all(user.id, searchTerm, searchTerm, Math.ceil(limit / 4));
-      
+      `).all(user.id, searchTerm, Math.ceil(limit / 4));
+
       snps.forEach((s: any) => {
         results.push({ ...s, type: 'snp' });
       });
-      
+
       // Search reports
       const reports = db.prepare(`
-        SELECT 
+        SELECT
           r.id,
           g.original_filename as title,
           'Generated ' || datetime(r.created_at, 'localtime') as subtitle,
@@ -70,14 +70,14 @@ export const APIRoute = createAPIFileRoute('/api/search')({
         WHERE g.user_id = ?
         LIMIT ?
       `).all(user.id, Math.ceil(limit / 4));
-      
+
       reports.forEach((r: any) => {
         results.push({ ...r, type: 'report' });
       });
-      
+
       // Search research database
       const research = db.prepare(`
-        SELECT 
+        SELECT
           rsid as id,
           rsid as title,
           COALESCE(gene_name, 'Unknown gene') as subtitle,
@@ -86,7 +86,7 @@ export const APIRoute = createAPIFileRoute('/api/search')({
         WHERE rsid LIKE ? OR gene_symbol LIKE ? OR gene_name LIKE ?
         LIMIT ?
       `).all(searchTerm, searchTerm, searchTerm, Math.ceil(limit / 4));
-      
+
       research.forEach((r: any) => {
         results.push({ ...r, type: 'research' });
       });

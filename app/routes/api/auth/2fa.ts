@@ -1,5 +1,6 @@
 import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
+import crypto from 'crypto';
 import { requireAuth } from '~/utils/auth';
 import {
   generateTotpSecret,
@@ -9,6 +10,9 @@ import {
   hashBackupCode,
   getPasskeyRegistrationOptions,
   getPasskeyAuthenticationOptions,
+  verifyEmailCode,
+  verifyPasskeyRegistration,
+  savePasskeyChallenge,
 } from '~/utils/twoFactor';
 import {
   saveTotpSecret,
@@ -21,6 +25,9 @@ import {
   isTwoFactorEnabled,
   getTwoFactorStatus,
   getBackupCodesCount,
+  getUserByEmail,
+  getPasskeys,
+  verifyAndUseBackupCode,
 } from '~/utils/database';
 import { logActivity } from '~/utils/database';
 import { getClientIp } from '~/utils/rateLimit';
@@ -68,7 +75,6 @@ export const APIRouteSetup = createAPIFileRoute('/api/auth/2fa/setup')({
 
       if (method === 'passkey') {
         // Get existing passkeys for this user
-        const { getPasskeys } = require('~/utils/database');
         const existingCredentials = getPasskeys(auth.id).map((p: any) => p.credentialId);
 
         // Generate registration options
@@ -80,7 +86,6 @@ export const APIRouteSetup = createAPIFileRoute('/api/auth/2fa/setup')({
         );
 
         // Store challenge temporarily for verification
-        const { savePasskeyChallenge } = require('~/utils/twoFactor');
         savePasskeyChallenge(auth.id, options.challenge);
 
         logActivity(auth.id, '2fa_passkey_setup_started', 'user', auth.id, {}, ipAddress);
@@ -156,7 +161,6 @@ export const APIRouteVerify = createAPIFileRoute('/api/auth/2fa/verify')({
         }
 
         // Verify passkey registration
-        const { verifyPasskeyRegistration } = require('~/utils/twoFactor');
         const verificationResult = await verifyPasskeyRegistration(auth.id, passkeyResponse);
 
         if (verificationResult.valid) {
@@ -187,7 +191,6 @@ export const APIRouteVerify = createAPIFileRoute('/api/auth/2fa/verify')({
         }
       } else if (method === 'email') {
         // Email code verification
-        const { verifyEmailCode } = require('~/utils/twoFactor');
         isValid = verifyEmailCode(auth.email, code);
 
         if (isValid) {
@@ -209,7 +212,6 @@ export const APIRouteVerify = createAPIFileRoute('/api/auth/2fa/verify')({
         }
       } else if (method === 'backup') {
         // Backup code verification (admin fallback)
-        const { verifyAndUseBackupCode } = require('~/utils/database');
         isValid = verifyAndUseBackupCode(auth.id, code);
 
         if (isValid) {
@@ -293,10 +295,8 @@ export const APIRouteDisable = createAPIFileRoute('/api/auth/2fa/disable')({
       const { password, twoFactor } = body;
 
       // Verify password
-      const { getUserByEmail } = require('~/utils/database');
       const user = getUserByEmail(auth.email);
       if (user && user.passwordHash) {
-        const crypto = require('crypto');
         const [salt, hash] = user.passwordHash.split(':');
         const { hash: computedHash } = crypto.pbkdf2Sync(password, salt, 100000, 64, 'sha256');
         if (computedHash !== hash) {
@@ -307,7 +307,6 @@ export const APIRouteDisable = createAPIFileRoute('/api/auth/2fa/disable')({
 
       // Verify 2FA if provided
       if (twoFactor && twoFactor.code) {
-        const { verifyTotpCode, verifyEmailCode } = require('~/utils/twoFactor');
         let is2faValid = false;
 
         if (twoFactor.method === 'totp') {
@@ -364,10 +363,8 @@ export const APIRouteRegenerateBackupCodes = createAPIFileRoute('/api/auth/2fa/b
       }
 
       // Verify password
-      const { getUserByEmail } = require('~/utils/database');
       const user = getUserByEmail(auth.email);
       if (user && user.passwordHash) {
-        const crypto = require('crypto');
         const [salt, hash] = user.passwordHash.split(':');
         const { hash: computedHash } = crypto.pbkdf2Sync(password, salt, 100000, 64, 'sha256');
         if (computedHash !== hash) {
@@ -378,7 +375,6 @@ export const APIRouteRegenerateBackupCodes = createAPIFileRoute('/api/auth/2fa/b
 
       // Verify 2FA
       if (twoFactor && twoFactor.code) {
-        const { verifyTotpCode, verifyEmailCode } = require('~/utils/twoFactor');
         let is2faValid = false;
 
         if (twoFactor.method === 'totp') {
@@ -428,7 +424,6 @@ export const APIRoutePasskeyAuth = createAPIFileRoute('/api/auth/2fa/passkey-aut
       const auth = requireAuth(request);
 
       // Get user's passkeys
-      const { getPasskeys } = require('~/utils/database');
       const passkeys = getPasskeys(auth.id);
 
       if (passkeys.length === 0) {

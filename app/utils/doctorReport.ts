@@ -7,6 +7,7 @@
  */
 
 import { format } from 'date-fns';
+import crypto from 'crypto';
 
 // ============================================================================
 // Report Types
@@ -244,7 +245,6 @@ export function formatDoctorReportForPrint(report: DoctorReportData): string {
 
 function hashPatientId(userId: string): string {
   // Create anonymized patient ID (first 8 chars of SHA256)
-  const crypto = require('crypto');
   return crypto.createHash('sha256').update(userId).digest('hex').substring(0, 8).toUpperCase();
 }
 

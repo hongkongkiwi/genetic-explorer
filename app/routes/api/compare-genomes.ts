@@ -35,14 +35,14 @@ export const APIRoute = createAPIFileRoute('/api/compare-genomes')({
       
       // Get SNPs for both genomes
       const snpsA = db.prepare(`
-        SELECT rsid, gene, genotype, chromosome, position, clinical_impact
-        FROM genome_snps
+        SELECT rsid, genotype, chromosome, position
+        FROM snps
         WHERE genome_id = ?
       `).all(genomeA) as any[];
-      
+
       const snpsB = db.prepare(`
-        SELECT rsid, gene, genotype, chromosome, position, clinical_impact
-        FROM genome_snps
+        SELECT rsid, genotype, chromosome, position
+        FROM snps
         WHERE genome_id = ?
       `).all(genomeB) as any[];
       
@@ -63,22 +63,15 @@ export const APIRoute = createAPIFileRoute('/api/compare-genomes')({
           sharedVariants++;
           // Check for genotype difference
           if (snpA.genotype !== snpB.genotype) {
-            const significance = 
-              snpA.clinical_impact === 'high' || snpB.clinical_impact === 'high' ? 'high' :
-              snpA.clinical_impact === 'moderate' || snpB.clinical_impact === 'moderate' ? 'medium' : 'low';
-            
             differences.push({
               rsid: snpA.rsid,
-              gene: snpA.gene,
               genomeA: {
                 genotype: snpA.genotype,
-                impact: snpA.clinical_impact,
               },
               genomeB: {
                 genotype: snpB.genotype,
-                impact: snpB.clinical_impact,
               },
-              significance,
+              significance: 'unknown',
             });
           }
         } else {
@@ -95,15 +88,9 @@ export const APIRoute = createAPIFileRoute('/api/compare-genomes')({
       
       // Calculate similarity score
       const totalUniqueVariants = sharedVariants + uniqueToA + uniqueToB;
-      const similarity = totalUniqueVariants > 0 
-        ? (sharedVariants / totalUniqueVariants) * 100 
+      const similarity = totalUniqueVariants > 0
+        ? (sharedVariants / totalUniqueVariants) * 100
         : 0;
-      
-      // Sort differences by significance
-      const significanceOrder = { high: 0, medium: 1, low: 2 };
-      differences.sort((a, b) => 
-        significanceOrder[a.significance] - significanceOrder[b.significance]
-      );
 
       return json({
         success: true,

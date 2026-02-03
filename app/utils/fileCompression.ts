@@ -1,12 +1,13 @@
 /**
  * File Compression Utilities
- * 
+ *
  * Handles decompression of genome files (.gz, .zip)
  * Uses Node.js built-in zlib for gzip
  * Uses adm-zip for zip files (if available)
  */
 
 import { gunzipSync, constants as zlibConstants } from 'zlib';
+import crypto from 'crypto';
 
 export interface DecompressionResult {
   content: string;
@@ -117,14 +118,7 @@ export function validateGeneticContent(content: string): { valid: boolean; error
  * Calculate SHA256 checksum of buffer
  */
 export function calculateChecksum(buffer: Buffer): string {
-  // Use Node.js crypto module dynamically to avoid issues
-  try {
-    const crypto = require('crypto');
-    return crypto.createHash('sha256').update(buffer).digest('hex');
-  } catch {
-    // Fallback: return empty if crypto not available
-    return '';
-  }
+  return crypto.createHash('sha256').update(buffer).digest('hex');
 }
 
 /**

@@ -1,5 +1,6 @@
 import Database from 'better-sqlite3';
 import { v4 as uuidv4 } from 'uuid';
+import crypto from 'crypto';
 import type { SNP, AnalysisReport, GenomeData } from '~/types/genetics';
 import { initializeResearchDatabase } from './researchDatabase';
 import { runMigrations } from './databaseMigrations';
@@ -509,7 +510,6 @@ export function verifyGenomeIntegrity(id: string): boolean {
     if (!genome) return false;
 
     const fileBuffer = readFileSync(genome.storage_path);
-    const crypto = require('crypto');
     const currentChecksum = crypto.createHash('sha256').update(fileBuffer).digest('hex');
 
     return currentChecksum === genome.checksum_sha256;
@@ -1232,7 +1232,6 @@ export function getBackupCodesCount(userId: string): number {
  */
 export function verifyAndUseBackupCode(userId: string, code: string): boolean {
   const db = getDb();
-  const crypto = require('crypto');
   const normalizedCode = code.replace(/-/g, '').toUpperCase();
   // Use the same salt derivation as hashBackupCode
   const salt = `${userId}-backup-code-salt`;

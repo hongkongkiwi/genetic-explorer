@@ -1,5 +1,6 @@
 import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
+import crypto from 'crypto';
 import { requireAuth, getUserByEmail } from '~/utils/auth';
 import { getDb, getUserById, getUserGenomes, getUserOAuthAccounts, getUserActivity } from '~/utils/database';
 import { verifyTotpCode, verifyEmailCode, verifyBackupCode, is2faRequiredForAction } from '~/utils/twoFactor';
@@ -96,7 +97,6 @@ export const APIRoute = createAPIFileRoute('/api/users/export')({
       // Check if user has a password (OAuth users may not)
       if (userWithPassword.passwordHash) {
         const [salt, hash] = userWithPassword.passwordHash.split(':');
-        const crypto = require('crypto');
         const { hash: computedHash } = crypto.pbkdf2Sync(password, salt, 100000, 64, 'sha256');
         if (computedHash !== hash) {
           logActivity(auth.id, 'export_failed', 'export', auth.id, { reason: 'invalid_password' }, ipAddress);

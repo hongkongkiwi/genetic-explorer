@@ -79,7 +79,7 @@ FROM research_updates
 
       // Get recent updates affecting user's genomes
       const updates = db.prepare(`
-        SELECT 
+        SELECT
           ru.id,
           ru.snp_rsid as rsid,
           ru.snp_gene as gene,
@@ -87,14 +87,14 @@ FROM research_updates
           ru.description,
           ru.date,
           ru.is_major as isMajor,
-          COUNT(DISTINCT CASE WHEN gs.user_id = ? THEN gs.id END) as affectsUserCount
+          COUNT(DISTINCT CASE WHEN s.genome_id IN (SELECT id FROM genomes WHERE user_id = ?) THEN s.id END) as affectsUserCount
         FROM research_updates ru
-        LEFT JOIN genome_snps gs ON gs.rsid = ru.snp_rsid AND gs.user_id = ?
+        LEFT JOIN snps s ON s.rsid = ru.snp_rsid
         WHERE ru.date >= ?
         GROUP BY ru.id
         ORDER BY ru.date DESC, ru.is_major DESC
         LIMIT 5
-      `).all(user.id, user.id, since);
+      `).all(user.id, since);
 
       // Generate recommendations
       const recommendations: string[] = [];

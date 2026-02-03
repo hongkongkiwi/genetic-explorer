@@ -65,8 +65,15 @@ export const APIRoute = createAPIFileRoute('/api/sharing')({
         if (!genome) {
           return json({ success: false, error: 'Genome not found' }, { status: 404 });
         }
-        // Note: We'd need to get user_id from the genome query
-        // This is simplified - in production, check genome ownership properly
+        // Verify the requester owns this genome
+        // Note: getGenome doesn't return user_id in the result, need to query directly
+        const ownershipCheck = getDb().prepare(`
+          SELECT id FROM genomes WHERE id = ? AND user_id = ?
+        `).get(genomeId, auth.user.id);
+
+        if (!ownershipCheck) {
+          return json({ success: false, error: 'You do not own this genome' }, { status: 403 });
+        }
       }
 
       let result: SharingPermission | { inviteToken: string };

@@ -16,7 +16,8 @@ export const APIRoute = createAPIFileRoute('/api/research/snp-updates')({
           ru.change_type as status,
           ru.date
         FROM research_updates ru
-        JOIN genome_snps gs ON gs.rsid = ru.snp_rsid AND gs.user_id = ?
+        JOIN snps s ON s.rsid = ru.snp_rsid
+        JOIN genomes g ON g.id = s.genome_id AND g.user_id = ?
         WHERE ru.date >= datetime('now', '-90 days')
         ORDER BY ru.date DESC
       `).all(user.id);

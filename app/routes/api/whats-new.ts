@@ -38,7 +38,7 @@ export const APIRoute = createAPIFileRoute('/api/whats-new')({
 
       // Get changelog
       const changelog = db.prepare(`
-        SELECT 
+        SELECT
           ru.id,
           ru.snp_rsid as rsid,
           ru.snp_gene as gene,
@@ -47,13 +47,13 @@ export const APIRoute = createAPIFileRoute('/api/whats-new')({
           ru.date,
           ru.is_major as isMajor,
           ru.papers_added as papersAdded,
-          COUNT(DISTINCT CASE WHEN gs.user_id = ? THEN gs.id END) as affectsUserCount
+          COUNT(DISTINCT CASE WHEN s.genome_id IN (SELECT id FROM genomes WHERE user_id = ?) THEN s.id END) as affectsUserCount
         FROM research_updates ru
-        LEFT JOIN genome_snps gs ON gs.rsid = ru.snp_rsid AND gs.user_id = ?
+        LEFT JOIN snps s ON s.rsid = ru.snp_rsid
         WHERE ru.date >= ?
         GROUP BY ru.id
         ORDER BY ru.date DESC, ru.is_major DESC
-      `).all(user.id, user.id, since);
+      `).all(user.id, since);
 
       return json({
         success: true,
