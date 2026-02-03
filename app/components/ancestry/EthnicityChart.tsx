@@ -77,7 +77,7 @@ function CustomTooltip({
     return (
       <div className="bg-white dark:bg-slate-800 p-3 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700">
         <p className="font-semibold text-slate-900 dark:text-white">{data.name}</p>
-        <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
+        <p className="text-2xl font-bold text-indigo-700 dark:text-indigo-400">
           {data.value.toFixed(1)}%
         </p>
         <div className="flex items-center gap-2 mt-2">
@@ -161,7 +161,7 @@ function SubPopulationBreakdown({
     <div className="mt-3 pl-7">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="flex items-center gap-2 text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700"
+        className="flex items-center gap-2 text-sm text-indigo-700 dark:text-indigo-400 hover:text-indigo-800"
       >
         {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
         {isExpanded ? 'Hide' : 'Show'} sub-regions

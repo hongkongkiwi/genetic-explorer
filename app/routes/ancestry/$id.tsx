@@ -15,6 +15,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useEffect, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
+import { Breadcrumb, predefinedBreadcrumbs } from '~/components/Breadcrumb';
 import { 
   ArrowLeft, 
   Globe, 
@@ -33,7 +34,6 @@ import {
   ChevronRight,
   Info,
 } from 'lucide-react';
-import { Navbar } from '~/components/Navbar';
 import { EthnicityChart, EthnicityChartCompact } from '~/components/ancestry/EthnicityChart';
 import { ChromosomePainting, ChromosomePaintingCompact } from '~/components/ancestry/ChromosomePainting';
 import { HaplogroupCard, HaplogroupCardCompact } from '~/components/ancestry/HaplogroupCard';
@@ -310,7 +310,6 @@ function AncestryReportPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
-        <Navbar />
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
             <motion.div
@@ -334,7 +333,6 @@ function AncestryReportPage() {
   if (error || !report) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
-        <Navbar />
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center py-12">
             <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
@@ -346,7 +344,7 @@ function AncestryReportPage() {
             </p>
             <Link
               to="/genomes"
-              className="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 font-medium"
+              className="text-indigo-700 hover:text-indigo-800 dark:text-indigo-400 font-medium"
             >
               Back to Genomes
             </Link>
@@ -360,9 +358,12 @@ function AncestryReportPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
-      <Navbar />
-      
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Breadcrumb */}
+        <div className="mb-6">
+          <Breadcrumb items={predefinedBreadcrumbs.ancestry(genome?.filename)} />
+        </div>
+        
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -371,7 +372,7 @@ function AncestryReportPage() {
         >
           <Link
             to="/genomes"
-            className="inline-flex items-center text-sm text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 mb-4"
+            className="inline-flex items-center text-sm text-slate-600 hover:text-indigo-700 dark:text-slate-400 dark:hover:text-indigo-400 mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-1" />
             Back to Genomes
@@ -477,7 +478,7 @@ function AncestryReportPage() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <History className="w-5 h-5 text-amber-600" />
+                    <History className="w-5 h-5 text-amber-700" />
                     Ancient Ancestry
                   </CardTitle>
                 </CardHeader>

@@ -69,7 +69,7 @@ export function MobileActionSheet({
             {/* Title */}
             {title && (
               <div className="px-4 py-2 text-center">
-                <h2 className="text-sm font-medium text-slate-500">{title}</h2>
+                <h2 className="text-sm font-medium text-slate-600">{title}</h2>
               </div>
             )}
             

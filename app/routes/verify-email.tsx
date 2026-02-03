@@ -86,7 +86,7 @@ function VerifyEmailPage() {
         <Card className="p-6 sm:p-8 shadow-xl text-center">
           {status === 'loading' && (
             <>
-              <Loader2 className="w-16 h-16 text-blue-600 animate-spin mx-auto mb-4" />
+              <Loader2 className="w-16 h-16 text-blue-700 animate-spin mx-auto mb-4" />
               <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
                 Verifying your email...
               </h2>
@@ -99,7 +99,7 @@ function VerifyEmailPage() {
           {status === 'success' && (
             <>
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 flex items-center justify-center">
-                <CheckCircle className="w-8 h-8 text-green-600" />
+                <CheckCircle className="w-8 h-8 text-green-700" />
               </div>
               <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
                 Email Verified!
@@ -151,7 +151,7 @@ function VerifyEmailPage() {
               <div className="mt-4">
                 <Link
                   to="/login"
-                  className="text-blue-600 hover:text-blue-500 font-medium"
+                  className="text-blue-700 hover:text-blue-800 font-medium"
                 >
                   Back to Sign In
                 </Link>

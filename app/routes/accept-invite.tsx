@@ -147,7 +147,7 @@ function AcceptInvitePage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 px-4">
         <Card className="w-full max-w-md p-8 text-center">
-          <Loader2 className="w-16 h-16 text-blue-600 animate-spin mx-auto mb-4" />
+          <Loader2 className="w-16 h-16 text-blue-700 animate-spin mx-auto mb-4" />
           <p className="text-slate-600 dark:text-slate-400">Validating invitation...</p>
         </Card>
       </div>
@@ -236,7 +236,7 @@ function AcceptInvitePage() {
                 <p className="font-medium text-slate-900 dark:text-white">
                   {inviteDetails?.ownerName || inviteDetails?.ownerEmail}
                 </p>
-                <p className="text-sm text-slate-500 dark:text-slate-400">
+                <p className="text-sm text-slate-600 dark:text-slate-400">
                   wants to share with you
                 </p>
               </div>

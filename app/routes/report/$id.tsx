@@ -2,6 +2,7 @@ import { createFileRoute, Link } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ReportCard } from '~/components/ReportCard';
+import { Breadcrumb, predefinedBreadcrumbs } from '~/components/Breadcrumb';
 import { 
   ArrowLeft, 
   FileText, 
@@ -21,7 +22,7 @@ import {
 } from 'lucide-react';
 import { analyzeGenomeComprehensive, generateQuickSummary } from '~/utils/comprehensiveAnalysis';
 import { getGenome } from '~/utils/database';
-import { generatePDF, printToPDF } from '~/utils/pdfExport';
+import { downloadPDF, printToPDF } from '~/utils/pdfExport';
 import type { GenomeData, HealthReport } from '~/types/genetics';
 import { cn } from '~/utils/cn';
 
@@ -81,19 +82,13 @@ function ReportPage() {
     if (!report || !genome) return;
     
     try {
-      // Generate HTML for PDF
-      const htmlBlob = await generatePDF(report, genome);
-      const url = URL.createObjectURL(htmlBlob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `genetic-report-${genome.filename.replace(/\.[^/.]+$/, '')}.html`;
-      a.click();
-      URL.revokeObjectURL(url);
-      
-      alert('HTML report downloaded. Open in browser and print to PDF for best results.');
+      setIsLoading(true);
+      await downloadPDF(report, genome);
     } catch (error) {
       console.error('PDF generation failed:', error);
       alert('Failed to generate PDF. Try using Print instead.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -139,7 +134,7 @@ function ReportPage() {
             <p className="text-slate-600 dark:text-slate-400 mb-4">{error || 'Report could not be generated'}</p>
             <Link
               to="/genomes"
-              className="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium"
+              className="text-indigo-700 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium"
             >
               Back to Genomes
             </Link>
@@ -164,6 +159,11 @@ function ReportPage() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Breadcrumb */}
+        <div className="mb-6">
+          <Breadcrumb items={predefinedBreadcrumbs.report(genome?.filename)} />
+        </div>
+        
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -172,7 +172,7 @@ function ReportPage() {
         >
           <Link
             to="/genomes"
-            className="inline-flex items-center text-sm text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 mb-4"
+            className="inline-flex items-center text-sm text-slate-500 hover:text-indigo-700 dark:text-slate-400 dark:hover:text-indigo-400 mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-1" />
             Back to Genomes
@@ -218,7 +218,7 @@ function ReportPage() {
           className="mb-6"
         >
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
-            <span className="text-sm font-medium text-slate-500 dark:text-slate-400">Other Reports:</span>
+            <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Other Reports:</span>
             <div className="flex flex-wrap gap-2">
               <RelatedReportLink
                 to={relatedReports.ancestry.href}
@@ -313,7 +313,7 @@ function ReportPage() {
                 className="flex items-center gap-4 p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-colors group"
               >
                 <div className="w-12 h-12 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
-                  <Globe className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                  <Globe className="w-6 h-6 text-emerald-700 dark:text-emerald-400" />
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-emerald-900 dark:text-emerald-300">View Full Ancestry Report</h3>
@@ -328,7 +328,7 @@ function ReportPage() {
                 className="flex items-center gap-4 p-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-xl hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors group"
               >
                 <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center">
-                  <Palette className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                  <Palette className="w-6 h-6 text-purple-700 dark:text-purple-400" />
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-purple-900 dark:text-purple-300">View Your Traits</h3>
@@ -436,9 +436,9 @@ function StatCard({
   color: string;
 }) {
   const colors: Record<string, string> = {
-    indigo: 'bg-indigo-50 text-indigo-600 border-indigo-200 dark:bg-indigo-900/20 dark:text-indigo-400 dark:border-indigo-800',
+    indigo: 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/20 dark:text-indigo-400 dark:border-indigo-800',
     blue: 'bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800',
-    green: 'bg-green-50 text-green-600 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800',
+    green: 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800',
     orange: 'bg-orange-50 text-orange-600 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800',
     red: 'bg-red-50 text-red-600 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800',
   };

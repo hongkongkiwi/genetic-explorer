@@ -107,13 +107,13 @@ export function GenomeComparisonView({
       <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-800">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
-            <GitCompare className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+            <GitCompare className="w-5 h-5 text-indigo-700 dark:text-indigo-400" />
           </div>
           <div>
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
               Genome Comparison
             </h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
+            <p className="text-sm text-slate-600 dark:text-slate-400">
               {comparison.genomeA.name} vs {comparison.genomeB.name}
             </p>
           </div>
@@ -125,6 +125,7 @@ export function GenomeComparisonView({
             size="sm"
             onClick={handleZoomOut}
             disabled={zoomLevel <= 0.5}
+            aria-label="Zoom out"
           >
             <ZoomOut className="w-4 h-4" />
           </Button>
@@ -136,6 +137,7 @@ export function GenomeComparisonView({
             size="sm"
             onClick={handleZoomIn}
             disabled={zoomLevel >= 3}
+            aria-label="Zoom in"
           >
             <ZoomIn className="w-4 h-4" />
           </Button>
@@ -147,23 +149,24 @@ export function GenomeComparisonView({
             size="sm"
             onClick={() => setShowDetails(!showDetails)}
             className={cn(showDetails && 'bg-slate-100 dark:bg-slate-800')}
+            aria-label={showDetails ? 'Hide details' : 'Show details'}
           >
             <Info className="w-4 h-4" />
           </Button>
 
           {onShare && (
-            <Button variant="ghost" size="sm" onClick={onShare}>
+            <Button variant="ghost" size="sm" onClick={onShare} aria-label="Share">
               <Share2 className="w-4 h-4" />
             </Button>
           )}
 
           {onDownload && (
-            <Button variant="ghost" size="sm" onClick={onDownload}>
+            <Button variant="ghost" size="sm" onClick={onDownload} aria-label="Download">
               <Download className="w-4 h-4" />
             </Button>
           )}
 
-          <Button variant="ghost" size="sm" onClick={handleToggleFullscreen}>
+          <Button variant="ghost" size="sm" onClick={handleToggleFullscreen} aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}>
             {isFullscreen ? (
               <Minimize2 className="w-4 h-4" />
             ) : (
@@ -172,7 +175,7 @@ export function GenomeComparisonView({
           </Button>
 
           {onClose && (
-            <Button variant="ghost" size="sm" onClick={onClose}>
+            <Button variant="ghost" size="sm" onClick={onClose} aria-label="Close">
               <X className="w-4 h-4" />
             </Button>
           )}

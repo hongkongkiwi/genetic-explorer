@@ -225,7 +225,7 @@ export function OptInPanel({
         {/* Expandable Details */}
         <button
           onClick={() => setShowDetails(!showDetails)}
-          className="flex items-center gap-2 text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium"
+          className="flex items-center gap-2 text-sm text-indigo-700 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium"
         >
           {showDetails ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           {showDetails ? 'Hide details' : 'How it works & what\'s shared'}
@@ -274,7 +274,7 @@ export function OptInPanel({
                 <div className="pt-2 border-t border-slate-200 dark:border-slate-700">
                   <p className="text-xs">
                     By opting in, you agree to our{' '}
-                    <a href="/privacy" className="text-indigo-600 hover:underline">Privacy Policy</a>{' '}
+                    <a href="/privacy" className="text-indigo-700 hover:underline">Privacy Policy</a>{' '}
                     and{' '}
                     <a href="/terms" className="text-indigo-600 hover:underline">Terms of Service</a>.
                   </p>

@@ -4,6 +4,8 @@ import {
   exchangeCodeForTokens,
   getOAuthUserInfo,
   validateOAuthState,
+  getOAuthStateData,
+  consumeOAuthState,
   OAuthProvider,
 } from '~/utils/oauth';
 import {
@@ -14,7 +16,7 @@ import {
   updateUserLastLogin,
   type User,
 } from '~/utils/database';
-import { createSession, generateSessionToken, logActivity } from '~/utils/auth';
+import { createSession, generateSessionToken, logActivity, getAuthUser } from '~/utils/auth';
 import { getClientIp } from '~/utils/rateLimit';
 import {
   canSignUpWithOAuth,
@@ -34,21 +36,11 @@ async function handleOAuthCallback(
   code: string,
   state: string,
   redirectTo: string,
+  linkMode: boolean,
+  currentUserId: string | null,
   ipAddress?: string,
   userAgent?: string
 ): Promise<AuthResult> {
-  // Validate state
-  const stateProvider = validateOAuthState(state);
-  if (!stateProvider || stateProvider !== provider) {
-    throw new Error('Invalid OAuth state');
-  }
-
-  // Check if OAuth signup is allowed
-  const oauthCheck = canSignUpWithOAuth();
-  if (!oauthCheck.allowed) {
-    return { success: false, error: oauthCheck.reason };
-  }
-
   // Get callback URL
   const callbackUrl = `${process.env.APP_URL || 'http://localhost:3000'}/api/auth/oauth/callback`;
 
@@ -70,7 +62,25 @@ async function handleOAuthCallback(
     return { success: false, error: 'Too many signup attempts. Please try again later.' };
   }
 
-  // Find or create user
+  // Handle account linking for authenticated users
+  if (linkMode && currentUserId) {
+    // Check if this OAuth account is already linked to another user
+    const existingOAuthUser = getUserByOAuth(provider, profile.providerId);
+    if (existingOAuthUser) {
+      return { success: false, error: 'This account is already linked to another user' };
+    }
+
+    // Link OAuth account to current user
+    linkOAuthAccount(currentUserId, profile);
+    logActivity(currentUserId, 'oauth_linked', 'user', currentUserId, { provider }, ipAddress);
+
+    return {
+      success: true,
+      user: { id: currentUserId } as User,
+    };
+  }
+
+  // Find or create user (normal login/signup flow)
   let user = getUserByOAuth(provider, profile.providerId);
 
   if (user) {
@@ -86,6 +96,11 @@ async function handleOAuthCallback(
       user = existingUser;
       updateUserLastLogin(user.id);
     } else {
+      // Check if OAuth signup is allowed
+      const oauthCheck = canSignUpWithOAuth();
+      if (!oauthCheck.allowed) {
+        return { success: false, error: oauthCheck.reason };
+      }
       // Create new user
       user = createOAuthUser(profile);
     }
@@ -114,15 +129,29 @@ export const APIRoute = createAPIFileRoute('/api/auth/oauth/callback')({
       const code = url.searchParams.get('code');
       const state = url.searchParams.get('state');
       const providerParam = url.searchParams.get('provider') as OAuthProvider | null;
-      const redirectTo = url.searchParams.get('redirectTo') || '/dashboard';
 
       if (!code || !state) {
         return json({ success: false, error: 'Missing authorization code or state' }, { status: 400 });
       }
 
-      // Try to get provider from state first, then from query param
-      const stateProvider = validateOAuthState(state);
-      const provider = stateProvider || providerParam;
+      // Get state data
+      const stateData = getOAuthStateData(state);
+      let provider = providerParam;
+      let redirectTo = '/dashboard';
+      let linkMode = false;
+
+      if (stateData) {
+        provider = stateData.provider;
+        redirectTo = stateData.redirectTo;
+        linkMode = stateData.link;
+        consumeOAuthState(state);
+      } else {
+        // Try to validate state the old way for backwards compatibility
+        const stateProvider = validateOAuthState(state);
+        if (stateProvider) {
+          provider = stateProvider;
+        }
+      }
 
       if (!provider || !['google', 'github'].includes(provider)) {
         return json({ success: false, error: 'Invalid OAuth provider' }, { status: 400 });
@@ -131,10 +160,36 @@ export const APIRoute = createAPIFileRoute('/api/auth/oauth/callback')({
       const ipAddress = getClientIp(request);
       const userAgent = request.headers.get('user-agent') || undefined;
 
-      const result = await handleOAuthCallback(provider, code, state, redirectTo, ipAddress, userAgent);
+      // Check if user is already authenticated (for account linking)
+      let currentUserId: string | null = null;
+      if (linkMode) {
+        try {
+          const auth = getAuthUser(request);
+          currentUserId = auth.id;
+        } catch {
+          // User not authenticated, can't link account
+          return redirect('/login?error=not_authenticated');
+        }
+      }
+
+      const result = await handleOAuthCallback(
+        provider,
+        code,
+        state,
+        redirectTo,
+        linkMode,
+        currentUserId,
+        ipAddress,
+        userAgent
+      );
 
       if (!result.success) {
-        return json({ success: false, error: result.error }, { status: 403 });
+        return redirect(`${redirectTo}?oauth=error&error=${encodeURIComponent(result.error || 'Unknown error')}`);
+      }
+
+      if (linkMode) {
+        // Account linking successful, redirect back to settings
+        return redirect(`${redirectTo}?oauth=linked&provider=${provider}`);
       }
 
       if (result.success && result.user && result.sessionToken) {
@@ -153,7 +208,7 @@ export const APIRoute = createAPIFileRoute('/api/auth/oauth/callback')({
     } catch (error) {
       console.error('OAuth callback error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Authentication failed';
-      return json({ success: false, error: errorMessage }, { status: 500 });
+      return redirect(`/login?oauth=error&error=${encodeURIComponent(errorMessage)}`);
     }
   },
 });

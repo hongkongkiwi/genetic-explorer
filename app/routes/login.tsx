@@ -129,7 +129,7 @@ function LoginPage() {
                 </label>
                 <Link
                   to="/forgot-password"
-                  className="text-sm font-medium text-blue-600 hover:text-blue-500"
+                  className="text-sm font-medium text-blue-700 hover:text-blue-800"
                 >
                   Forgot password?
                 </Link>
@@ -169,7 +169,7 @@ function LoginPage() {
           </div>
         </Card>
 
-        <p className="mt-8 text-center text-xs text-slate-500 dark:text-slate-500">
+        <p className="mt-8 text-center text-xs text-slate-600 dark:text-slate-500">
           Your genetic data is stored locally and never shared without your consent.
         </p>
       </div>

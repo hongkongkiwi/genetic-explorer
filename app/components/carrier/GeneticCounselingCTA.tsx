@@ -138,7 +138,7 @@ export function GeneticCounselingCTA({ results, variant = 'full' }: GeneticCouns
           {/* What is Genetic Counseling */}
           <div>
             <h3 className="font-semibold text-slate-900 mb-2 flex items-center gap-2">
-              <Info className="w-4 h-4 text-slate-500" />
+              <Info className="w-4 h-4 text-slate-600" />
               What is Genetic Counseling?
             </h3>
             <p className="text-sm text-slate-600 leading-relaxed">
@@ -188,7 +188,7 @@ export function GeneticCounselingCTA({ results, variant = 'full' }: GeneticCouns
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
-                <Users className="w-4 h-4 text-blue-600" />
+                <Users className="w-4 h-4 text-blue-700" />
               </div>
               <div>
                 <p className="font-medium text-slate-900 text-sm">Family Planning</p>
@@ -199,7 +199,7 @@ export function GeneticCounselingCTA({ results, variant = 'full' }: GeneticCouns
             </div>
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center flex-shrink-0">
-                <Calendar className="w-4 h-4 text-purple-600" />
+                <Calendar className="w-4 h-4 text-purple-700" />
               </div>
               <div>
                 <p className="font-medium text-slate-900 text-sm">Early Detection</p>
@@ -210,7 +210,7 @@ export function GeneticCounselingCTA({ results, variant = 'full' }: GeneticCouns
             </div>
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
-                <Heart className="w-4 h-4 text-emerald-600" />
+                <Heart className="w-4 h-4 text-emerald-700" />
               </div>
               <div>
                 <p className="font-medium text-slate-900 text-sm">Personalized Care</p>
@@ -221,7 +221,7 @@ export function GeneticCounselingCTA({ results, variant = 'full' }: GeneticCouns
             </div>
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
-                <MapPin className="w-4 h-4 text-amber-600" />
+                <MapPin className="w-4 h-4 text-amber-700" />
               </div>
               <div>
                 <p className="font-medium text-slate-900 text-sm">Local Resources</p>

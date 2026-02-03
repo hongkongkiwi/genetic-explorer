@@ -129,7 +129,7 @@ export function CarrierReportSummary({ report, onFilterByStatus }: CarrierReport
           <CardHeader>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
-                <Activity className="w-5 h-5 text-blue-600" />
+                <Activity className="w-5 h-5 text-blue-700" />
               </div>
               <div>
                 <CardTitle>Carrier Status Overview</CardTitle>

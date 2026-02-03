@@ -2,15 +2,17 @@
  * PDF Report Export
  * 
  * Generates beautiful PDF reports from health reports
- * Uses puppeteer for high-quality rendering
+ * Uses jsPDF and html2canvas for client-side PDF generation
  */
 
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import type { HealthReport, GenomeData } from '~/types/genetics';
 
 /**
- * Generate HTML content for PDF
+ * Generate HTML content for PDF report preview
  */
-function generateReportHTML(report: HealthReport, genome: GenomeData): string {
+export function generateReportHTML(report: HealthReport, genome: GenomeData): string {
   const generatedDate = new Date(report.generatedAt).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
@@ -20,11 +22,18 @@ function generateReportHTML(report: HealthReport, genome: GenomeData): string {
   // Build sections HTML
   const sectionsHTML = report.sections.map(section => {
     const priorityColor = {
-      critical: '#ef4444',
-      high: '#f97316',
-      medium: '#eab308',
-      low: '#3b82f6',
-    }[section.priority] || '#6b7280';
+      critical: '#dc2626',
+      high: '#ea580c',
+      medium: '#ca8a04',
+      low: '#2563eb',
+    }[section.priority] || '#475569';
+
+    const priorityBg = {
+      critical: '#fef2f2',
+      high: '#fff7ed',
+      medium: '#fefce8',
+      low: '#eff6ff',
+    }[section.priority] || '#f8fafc';
 
     let detailsHTML = '';
     
@@ -32,27 +41,27 @@ function generateReportHTML(report: HealthReport, genome: GenomeData): string {
       detailsHTML = `
         <div style="margin-top: 16px;">
           ${section.protocol.supplements?.length ? `
-            <h4 style="color: #059669; margin-bottom: 8px;">💊 Supplements</h4>
+            <h4 style="color: #047857; margin-bottom: 8px;">💊 Supplements</h4>
             <ul style="margin: 0; padding-left: 20px;">
-              ${section.protocol.supplements.map(item => `<li style="margin-bottom: 4px;">${item}</li>`).join('')}
+              ${section.protocol.supplements.map(item => `<li style="margin-bottom: 4px; color: #334155;">${item}</li>`).join('')}
             </ul>
           ` : ''}
           ${section.protocol.diet?.length ? `
-            <h4 style="color: #ea580c; margin: 16px 0 8px;">🥗 Diet</h4>
+            <h4 style="color: #9a3412; margin: 16px 0 8px;">🥗 Diet</h4>
             <ul style="margin: 0; padding-left: 20px;">
-              ${section.protocol.diet.map(item => `<li style="margin-bottom: 4px;">${item}</li>`).join('')}
+              ${section.protocol.diet.map(item => `<li style="margin-bottom: 4px; color: #334155;">${item}</li>`).join('')}
             </ul>
           ` : ''}
           ${section.protocol.lifestyle?.length ? `
-            <h4 style="color: #2563eb; margin: 16px 0 8px;">🏃 Lifestyle</h4>
+            <h4 style="color: #1d4ed8; margin: 16px 0 8px;">🏃 Lifestyle</h4>
             <ul style="margin: 0; padding-left: 20px;">
-              ${section.protocol.lifestyle.map(item => `<li style="margin-bottom: 4px;">${item}</li>`).join('')}
+              ${section.protocol.lifestyle.map(item => `<li style="margin-bottom: 4px; color: #334155;">${item}</li>`).join('')}
             </ul>
           ` : ''}
           ${section.protocol.monitoring?.length ? `
-            <h4 style="color: #7c3aed; margin: 16px 0 8px;">📊 Monitoring</h4>
+            <h4 style="color: #6d28d9; margin: 16px 0 8px;">📊 Monitoring</h4>
             <ul style="margin: 0; padding-left: 20px;">
-              ${section.protocol.monitoring.map(item => `<li style="margin-bottom: 4px;">${item}</li>`).join('')}
+              ${section.protocol.monitoring.map(item => `<li style="margin-bottom: 4px; color: #334155;">${item}</li>`).join('')}
             </ul>
           ` : ''}
         </div>
@@ -63,8 +72,8 @@ function generateReportHTML(report: HealthReport, genome: GenomeData): string {
       detailsHTML = `
         <div style="margin-top: 16px;">
           ${section.details.map((detail: any) => `
-            <div style="margin-bottom: 12px; padding: 12px; background: #f8fafc; border-radius: 8px;">
-              <strong style="color: #1e293b;">${detail.category}</strong>
+            <div style="margin-bottom: 12px; padding: 12px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+              <strong style="color: #0f172a;">${detail.category}</strong>
               <p style="margin: 4px 0; color: #475569;">${detail.drugs.join(', ')}</p>
               <p style="margin: 4px 0; color: ${priorityColor}; font-weight: 500;">${detail.guidance}</p>
             </div>
@@ -76,7 +85,7 @@ function generateReportHTML(report: HealthReport, genome: GenomeData): string {
     if (section.actionItems && section.actionItems.length > 0) {
       detailsHTML += `
         <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #e2e8f0;">
-          <h4 style="color: #1e293b; margin-bottom: 8px;">Recommended Actions</h4>
+          <h4 style="color: #0f172a; margin-bottom: 8px;">Recommended Actions</h4>
           <ul style="margin: 0; padding-left: 20px;">
             ${section.actionItems.map(item => `<li style="margin-bottom: 4px; color: #475569;">${item}</li>`).join('')}
           </ul>
@@ -85,9 +94,9 @@ function generateReportHTML(report: HealthReport, genome: GenomeData): string {
     }
 
     return `
-      <div style="margin-bottom: 24px; padding: 20px; background: #ffffff; border-radius: 12px; border: 2px solid ${priorityColor}20;">
+      <div style="margin-bottom: 24px; padding: 20px; background: ${priorityBg}; border-radius: 12px; border: 2px solid ${priorityColor}30;">
         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-          <h3 style="margin: 0; color: #1e293b; font-size: 18px;">${section.title}</h3>
+          <h3 style="margin: 0; color: #0f172a; font-size: 18px; font-weight: 600;">${section.title}</h3>
           <span style="background: ${priorityColor}20; color: ${priorityColor}; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase;">
             ${section.priority}
           </span>
@@ -101,42 +110,54 @@ function generateReportHTML(report: HealthReport, genome: GenomeData): string {
   // Build disease risks HTML
   const risksHTML = report.diseaseRisks?.slice(0, 5).map(risk => {
     const riskColor = {
-      high: '#ef4444',
-      moderate: '#f97316',
-      low: '#22c55e',
-      protective: '#3b82f6',
-    }[risk.riskLevel] || '#6b7280';
+      high: '#dc2626',
+      moderate: '#ea580c',
+      low: #16a34a',
+      protective: '#2563eb',
+    }[risk.riskLevel] || '#475569';
+
+    const riskBg = {
+      high: '#fef2f2',
+      moderate: '#fff7ed',
+      low: '#f0fdf4',
+      protective: '#eff6ff',
+    }[risk.riskLevel] || '#f8fafc';
 
     return `
-      <div style="margin-bottom: 12px; padding: 16px; background: #f8fafc; border-radius: 8px; border-left: 4px solid ${riskColor};">
+      <div style="margin-bottom: 12px; padding: 16px; background: ${riskBg}; border-radius: 8px; border-left: 4px solid ${riskColor};">
         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
           <span style="background: ${riskColor}20; color: ${riskColor}; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;">
             ${risk.riskLevel.toUpperCase()}
           </span>
-          <strong style="color: #1e293b;">${risk.condition}</strong>
+          <strong style="color: #0f172a;">${risk.condition}</strong>
         </div>
         <p style="margin: 0; color: #475569; font-size: 14px;">${risk.description || ''}</p>
       </div>
     `;
-  }).join('') || '<p style="color: #64748b;">No significant disease risks identified.</p>';
+  }).join('') || '<p style="color: #475569;">No significant disease risks identified.</p>';
 
   return `
     <!DOCTYPE html>
     <html>
     <head>
       <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <style>
         @page {
           margin: 40px;
           size: A4;
         }
+        * {
+          box-sizing: border-box;
+        }
         body {
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
           line-height: 1.6;
-          color: #1e293b;
+          color: #0f172a;
           max-width: 800px;
           margin: 0 auto;
           padding: 20px;
+          background: white;
         }
         .header {
           text-align: center;
@@ -153,11 +174,11 @@ function generateReportHTML(report: HealthReport, genome: GenomeData): string {
         .title {
           font-size: 32px;
           font-weight: bold;
-          color: #1e293b;
+          color: #0f172a;
           margin: 0;
         }
         .subtitle {
-          color: #64748b;
+          color: #475569;
           margin-top: 8px;
         }
         .stats-grid {
@@ -171,6 +192,7 @@ function generateReportHTML(report: HealthReport, genome: GenomeData): string {
           padding: 16px;
           border-radius: 8px;
           text-align: center;
+          border: 1px solid #e2e8f0;
         }
         .stat-value {
           font-size: 24px;
@@ -179,7 +201,7 @@ function generateReportHTML(report: HealthReport, genome: GenomeData): string {
         }
         .stat-label {
           font-size: 12px;
-          color: #64748b;
+          color: #475569;
           margin-top: 4px;
         }
         .executive-summary {
@@ -192,6 +214,7 @@ function generateReportHTML(report: HealthReport, genome: GenomeData): string {
         .executive-summary h2 {
           margin-top: 0;
           font-size: 20px;
+          color: white;
         }
         .executive-summary p {
           margin: 0;
@@ -201,24 +224,24 @@ function generateReportHTML(report: HealthReport, genome: GenomeData): string {
         .section-title {
           font-size: 20px;
           font-weight: bold;
-          color: #1e293b;
+          color: #0f172a;
           margin: 30px 0 16px;
           padding-bottom: 8px;
           border-bottom: 2px solid #e2e8f0;
         }
         .disclaimer {
-          background: #fef3c7;
-          border: 2px solid #fbbf24;
+          background: #fefce8;
+          border: 2px solid #facc15;
           padding: 20px;
           border-radius: 12px;
           margin-top: 40px;
         }
         .disclaimer h3 {
-          color: #92400e;
+          color: #713f12;
           margin-top: 0;
         }
         .disclaimer p {
-          color: #78350f;
+          color: #713f12;
           margin: 0;
           font-size: 14px;
         }
@@ -227,7 +250,7 @@ function generateReportHTML(report: HealthReport, genome: GenomeData): string {
           margin-top: 40px;
           padding-top: 20px;
           border-top: 1px solid #e2e8f0;
-          color: #64748b;
+          color: #475569;
           font-size: 12px;
         }
       </style>
@@ -291,31 +314,104 @@ function generateReportHTML(report: HealthReport, genome: GenomeData): string {
 }
 
 /**
- * Generate PDF from health report
- * Note: In a server environment, you'd use puppeteer
- * For client-side, we'll use a simpler approach
+ * Generate PDF from health report using jsPDF and html2canvas
  */
 export async function generatePDF(
   report: HealthReport,
   genome: GenomeData
 ): Promise<Blob> {
+  // Generate HTML content
   const html = generateReportHTML(report, genome);
   
-  // Create a blob from the HTML
-  const htmlBlob = new Blob([html], { type: 'text/html' });
+  // Create a temporary container to render the HTML
+  const container = document.createElement('div');
+  container.innerHTML = html;
+  container.style.position = 'absolute';
+  container.style.left = '-9999px';
+  container.style.width = '800px';
+  container.style.background = 'white';
+  document.body.appendChild(container);
   
-  // In a real implementation, you'd send this to a server endpoint
-  // that uses puppeteer to convert to PDF
-  // For now, we'll return the HTML as a downloadable file
-  // and the user can print to PDF
+  try {
+    // Wait for fonts to load
+    await document.fonts.ready;
+    
+    // Use html2canvas to render the content
+    const canvas = await html2canvas(container, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      logging: false,
+      backgroundColor: '#ffffff',
+      windowWidth: 800,
+    });
+    
+    // Calculate dimensions
+    const imgWidth = 210; // A4 width in mm
+    const pageHeight = 297; // A4 height in mm
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    
+    // Create PDF
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    
+    // Add title
+    pdf.setProperties({
+      title: `Genetic Health Report - ${genome.filename}`,
+      subject: 'Genetic Health Analysis Report',
+      author: 'Genetic Explorer',
+      creator: 'Genetic Explorer',
+    });
+    
+    let heightLeft = imgHeight;
+    let position = 0;
+    
+    // Get image data
+    const imgData = canvas.toDataURL('image/png');
+    
+    // Add first page
+    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+    
+    // Add additional pages if content overflows
+    while (heightLeft > 0) {
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+    
+    // Return as blob
+    return pdf.output('blob');
+  } finally {
+    // Cleanup
+    document.body.removeChild(container);
+  }
+}
+
+/**
+ * Download PDF report
+ */
+export async function downloadPDF(
+  report: HealthReport,
+  genome: GenomeData
+): Promise<void> {
+  const blob = await generatePDF(report, genome);
+  const url = URL.createObjectURL(blob);
   
-  return htmlBlob;
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `genetic-report-${genome.filename.replace(/\.[^/.]+$/, '')}-${new Date().toISOString().split('T')[0]}.pdf`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  
+  URL.revokeObjectURL(url);
 }
 
 /**
  * Alternative: Print to PDF using browser's print function
  */
-export function printToPDF() {
+export function printToPDF(): void {
   window.print();
 }
 
@@ -342,21 +438,76 @@ export function generateShareableSummary(report: HealthReport): string {
 }
 
 /**
- * API endpoint for PDF generation
+ * Export report data as JSON
+ */
+export function exportReportJSON(
+  report: HealthReport,
+  genome: GenomeData
+): Blob {
+  const exportData = {
+    metadata: {
+      exportDate: new Date().toISOString(),
+      version: '1.0',
+      source: 'Genetic Explorer',
+    },
+    genome: {
+      id: genome.id,
+      filename: genome.filename,
+      uploadDate: genome.uploadDate,
+      assembly: genome.assembly,
+    },
+    report: {
+      id: report.id,
+      generatedAt: report.generatedAt,
+      summary: report.summary,
+      executiveSummary: report.executiveSummary,
+      keyFindings: report.keyFindings,
+      diseaseRisks: report.diseaseRisks,
+      actionableProtocol: report.actionableProtocol,
+      sections: report.sections,
+    },
+  };
+  
+  return new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+}
+
+/**
+ * Download report as JSON
+ */
+export function downloadReportJSON(
+  report: HealthReport,
+  genome: GenomeData
+): void {
+  const blob = exportReportJSON(report, genome);
+  const url = URL.createObjectURL(blob);
+  
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `genetic-report-${genome.filename.replace(/\.[^/.]+$/, '')}-${new Date().toISOString().split('T')[0]}.json`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * API endpoint for PDF generation (server-side)
+ * This would be implemented on the server using puppeteer
  */
 export async function generatePDFOnServer(
   report: HealthReport,
   genome: GenomeData
-): Promise<Buffer> {
-  // This would be implemented on the server using puppeteer
-  // Example:
-  // const puppeteer = require('puppeteer');
-  // const browser = await puppeteer.launch();
-  // const page = await browser.newPage();
-  // await page.setContent(html);
-  // const pdf = await page.pdf({ format: 'A4' });
-  // await browser.close();
-  // return pdf;
+): Promise<Blob> {
+  const response = await fetch('/api/export/pdf', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ report, genome }),
+  });
   
-  throw new Error('Server-side PDF generation requires puppeteer setup');
+  if (!response.ok) {
+    throw new Error('Failed to generate PDF on server');
+  }
+  
+  return response.blob();
 }

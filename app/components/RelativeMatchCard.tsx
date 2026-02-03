@@ -144,7 +144,7 @@ export const RelativeMatchCard = memo(function RelativeMatchCard({
                 className="w-full h-full rounded-full object-cover"
               />
             ) : (
-              <User className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+              <User className="w-6 h-6 text-indigo-700 dark:text-indigo-400" />
             )}
           </div>
 
@@ -241,6 +241,7 @@ export const RelativeMatchCard = memo(function RelativeMatchCard({
             size="sm"
             onClick={handleToggleVisibility}
             title={match.isHidden ? 'Unhide match' : 'Hide match'}
+            aria-label={match.isHidden ? 'Unhide match' : 'Hide match'}
           >
             {match.isHidden ? (
               <Eye className="w-4 h-4" />
@@ -253,6 +254,7 @@ export const RelativeMatchCard = memo(function RelativeMatchCard({
             variant="ghost"
             size="sm"
             onClick={handleToggleExpand}
+            aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
           >
             {isExpanded ? (
               <ChevronUp className="w-4 h-4" />
@@ -321,6 +323,7 @@ function CompactMatchCard({
         size="sm"
         onClick={onCompare}
         className="flex-shrink-0"
+        aria-label="Compare genomes"
       >
         <GitCompare className="w-4 h-4" />
       </Button>

@@ -393,10 +393,10 @@ function RelativesPage() {
               <div className="flex items-center justify-between flex-wrap gap-4">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
-                    <User className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                    <User className="w-5 h-5 text-indigo-700 dark:text-indigo-400" />
                   </div>
                   <div>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                    <p className="text-sm text-slate-600 dark:text-slate-400">
                       Your Anonymous Display Name
                     </p>
                     <p className="font-mono font-medium text-slate-900 dark:text-white">

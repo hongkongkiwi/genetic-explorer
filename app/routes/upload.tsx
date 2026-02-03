@@ -1,10 +1,11 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
+import { Breadcrumb, predefinedBreadcrumbs } from '~/components/Breadcrumb';
 import { UploadZone } from '~/components/UploadZone';
 import { AnalysisProgress } from '~/components/AnalysisProgress';
-import { Navbar } from '~/components/Navbar';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, AlertCircle, FileText, Info } from 'lucide-react';
+import type { DnaFileValidation } from '~/utils/dnaValidation';
 
 export const Route = createFileRoute('/upload')({
   component: UploadPage,
@@ -18,7 +19,7 @@ function UploadPage() {
   const [error, setError] = useState<string | null>(null);
   const [uploadedGenomeId, setUploadedGenomeId] = useState<string | null>(null);
 
-  const handleUpload = async (file: File) => {
+  const handleUpload = async (file: File, validation: DnaFileValidation) => {
     setIsUploading(true);
     setUploadProgress(0);
     setError(null);
@@ -38,6 +39,7 @@ function UploadPage() {
       // Upload file
       const formData = new FormData();
       formData.append('file', file);
+      formData.append('validation', JSON.stringify(validation));
 
       const response = await fetch('/api/genomes', {
         method: 'POST',
@@ -107,8 +109,12 @@ function UploadPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <Navbar />
       <main className="max-w-4xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-8 pb-safe">
+        {/* Breadcrumb */}
+        <div className="mb-6">
+          <Breadcrumb items={predefinedBreadcrumbs.upload()} />
+        </div>
+        
         <div className="min-h-[calc(100vh-4rem)] py-6 sm:py-12">
           <div className="max-w-3xl mx-auto">
         <motion.div
@@ -186,7 +192,7 @@ function UploadPage() {
                   ].map((item) => (
                     <div key={item.service} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 bg-slate-100 dark:bg-slate-900/50 rounded-lg gap-1 sm:gap-0">
                       <span className="font-medium text-slate-700 dark:text-slate-300 text-sm">{item.service}</span>
-                      <span className="text-xs sm:text-sm text-slate-500 dark:text-slate-500">{item.steps}</span>
+                      <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-500">{item.steps}</span>
                     </div>
                   ))}
                 </div>

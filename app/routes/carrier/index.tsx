@@ -7,7 +7,6 @@
 
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { motion } from 'framer-motion';
-import { Navbar } from '~/components/Navbar';
 import {
   Dna,
   Upload,
@@ -38,8 +37,6 @@ export const Route = createFileRoute('/carrier/')({
 function CarrierLandingPage() {
   return (
     <div className="min-h-screen bg-slate-50">
-      <Navbar />
-      
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Medical Disclaimer Banner */}
         <motion.div
@@ -139,21 +136,21 @@ function CarrierLandingPage() {
                 title: 'What is a Carrier?',
                 description: 'A carrier is someone who has one copy of a gene variant for a recessive condition. Carriers typically do not have symptoms but can pass the variant to their children.',
                 color: 'from-blue-500/20 to-blue-600/20',
-                iconColor: 'text-blue-600',
+                iconColor: 'text-blue-700',
               },
               {
                 icon: Baby,
                 title: 'Risk to Children',
                 description: 'If both parents are carriers of the same condition, there is a 25% chance with each pregnancy of having an affected child. This is why partner screening is important.',
                 color: 'from-purple-500/20 to-purple-600/20',
-                iconColor: 'text-purple-600',
+                iconColor: 'text-purple-700',
               },
               {
                 icon: Heart,
                 title: 'Your Health',
                 description: 'Most carriers are healthy and asymptomatic. However, some carrier statuses may have mild health implications that are important to know about.',
                 color: 'from-emerald-500/20 to-emerald-600/20',
-                iconColor: 'text-emerald-600',
+                iconColor: 'text-emerald-700',
               },
             ].map((item, index) => (
               <motion.div
@@ -224,7 +221,7 @@ function CarrierLandingPage() {
                 <Card className="h-full">
                   <CardContent className="p-6 flex items-start gap-4">
                     <div className="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center flex-shrink-0">
-                      <item.icon className="w-6 h-6 text-indigo-600" />
+                      <item.icon className="w-6 h-6 text-indigo-700" />
                     </div>
                     <div>
                       <h3 className="text-lg font-bold text-slate-900 mb-2">{item.title}</h3>

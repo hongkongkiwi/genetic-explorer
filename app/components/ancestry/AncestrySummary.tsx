@@ -53,11 +53,11 @@ interface StatItemProps {
 function StatItem({ icon: Icon, label, value, color, delay = 0 }: StatItemProps) {
   const colorClasses: Record<string, string> = {
     blue: 'bg-blue-50 text-blue-600 border-blue-200',
-    green: 'bg-green-50 text-green-600 border-green-200',
-    purple: 'bg-purple-50 text-purple-600 border-purple-200',
+    green: 'bg-green-50 text-green-700 border-green-200',
+    purple: 'bg-purple-50 text-purple-700 border-purple-200',
     amber: 'bg-amber-50 text-amber-600 border-amber-200',
     rose: 'bg-rose-50 text-rose-600 border-rose-200',
-    indigo: 'bg-indigo-50 text-indigo-600 border-indigo-200',
+    indigo: 'bg-indigo-50 text-indigo-700 border-indigo-200',
   };
 
   return (
@@ -87,7 +87,7 @@ function ConfidenceBadge({ score }: { score: number }) {
   let label = 'Low Confidence';
   
   if (score >= 0.9) {
-    color = 'text-green-600 bg-green-50 border-green-200';
+    color = 'text-green-700 bg-green-50 border-green-200';
     label = 'Very High Confidence';
   } else if (score >= 0.7) {
     color = 'text-emerald-600 bg-emerald-50 border-emerald-200';

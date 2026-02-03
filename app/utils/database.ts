@@ -1279,6 +1279,41 @@ export function deleteUserSessions(userId: string): void {
   db.prepare(`DELETE FROM sessions WHERE user_id = ?`).run(userId);
 }
 
+/**
+ * Get all active sessions for a user
+ */
+export interface UserSession {
+  id: string;
+  token: string;
+  createdAt: Date;
+  expiresAt: Date;
+  lastActiveAt: Date | null;
+  ipAddress: string | null;
+  userAgent: string | null;
+  isCurrent: boolean;
+}
+
+export function getUserSessions(userId: string, currentToken?: string): UserSession[] {
+  const db = getDb();
+  const sessions = db.prepare(`
+    SELECT id, token, created_at, expires_at, last_active_at, ip_address, user_agent
+    FROM sessions 
+    WHERE user_id = ? AND expires_at > datetime('now')
+    ORDER BY created_at DESC
+  `).all(userId) as any[];
+
+  return sessions.map(session => ({
+    id: session.id,
+    token: session.token,
+    createdAt: new Date(session.created_at),
+    expiresAt: new Date(session.expires_at),
+    lastActiveAt: session.last_active_at ? new Date(session.last_active_at) : null,
+    ipAddress: session.ip_address,
+    userAgent: session.user_agent,
+    isCurrent: currentToken ? session.token === currentToken : false,
+  }));
+}
+
 // Activity logging
 export function logActivity(
   userId: string | null,

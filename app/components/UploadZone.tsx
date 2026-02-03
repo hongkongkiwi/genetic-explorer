@@ -2,9 +2,15 @@ import { useCallback, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, FileText, CheckCircle, AlertCircle, X, FileArchive, Shield } from 'lucide-react';
 import { cn } from '~/utils/cn';
+import { 
+  validateDnaFile, 
+  detectCompression, 
+  getFormatDisplayName,
+  type DnaFileValidation 
+} from '~/utils/dnaValidation';
 
 interface UploadZoneProps {
-  onUpload: (file: File) => void;
+  onUpload: (file: File, validation: DnaFileValidation) => void;
   isUploading?: boolean;
   uploadProgress?: number;
 }
@@ -12,49 +18,48 @@ interface UploadZoneProps {
 export function UploadZone({ onUpload, isUploading, uploadProgress }: UploadZoneProps) {
   const [isDragActive, setIsDragActive] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [validation, setValidation] = useState<DnaFileValidation | null>(null);
+  const [isValidating, setIsValidating] = useState(false);
 
-  const validateFile = (file: File): boolean => {
-    // Extended valid extensions including compressed formats
-    const validExtensions = ['.txt', '.csv', '.tsv', '.gz', '.gzip', '.zip'];
-    const hasValidExtension = validExtensions.some(ext => 
-      file.name.toLowerCase().endsWith(ext)
-    );
-    
-    if (!hasValidExtension) {
-      setError('Please upload a .txt, .csv, .tsv, .gz, or .zip file');
+  const validateFile = async (file: File): Promise<boolean> => {
+    setIsValidating(true);
+    try {
+      const result = await validateDnaFile(file);
+      setValidation(result);
+      setIsValidating(false);
+      return result.isValid;
+    } catch (error) {
+      setValidation({
+        isValid: false,
+        format: 'unknown',
+        compression: detectCompression(file.name),
+        estimatedSnpCount: 0,
+        errors: ['Validation failed: ' + (error as Error).message],
+        warnings: [],
+      });
+      setIsValidating(false);
       return false;
     }
-
-    // Max 100MB
-    if (file.size > 100 * 1024 * 1024) {
-      setError('File size must be less than 100MB');
-      return false;
-    }
-
-    setError(null);
-    return true;
   };
 
   const getFileIcon = (filename: string) => {
-    if (filename.toLowerCase().endsWith('.gz') || filename.toLowerCase().endsWith('.gzip')) {
+    const compression = detectCompression(filename);
+    if (compression === 'gzip' || compression === 'zip') {
       return <FileArchive className="w-6 h-6 text-purple-500" />;
-    }
-    if (filename.toLowerCase().endsWith('.zip')) {
-      return <FileArchive className="w-6 h-6 text-blue-500" />;
     }
     return <FileText className="w-6 h-6 text-dna-primary" />;
   };
 
   const getCompressionBadge = (filename: string) => {
-    if (filename.toLowerCase().endsWith('.gz') || filename.toLowerCase().endsWith('.gzip')) {
+    const compression = detectCompression(filename);
+    if (compression === 'gzip') {
       return (
         <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs rounded-full font-medium">
           GZIP
         </span>
       );
     }
-    if (filename.toLowerCase().endsWith('.zip')) {
+    if (compression === 'zip') {
       return (
         <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">
           ZIP
@@ -62,6 +67,15 @@ export function UploadZone({ onUpload, isUploading, uploadProgress }: UploadZone
       );
     }
     return null;
+  };
+
+  const getFormatBadge = (format: string) => {
+    if (format === 'unknown') return null;
+    return (
+      <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full font-medium">
+        {getFormatDisplayName(format as any)}
+      </span>
+    );
   };
 
   const handleDrag = useCallback((e: React.DragEvent) => {
@@ -74,38 +88,54 @@ export function UploadZone({ onUpload, isUploading, uploadProgress }: UploadZone
     }
   }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragActive(false);
 
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const file = e.dataTransfer.files[0];
-      if (validateFile(file)) {
+      const isValid = await validateFile(file);
+      if (isValid) {
         setSelectedFile(file);
       }
     }
   }, []);
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      if (validateFile(file)) {
+      const isValid = await validateFile(file);
+      if (isValid) {
         setSelectedFile(file);
       }
     }
   };
 
   const handleUpload = () => {
-    if (selectedFile) {
-      onUpload(selectedFile);
+    if (selectedFile && validation) {
+      onUpload(selectedFile, validation);
     }
   };
 
   const clearFile = () => {
     setSelectedFile(null);
-    setError(null);
+    setValidation(null);
   };
+
+  // Get the first error or warning to display
+  const getStatusMessage = (): { message: string; type: 'error' | 'warning' | null } => {
+    if (!validation) return { message: '', type: null };
+    if (validation.errors.length > 0) {
+      return { message: validation.errors[0], type: 'error' };
+    }
+    if (validation.warnings.length > 0) {
+      return { message: validation.warnings[0], type: 'warning' };
+    }
+    return { message: '', type: null };
+  };
+
+  const status = getStatusMessage();
 
   return (
     <div className="w-full">
@@ -119,7 +149,9 @@ export function UploadZone({ onUpload, isUploading, uploadProgress }: UploadZone
               'relative border-2 border-dashed rounded-xl sm:rounded-2xl p-5 sm:p-8 text-center transition-all duration-300 min-h-[200px] sm:min-h-0 flex flex-col justify-center',
               isDragActive
                 ? 'border-indigo-500 bg-indigo-50'
-                : 'border-slate-300 hover:border-slate-400 bg-white'
+                : status.type === 'error'
+                  ? 'border-red-300 bg-red-50/50'
+                  : 'border-slate-300 hover:border-slate-400 bg-white'
             )}
             onDragEnter={handleDrag}
             onDragLeave={handleDrag}
@@ -131,6 +163,7 @@ export function UploadZone({ onUpload, isUploading, uploadProgress }: UploadZone
               accept=".txt,.csv,.tsv,.gz,.gzip,.zip"
               onChange={handleFileSelect}
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer touch-target"
+              aria-label="Upload genome file"
             />
             
             <div className="flex flex-col items-center gap-3 sm:gap-4">
@@ -140,7 +173,7 @@ export function UploadZone({ onUpload, isUploading, uploadProgress }: UploadZone
               )}>
                 <Upload className={cn(
                   'w-7 h-7 sm:w-8 sm:h-8 transition-colors',
-                  isDragActive ? 'text-indigo-600' : 'text-slate-500'
+                  isDragActive ? 'text-indigo-700' : 'text-slate-600'
                 )} />
               </div>
               
@@ -162,11 +195,11 @@ export function UploadZone({ onUpload, isUploading, uploadProgress }: UploadZone
                   <FileText className="w-3 h-3" />
                   .csv
                 </span>
-                <span className="flex items-center gap-1 px-2 py-1 bg-purple-100 rounded text-purple-600">
+                <span className="flex items-center gap-1 px-2 py-1 bg-purple-100 rounded text-purple-700">
                   <FileArchive className="w-3 h-3" />
                   .gz
                 </span>
-                <span className="flex items-center gap-1 px-2 py-1 bg-blue-100 rounded text-blue-600">
+                <span className="flex items-center gap-1 px-2 py-1 bg-blue-100 rounded text-blue-700">
                   <FileArchive className="w-3 h-3" />
                   .zip
                 </span>
@@ -179,14 +212,36 @@ export function UploadZone({ onUpload, isUploading, uploadProgress }: UploadZone
               </div>
             </div>
 
-            {error && (
+            {isValidating && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 text-red-600 text-xs sm:text-sm bg-red-50 px-3 sm:px-4 py-2 rounded-full border border-red-200 whitespace-nowrap"
+                className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 text-indigo-600 text-xs sm:text-sm bg-indigo-50 px-3 sm:px-4 py-2 rounded-full border border-indigo-200 whitespace-nowrap"
               >
-                <AlertCircle className="w-4 h-4" />
-                {error}
+                <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                Validating file...
+              </motion.div>
+            )}
+
+            {status.type === 'error' && !isValidating && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 text-red-600 text-xs sm:text-sm bg-red-50 px-3 sm:px-4 py-2 rounded-full border border-red-200 whitespace-nowrap max-w-[90%]"
+              >
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                <span className="truncate">{status.message}</span>
+              </motion.div>
+            )}
+
+            {status.type === 'warning' && !isValidating && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 text-amber-700 text-xs sm:text-sm bg-amber-50 px-3 sm:px-4 py-2 rounded-full border border-amber-200 whitespace-nowrap max-w-[90%]"
+              >
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                <span className="truncate">{status.message}</span>
               </motion.div>
             )}
           </motion.div>
@@ -206,9 +261,15 @@ export function UploadZone({ onUpload, isUploading, uploadProgress }: UploadZone
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="font-medium text-slate-900 truncate text-sm sm:text-base">{selectedFile.name}</p>
                     {getCompressionBadge(selectedFile.name)}
+                    {validation && getFormatBadge(validation.format)}
                   </div>
                   <p className="text-xs sm:text-sm text-slate-500">
                     {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                    {validation && validation.estimatedSnpCount > 0 && (
+                      <span className="ml-2 text-slate-400">
+                        ~{validation.estimatedSnpCount.toLocaleString()} SNPs
+                      </span>
+                    )}
                   </p>
                 </div>
               </div>
@@ -223,6 +284,14 @@ export function UploadZone({ onUpload, isUploading, uploadProgress }: UploadZone
                 </button>
               )}
             </div>
+
+            {validation && validation.warnings.length > 0 && (
+              <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <p className="text-xs text-amber-800">
+                  <strong>Note:</strong> {validation.warnings[0]}
+                </p>
+              </div>
+            )}
 
             {isUploading && (
               <div className="mt-4">

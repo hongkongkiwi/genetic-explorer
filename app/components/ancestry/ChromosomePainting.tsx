@@ -201,7 +201,7 @@ function PaintingLegend({
         {populations.length > 6 && (
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-700"
+            className="text-xs text-indigo-700 dark:text-indigo-400 hover:text-indigo-800"
           >
             {isExpanded ? 'Show less' : `+${populations.length - 6} more`}
           </button>
@@ -339,6 +339,7 @@ export function ChromosomePainting({
                 onClick={handleZoomOut}
                 className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400"
                 title="Zoom out"
+                aria-label="Zoom out"
               >
                 <ZoomOut className="w-4 h-4" />
               </button>
@@ -349,6 +350,7 @@ export function ChromosomePainting({
                 onClick={handleZoomIn}
                 className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400"
                 title="Zoom in"
+                aria-label="Zoom in"
               >
                 <ZoomIn className="w-4 h-4" />
               </button>
@@ -356,6 +358,7 @@ export function ChromosomePainting({
                 onClick={handleReset}
                 className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400"
                 title="Reset zoom"
+                aria-label="Reset zoom"
               >
                 <RotateCcw className="w-4 h-4" />
               </button>

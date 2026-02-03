@@ -1,5 +1,7 @@
 import { motion } from 'framer-motion';
+import { useEffect } from 'react';
 import { DNALogo } from './DNALogo';
+import { useAnnouncer } from '~/components/LiveAnnouncer';
 
 interface AnalysisProgressProps {
   stage: string;
@@ -15,7 +17,15 @@ const stages = [
 ];
 
 export function AnalysisProgress({ stage, progress, message }: AnalysisProgressProps) {
+  const { announce } = useAnnouncer();
   const currentStageIndex = stages.findIndex(s => stage.includes(s.key));
+  
+  // Announce progress changes to screen readers
+  useEffect(() => {
+    if (progress % 25 === 0 && progress > 0) {
+      announce(`${progress}% complete: ${message}`, 'polite');
+    }
+  }, [progress, message, announce]);
 
   return (
     <div className="glass-panel p-8 max-w-md mx-auto">
@@ -29,7 +39,14 @@ export function AnalysisProgress({ stage, progress, message }: AnalysisProgressP
 
         {/* Progress bar */}
         <div className="w-full">
-          <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+          <div 
+            className="h-2 bg-slate-800 rounded-full overflow-hidden"
+            role="progressbar"
+            aria-valuenow={progress}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label="Analysis progress"
+          >
             <motion.div
               className="h-full bg-gradient-to-r from-dna-primary via-dna-secondary to-dna-accent animate-shimmer"
               initial={{ width: 0 }}

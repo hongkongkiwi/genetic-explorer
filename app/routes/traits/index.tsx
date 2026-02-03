@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
-import { Navbar } from '~/components/Navbar';
 import { Button } from '~/components/ui/Button';
 import { Card, CardContent } from '~/components/ui/Card';
 import { Badge } from '~/components/ui/Badge';
@@ -150,8 +149,6 @@ function TraitsLandingPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
-      <Navbar />
-
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 text-white">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSIyIi8+PC9nPjwvZz48L3N2Zz4=')] opacity-20" />
@@ -192,7 +189,7 @@ function TraitsLandingPage() {
                   <Link to={`/traits/${getAllGenomes()[0]?.id}`}>
                     <Button
                       size="lg"
-                      className="bg-white text-indigo-600 hover:bg-white/90 font-semibold px-8"
+                      className="bg-white text-indigo-700 hover:bg-white/90 font-semibold px-8"
                     >
                       <Sparkles className="w-5 h-5 mr-2" />
                       View My Traits
@@ -348,7 +345,7 @@ function TraitsLandingPage() {
                       {category.description}
                     </p>
                     <div className="space-y-2">
-                      <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                      <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">
                         Example Traits
                       </p>
                       <div className="flex flex-wrap gap-2">

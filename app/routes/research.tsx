@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Navbar } from '~/components/Navbar';
 import { SNPBadge } from '~/components/SNPBadge';
 import { 
   Database, 
@@ -124,7 +123,6 @@ function ResearchAdminPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <Navbar />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -145,7 +143,7 @@ function ResearchAdminPage() {
               onClick={() => setActiveTab(tab)}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
                 activeTab === tab
-                  ? 'bg-white text-indigo-600 shadow-sm'
+                  ? 'bg-white text-indigo-700 shadow-sm'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -210,7 +208,7 @@ function ResearchAdminPage() {
                       Object.entries(stats.lastSyncBySource).map(([source, date]) => (
                         <div key={source} className="flex items-center justify-between">
                           <span className="text-slate-600 capitalize">{source}</span>
-                          <span className="text-sm text-slate-500">
+                          <span className="text-sm text-slate-600">
                             {new Date(date).toLocaleString()}
                           </span>
                         </div>
@@ -226,7 +224,7 @@ function ResearchAdminPage() {
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-4">
                       <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <Sparkles className="w-6 h-6 text-amber-600" />
+                        <Sparkles className="w-6 h-6 text-amber-700" />
                       </div>
                       <div>
                         <h3 className="text-lg font-semibold text-slate-900 mb-1">

@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Navbar } from '~/components/Navbar';
 import { FileText, Clock, AlertCircle, Dna, ArrowRight } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -43,7 +42,6 @@ function ReportsPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <Navbar />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -95,7 +93,7 @@ function ReportsPage() {
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <FileText className="w-6 h-6 text-purple-600" />
+                        <FileText className="w-6 h-6 text-purple-700" />
                       </div>
                       <div>
                         <h3 className="font-semibold text-slate-900">Genetic Analysis Report</h3>
@@ -106,7 +104,7 @@ function ReportsPage() {
                       </div>
                     </div>
                     <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center group-hover:bg-indigo-100 transition-colors">
-                      <ArrowRight className="w-4 h-4 text-slate-600 group-hover:text-indigo-600" />
+                      <ArrowRight className="w-4 h-4 text-slate-600 group-hover:text-indigo-700" />
                     </div>
                   </div>
                 </Link>

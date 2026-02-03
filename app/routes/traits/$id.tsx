@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useEffect, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Navbar } from '~/components/Navbar';
 import { TraitCard } from '~/components/TraitCard';
 import { TraitsSummary } from '~/components/traits/TraitsSummary';
 import { Button } from '~/components/ui/Button';
@@ -158,7 +157,6 @@ function TraitsReportPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
-        <Navbar />
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
             <motion.div
@@ -181,7 +179,6 @@ function TraitsReportPage() {
   if (error || !report) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
-        <Navbar />
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center py-12">
             <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
@@ -193,7 +190,7 @@ function TraitsReportPage() {
             </p>
             <Link
               to="/genomes"
-              className="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium"
+              className="text-indigo-700 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium"
             >
               Back to Genomes
             </Link>
@@ -205,8 +202,6 @@ function TraitsReportPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
-      <Navbar />
-
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <motion.div
@@ -216,7 +211,7 @@ function TraitsReportPage() {
         >
           <Link
             to="/genomes"
-            className="inline-flex items-center text-sm text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 mb-4"
+            className="inline-flex items-center text-sm text-slate-500 hover:text-indigo-700 dark:text-slate-400 dark:hover:text-indigo-400 mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-1" />
             Back to Genomes
@@ -577,7 +572,7 @@ function TraitsReportPage() {
                     const text = encodeURIComponent(report.shareableSummary);
                     window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, '_blank');
                   }}
-                  className="p-3 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors"
+                  className="p-3 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
                 >
                   <Facebook className="w-5 h-5" />
                 </button>

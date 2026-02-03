@@ -305,6 +305,7 @@ export function RelativeList({
               <button
                 onClick={() => setSearchQuery('')}
                 className="absolute right-3 top-1/2 -translate-y-1/2"
+                aria-label="Clear search"
               >
                 <X className="w-4 h-4 text-slate-400 hover:text-slate-600" />
               </button>
@@ -455,7 +456,7 @@ export function RelativeList({
                 {activeFiltersCount > 0 && (
                   <button
                     onClick={clearFilters}
-                    className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                    className="text-sm text-indigo-700 hover:text-indigo-800 font-medium"
                   >
                     Clear all filters
                   </button>
@@ -506,6 +507,7 @@ export function RelativeList({
                 }))
               }
               className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md"
+              aria-label={`Sort ${sort.direction === 'asc' ? 'descending' : 'ascending'}`}
             >
               {sort.direction === 'asc' ? (
                 <SortAsc className="w-4 h-4 text-slate-500" />

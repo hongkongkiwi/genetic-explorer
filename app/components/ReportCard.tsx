@@ -152,7 +152,7 @@ export function ReportCard({ section, index }: ReportCardProps) {
               <ul className="space-y-1">
                 {section.protocol.supplements.map((item: string, i: number) => (
                   <li key={i} className="text-sm flex items-start gap-2">
-                    <span className="text-green-600">•</span>
+                    <span className="text-green-700">•</span>
                     {item}
                   </li>
                 ))}
@@ -191,7 +191,7 @@ export function ReportCard({ section, index }: ReportCardProps) {
               <ul className="space-y-1">
                 {section.protocol.monitoring.map((item: string, i: number) => (
                   <li key={i} className="text-sm flex items-start gap-2">
-                    <span className="text-purple-600">•</span>
+                    <span className="text-purple-700">•</span>
                     {item}
                   </li>
                 ))}

@@ -126,6 +126,7 @@ export function OnboardingModal() {
         <button
           onClick={handleClose}
           className="absolute top-4 right-4 p-2 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors z-10"
+          aria-label="Close onboarding"
         >
           <X className="w-5 h-5" />
         </button>
@@ -194,7 +195,7 @@ export function OnboardingModal() {
           <div className="flex items-center justify-between mt-8">
             <button
               onClick={handleSkip}
-              className="text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300 transition-colors"
+              className="text-sm text-slate-600 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300 transition-colors"
             >
               Skip tour
             </button>
@@ -275,6 +276,7 @@ export function OnboardingChecklist() {
         <button
           onClick={() => setIsVisible(false)}
           className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+          aria-label="Dismiss checklist"
         >
           <X className="w-5 h-5" />
         </button>
@@ -284,7 +286,7 @@ export function OnboardingChecklist() {
       <div className="mb-4">
         <div className="flex items-center justify-between text-sm mb-1">
           <span className="text-slate-600 dark:text-slate-400">{progress}% complete</span>
-          <span className="text-indigo-600 dark:text-indigo-400 font-medium">
+          <span className="text-indigo-700 dark:text-indigo-400 font-medium">
             {completed.length}/{checklistItems.length}
           </span>
         </div>
@@ -332,7 +334,7 @@ export function OnboardingChecklist() {
               <span
                 className={`flex-1 ${
                   isCompleted
-                    ? 'text-slate-500 dark:text-slate-400 line-through'
+                    ? 'text-slate-600 dark:text-slate-400 line-through'
                     : 'text-slate-900 dark:text-slate-200'
                 }`}
               >

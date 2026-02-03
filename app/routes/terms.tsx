@@ -11,7 +11,7 @@ function TermsPage() {
     <div className="max-w-4xl mx-auto px-4 py-8">
       <div className="mb-8 text-center">
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-blue-100 dark:bg-blue-900/30 mb-4">
-          <Scroll className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+          <Scroll className="w-8 h-8 text-blue-700 dark:text-blue-400" />
         </div>
         <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
           Terms of Service
@@ -92,7 +92,7 @@ function TermsPage() {
             <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
               You retain ownership of your genetic data. By uploading data, you grant us a license to process 
               it for the purpose of providing our services. We handle your data in accordance with our{' '}
-              <Link to="/privacy" className="text-blue-600 hover:text-blue-500">Privacy Policy</Link>.
+              <Link to="/privacy" className="text-blue-700 hover:text-blue-800">Privacy Policy</Link>.
             </p>
           </section>
 
@@ -150,7 +150,7 @@ function TermsPage() {
       </Card>
 
       <div className="mt-8 text-center">
-        <p className="text-sm text-slate-500 dark:text-slate-400">
+        <p className="text-sm text-slate-600 dark:text-slate-400">
           By using Genetic Explorer, you acknowledge that you have read and agree to these terms.
         </p>
       </div>

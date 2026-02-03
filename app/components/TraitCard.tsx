@@ -88,7 +88,7 @@ const FunFactBox = memo(function FunFactBox({ fact }: { fact: string }) {
         onClick={() => setIsRevealed(true)}
         className="w-full mt-3 p-3 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg border border-purple-100 dark:border-purple-800 hover:border-purple-300 dark:hover:border-purple-600 transition-colors group"
       >
-        <div className="flex items-center justify-center text-purple-600 dark:text-purple-400">
+        <div className="flex items-center justify-center text-purple-700 dark:text-purple-400">
           <span className="text-lg mr-2">💡</span>
           <span className="text-sm font-medium group-hover:underline">
             Click to reveal fun fact!

@@ -160,7 +160,7 @@ export function TraitsSummary({ report, stats }: TraitsSummaryProps) {
           {/* Shareable Summary */}
           <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl p-4 border border-indigo-100 dark:border-indigo-800">
             <div className="flex items-start gap-3">
-              <Share2 className="w-5 h-5 text-indigo-600 dark:text-indigo-400 mt-0.5" />
+              <Share2 className="w-5 h-5 text-indigo-700 dark:text-indigo-400 mt-0.5" />
               <div>
                 <h4 className="font-medium text-slate-900 dark:text-slate-100 mb-1">
                   Share Your Results
@@ -202,7 +202,7 @@ export function TraitsSummary({ report, stats }: TraitsSummaryProps) {
                     <Badge variant="default" size="sm">
                       {cat.analyzed}/{cat.total}
                     </Badge>
-                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                    <span className="text-xs text-slate-600 dark:text-slate-400">
                       {cat.percentage}%
                     </span>
                   </div>

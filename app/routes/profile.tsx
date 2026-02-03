@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
 import { useAuth } from '~/hooks/useAuth';
 import { Card } from '~/components/ui/Card';
 import { Button } from '~/components/ui/Button';
 import { Input } from '~/components/ui/Input';
 import { Alert } from '~/components/ui/Alert';
-import { User, Mail, Calendar, Globe, Shield, Save } from 'lucide-react';
+import { Modal } from '~/components/ui/Modal';
+import { User, Mail, Calendar, Globe, Shield, Save, Lock, Eye, EyeOff, ChevronRight } from 'lucide-react';
 
 export const Route = createFileRoute('/profile')({
   component: ProfilePage,
@@ -41,6 +42,13 @@ function ProfilePage() {
   });
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  
+  // Email change state
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [newEmail, setNewEmail] = useState('');
+  const [emailPassword, setEmailPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isChangingEmail, setIsChangingEmail] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -90,6 +98,46 @@ function ProfilePage() {
     setIsSaving(false);
   };
 
+  const handleChangeEmail = async () => {
+    if (!newEmail || !emailPassword) {
+      setMessage({ type: 'error', text: 'Please enter your new email and password' });
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newEmail)) {
+      setMessage({ type: 'error', text: 'Invalid email format' });
+      return;
+    }
+
+    setIsChangingEmail(true);
+    setMessage(null);
+
+    try {
+      const response = await fetch('/api/auth/change-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newEmail, password: emailPassword }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setMessage({ type: 'success', text: 'Email address updated successfully!' });
+        setShowEmailModal(false);
+        setNewEmail('');
+        setEmailPassword('');
+        await refreshUser();
+      } else {
+        setMessage({ type: 'error', text: data.error || 'Failed to change email' });
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: 'An unexpected error occurred' });
+    }
+
+    setIsChangingEmail(false);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -117,7 +165,7 @@ function ProfilePage() {
         {/* Basic Information */}
         <Card className="p-4 sm:p-6">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-            <User className="w-5 h-5 text-blue-600" />
+            <User className="w-5 h-5 text-blue-700" />
             Basic Information
           </h2>
 
@@ -137,9 +185,18 @@ function ProfilePage() {
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                 Email
               </label>
-              <div className="flex items-center gap-2 px-3 py-2 bg-slate-100 dark:bg-slate-700 rounded-lg text-slate-600 dark:text-slate-400">
-                <Mail className="w-4 h-4" />
-                {user?.email}
+              <div className="flex items-center gap-2">
+                <div className="flex-1 flex items-center gap-2 px-3 py-2 bg-slate-100 dark:bg-slate-700 rounded-lg text-slate-600 dark:text-slate-400">
+                  <Mail className="w-4 h-4" />
+                  {user?.email}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowEmailModal(true)}
+                >
+                  Change
+                </Button>
               </div>
             </div>
 
@@ -161,7 +218,7 @@ function ProfilePage() {
         {/* Genetic Profile */}
         <Card className="p-4 sm:p-6">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-green-600" />
+            <Calendar className="w-5 h-5 text-green-700" />
             Genetic Profile
           </h2>
 
@@ -219,7 +276,7 @@ function ProfilePage() {
         {/* Privacy Settings */}
         <Card className="p-4 sm:p-6">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-            <Shield className="w-5 h-5 text-purple-600" />
+            <Shield className="w-5 h-5 text-purple-700" />
             Privacy Settings
           </h2>
 
@@ -236,7 +293,7 @@ function ProfilePage() {
               />
               <div>
                 <p className="font-medium text-slate-900 dark:text-white">Allow Family Sharing</p>
-                <p className="text-sm text-slate-500 dark:text-slate-400">
+                <p className="text-sm text-slate-600 dark:text-slate-400">
                   Enable family members to request access to your genetic profiles
                 </p>
               </div>
@@ -275,6 +332,86 @@ function ProfilePage() {
           </Button>
         </div>
       </div>
+
+      {/* Change Email Modal */}
+      <Modal
+        isOpen={showEmailModal}
+        onClose={() => {
+          setShowEmailModal(false);
+          setNewEmail('');
+          setEmailPassword('');
+          setMessage(null);
+        }}
+        title="Change Email Address"
+      >
+        <div className="space-y-4">
+          <p className="text-slate-600 dark:text-slate-400">
+            Enter your new email address and current password to confirm.
+          </p>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              Current Email
+            </label>
+            <div className="flex items-center gap-2 px-3 py-2 bg-slate-100 dark:bg-slate-700 rounded-lg text-slate-500 dark:text-slate-400">
+              <Mail className="w-4 h-4" />
+              {user?.email}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              New Email Address
+            </label>
+            <Input
+              type="email"
+              value={newEmail}
+              onChange={(e) => setNewEmail(e.target.value)}
+              placeholder="new-email@example.com"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              Current Password
+            </label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <Input
+                type={showPassword ? 'text' : 'password'}
+                value={emailPassword}
+                onChange={(e) => setEmailPassword(e.target.value)}
+                placeholder="Enter your password"
+                className="pl-10 pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <Button
+              variant="ghost"
+              onClick={() => setShowEmailModal(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleChangeEmail}
+              isLoading={isChangingEmail}
+              disabled={!newEmail || !emailPassword}
+              className="flex-1"
+            >
+              Update Email
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

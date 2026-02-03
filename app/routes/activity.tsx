@@ -20,14 +20,14 @@ interface ActivityItem {
 }
 
 const actionConfig: Record<string, { icon: React.ElementType; label: string; color: string }> = {
-  'user_registered': { icon: User, label: 'Account created', color: 'text-green-600 bg-green-100' },
-  'user_login': { icon: LogIn, label: 'Signed in', color: 'text-blue-600 bg-blue-100' },
+  'user_registered': { icon: User, label: 'Account created', color: 'text-green-800 bg-green-100' },
+  'user_login': { icon: LogIn, label: 'Signed in', color: 'text-blue-800 bg-blue-100' },
   'user_logout': { icon: LogOut, label: 'Signed out', color: 'text-slate-600 bg-slate-100' },
-  'genome_uploaded': { icon: Upload, label: 'Genome uploaded', color: 'text-purple-600 bg-purple-100' },
+  'genome_uploaded': { icon: Upload, label: 'Genome uploaded', color: 'text-purple-800 bg-purple-100' },
   'genome_deleted': { icon: Trash2, label: 'Genome deleted', color: 'text-red-600 bg-red-100' },
-  'genome_set_primary': { icon: Shield, label: 'Primary genome updated', color: 'text-amber-600 bg-amber-100' },
+  'genome_set_primary': { icon: Shield, label: 'Primary genome updated', color: 'text-amber-800 bg-amber-100' },
   'report_generated': { icon: FileText, label: 'Report generated', color: 'text-cyan-600 bg-cyan-100' },
-  'sharing_created': { icon: Users, label: 'Sharing permission created', color: 'text-indigo-600 bg-indigo-100' },
+  'sharing_created': { icon: Users, label: 'Sharing permission created', color: 'text-indigo-800 bg-indigo-100' },
   'sharing_revoked': { icon: Shield, label: 'Sharing permission revoked', color: 'text-orange-600 bg-orange-100' },
   'profile_updated': { icon: User, label: 'Profile updated', color: 'text-teal-600 bg-teal-100' },
 };
@@ -131,7 +131,7 @@ function ActivityPage() {
             <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">
               No Activity Yet
             </h3>
-            <p className="text-slate-500 dark:text-slate-400">
+            <p className="text-slate-600 dark:text-slate-400">
               Your account activity will appear here.
             </p>
           </div>
@@ -166,7 +166,7 @@ function ActivityPage() {
                         )}
                       </div>
                     )}
-                    <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
+                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-500">
                       {formatDate(activity.createdAt)}
                     </p>
                   </div>

@@ -60,7 +60,7 @@ export function MobileFilterDrawer({
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-700">
               <div className="flex items-center gap-2">
-                <Filter className="w-5 h-5 text-slate-500" />
+                <Filter className="w-5 h-5 text-slate-600" />
                 <h2 className="text-lg font-semibold text-slate-900 dark:text-white">{title}</h2>
               </div>
               <button

@@ -52,7 +52,7 @@ function HomeContent() {
       description: 'Supports 23andMe, AncestryDNA, and other major providers. Keep your genetic data private and secure.',
       color: 'from-emerald-500/20 to-emerald-600/20',
       iconBg: 'bg-emerald-100 dark:bg-emerald-900/30',
-      iconColor: 'text-emerald-600 dark:text-emerald-400',
+      iconColor: 'text-emerald-700 dark:text-emerald-400',
       isNew: false,
       link: '/upload',
     },
@@ -62,7 +62,7 @@ function HomeContent() {
       description: 'LLM-powered interpretation of your genetic variants with personalized health insights and recommendations.',
       color: 'from-blue-500/20 to-blue-600/20',
       iconBg: 'bg-blue-100 dark:bg-blue-900/30',
-      iconColor: 'text-blue-600 dark:text-blue-400',
+      iconColor: 'text-blue-700 dark:text-blue-400',
       isNew: false,
       link: '/reports',
     },
@@ -72,7 +72,7 @@ function HomeContent() {
       description: 'Discover your ethnic origins and ancestral migration paths with detailed geographic breakdowns.',
       color: 'from-indigo-500/20 to-indigo-600/20',
       iconBg: 'bg-indigo-100 dark:bg-indigo-900/30',
-      iconColor: 'text-indigo-600 dark:text-indigo-400',
+      iconColor: 'text-indigo-700 dark:text-indigo-400',
       isNew: true,
       link: '/ancestry',
     },
@@ -82,7 +82,7 @@ function HomeContent() {
       description: 'Explore fun genetic traits like eye color, taste preferences, sleep patterns, and physical characteristics.',
       color: 'from-purple-500/20 to-purple-600/20',
       iconBg: 'bg-purple-100 dark:bg-purple-900/30',
-      iconColor: 'text-purple-600 dark:text-purple-400',
+      iconColor: 'text-purple-700 dark:text-purple-400',
       isNew: true,
       link: '/traits',
     },
@@ -198,7 +198,7 @@ function HomeContent() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-amber-100 dark:bg-amber-800 rounded-xl flex items-center justify-center flex-shrink-0">
-              <Bell className="w-5 h-5 text-amber-600 dark:text-amber-300" />
+              <Bell className="w-5 h-5 text-amber-700 dark:text-amber-300" />
             </div>
             <div>
               <h3 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
@@ -272,7 +272,7 @@ function HomeContent() {
               className="mb-10 h-12"
             >
               <div className="flex items-center justify-center gap-2 text-lg">
-                <span className="text-slate-500 dark:text-slate-400">Discover your</span>
+                <span className="text-slate-600 dark:text-slate-400">Discover your</span>
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={currentHighlight}

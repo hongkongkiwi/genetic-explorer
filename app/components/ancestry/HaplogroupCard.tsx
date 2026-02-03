@@ -340,6 +340,7 @@ export function HaplogroupCard({
             onClick={handleShare}
             className="p-2 bg-white/20 rounded-lg hover:bg-white/30 transition-colors text-white relative"
             title="Share"
+            aria-label="Share haplogroup"
           >
             <Share2 className="w-5 h-5" />
             {showShare && (

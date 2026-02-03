@@ -152,6 +152,7 @@ export function GenomeVisualizer({
           <button
             onClick={() => setZoom((z) => Math.min(3, z + 0.2))}
             className="w-8 h-8 bg-slate-700 hover:bg-slate-600 rounded-lg flex items-center justify-center text-white transition-colors"
+            aria-label="Zoom in"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -160,6 +161,7 @@ export function GenomeVisualizer({
           <button
             onClick={() => setZoom((z) => Math.max(0.5, z - 0.2))}
             className="w-8 h-8 bg-slate-700 hover:bg-slate-600 rounded-lg flex items-center justify-center text-white transition-colors"
+            aria-label="Zoom out"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
@@ -171,6 +173,7 @@ export function GenomeVisualizer({
               setPan({ x: 0, y: 0 });
             }}
             className="w-8 h-8 bg-slate-700 hover:bg-slate-600 rounded-lg flex items-center justify-center text-white transition-colors"
+            aria-label="Reset zoom"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path

@@ -19,8 +19,8 @@ import {
   Bell,
   Rocket
 } from 'lucide-react';
-import { Card } from '../components/ui/Card';
-import { Badge } from '../components/ui/Badge';
+import { Card } from '~/components/ui/Card';
+import { Badge } from '~/components/ui/Badge';
 import { memo } from 'react';
 
 const researchUpdatesQueryOptions = {
@@ -95,7 +95,7 @@ const UpdateCard = memo(function UpdateCard({ update }: { update: any }) {
               <Badge className={categoryColor}>
                 {update.category.charAt(0).toUpperCase() + update.category.slice(1)}
               </Badge>
-              <span className="text-sm text-slate-500 flex items-center gap-1">
+              <span className="text-sm text-slate-600 flex items-center gap-1">
                 <Calendar className="w-3 h-3" />
                 {new Date(update.date).toLocaleDateString(undefined, {
                   month: 'long',
@@ -123,7 +123,7 @@ const UpdateCard = memo(function UpdateCard({ update }: { update: any }) {
                     href={update.learnMoreUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 flex items-center gap-1 group/link"
+                    className="text-sm text-indigo-700 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 flex items-center gap-1 group/link"
                   >
                     Learn more
                     <ExternalLink className="w-3 h-3 transition-transform group-hover/link:translate-x-0.5" />
@@ -134,7 +134,7 @@ const UpdateCard = memo(function UpdateCard({ update }: { update: any }) {
                     href={update.documentationUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300 flex items-center gap-1"
+                    className="text-sm text-slate-600 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300 flex items-center gap-1"
                   >
                     Documentation
                     <ArrowRight className="w-3 h-3" />
@@ -171,7 +171,7 @@ const FeatureHighlight = memo(function FeatureHighlight({
       <h3 className="font-semibold text-slate-900 dark:text-white mb-2">{title}</h3>
       <p className="text-sm text-slate-600 dark:text-slate-400">{description}</p>
       {href && (
-        <div className="mt-3 flex items-center gap-1 text-sm text-indigo-600 dark:text-indigo-400 font-medium">
+        <div className="mt-3 flex items-center gap-1 text-sm text-indigo-700 dark:text-indigo-400 font-medium">
           Explore <ArrowRight className="w-3 h-3" />
         </div>
       )}
@@ -333,7 +333,7 @@ function WhatsNewPage() {
           </div>
 
           {lastUpdated && (
-            <p className="text-sm text-slate-500 dark:text-slate-400">
+            <p className="text-sm text-slate-600 dark:text-slate-400">
               Last updated: {new Date(lastUpdated).toLocaleDateString(undefined, {
                 month: 'long',
                 day: 'numeric',

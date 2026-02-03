@@ -208,7 +208,7 @@ Analyzed with Genetic Explorer`;
               </p>
             </div>
             <div className="text-right">
-              <div className="text-5xl font-bold text-indigo-600 dark:text-indigo-400">
+              <div className="text-5xl font-bold text-indigo-700 dark:text-indigo-400">
                 {stats.similarityPercentage}%
               </div>
               <div className="text-sm text-slate-600 dark:text-slate-400">

@@ -1,9 +1,8 @@
 import { createFileRoute, Link, useSearch } from '@tanstack/react-router'
 import { useState, useMemo, useEffect } from 'react'
-import { Navbar } from '../components/Navbar'
-import { ImpactBadge } from '../components/ImpactBadge'
-import { CategoryBadge } from '../components/CategoryBadge'
-import { SNPBadge } from '../components/SNPBadge'
+import { ImpactBadge } from '~/components/ImpactBadge'
+import { CategoryBadge } from '~/components/CategoryBadge'
+import { SNPBadge } from '~/components/SNPBadge'
 import { 
   Dna, 
   Search, 
@@ -20,10 +19,10 @@ import {
   Upload
 } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
-import { Card } from '../components/ui/Card'
-import { Button } from '../components/ui/Button'
-import type { SNPResult, SNPListResponse } from '../types/api'
-import type { AnalysisReport, GeneticVariant } from '../types/genetics'
+import { Card } from '~/components/ui/Card'
+import { Button } from '~/components/ui/Button'
+import type { SNPResult, SNPListResponse } from '~/types/api'
+import type { AnalysisReport, GeneticVariant } from '~/types/genetics'
 
 // Extended analysis type that includes SNPs from the API
 interface AnalysisResult extends AnalysisReport {
@@ -326,8 +325,6 @@ function SNPExplorerPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
-      <Navbar />
-      
       <main className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-8 pb-safe">
         {/* Header */}
         <div className="mb-4 sm:mb-8">
@@ -495,7 +492,7 @@ function SNPExplorerPage() {
             {/* Active Filters Summary */}
             {(selectedCategory !== 'all' || selectedImpact !== 'all' || selectedChromosome !== 'all' || searchQuery || showFavoritesOnly) && (
               <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 flex items-center gap-2 flex-wrap">
-                <span className="text-sm text-slate-500 dark:text-slate-400">Active filters:</span>
+                <span className="text-sm text-slate-600 dark:text-slate-400">Active filters:</span>
                 {searchQuery && (
                   <span className="text-xs px-2 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded-full">
                     Search: {searchQuery}
@@ -579,12 +576,17 @@ function SNPExplorerPage() {
                 )}
               </div>
               {/* Horizontally scrollable table for mobile */}
-              <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-thin">
+              <div 
+                className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-thin scroll-smooth"
+                role="region"
+                aria-label="SNP data table"
+                tabIndex={0}
+              >
                 <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
                   <thead className="bg-slate-50 dark:bg-slate-800/50">
                     <tr>
                       <th 
-                        className="px-3 sm:px-6 py-2.5 sm:py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors whitespace-nowrap"
+                        className="px-3 sm:px-6 py-2.5 sm:py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors whitespace-nowrap"
                         onClick={() => handleSort('rsid')}
                       >
                         <div className="flex items-center gap-1">
@@ -593,7 +595,7 @@ function SNPExplorerPage() {
                         </div>
                       </th>
                       <th 
-                        className="px-3 sm:px-6 py-2.5 sm:py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors whitespace-nowrap"
+                        className="px-3 sm:px-6 py-2.5 sm:py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors whitespace-nowrap"
                         onClick={() => handleSort('gene')}
                       >
                         <div className="flex items-center gap-1">
@@ -602,7 +604,7 @@ function SNPExplorerPage() {
                         </div>
                       </th>
                       <th 
-                        className="px-3 sm:px-6 py-2.5 sm:py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors whitespace-nowrap"
+                        className="px-3 sm:px-6 py-2.5 sm:py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors whitespace-nowrap"
                         onClick={() => handleSort('chromosome')}
                       >
                         <div className="flex items-center gap-1">
@@ -610,11 +612,11 @@ function SNPExplorerPage() {
                           <ArrowUpDown className="w-3 h-3" />
                         </div>
                       </th>
-                      <th className="px-3 sm:px-6 py-2.5 sm:py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap">
+                      <th className="px-3 sm:px-6 py-2.5 sm:py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider whitespace-nowrap">
                         Genotype
                       </th>
                       <th 
-                        className="px-3 sm:px-6 py-2.5 sm:py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors whitespace-nowrap"
+                        className="px-3 sm:px-6 py-2.5 sm:py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors whitespace-nowrap"
                         onClick={() => handleSort('category')}
                       >
                         <div className="flex items-center gap-1">
@@ -623,7 +625,7 @@ function SNPExplorerPage() {
                         </div>
                       </th>
                       <th 
-                        className="px-3 sm:px-6 py-2.5 sm:py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors whitespace-nowrap"
+                        className="px-3 sm:px-6 py-2.5 sm:py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors whitespace-nowrap"
                         onClick={() => handleSort('impact')}
                       >
                         <div className="flex items-center gap-1">
@@ -631,10 +633,10 @@ function SNPExplorerPage() {
                           <ArrowUpDown className="w-3 h-3" />
                         </div>
                       </th>
-                      <th className="px-3 sm:px-6 py-2.5 sm:py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap">
+                      <th className="px-3 sm:px-6 py-2.5 sm:py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider whitespace-nowrap">
                         Updates
                       </th>
-                      <th className="px-3 sm:px-6 py-2.5 sm:py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap">
+                      <th className="px-3 sm:px-6 py-2.5 sm:py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider whitespace-nowrap">
                         Actions
                       </th>
                     </tr>
@@ -647,7 +649,7 @@ function SNPExplorerPage() {
                             href={`https://www.ncbi.nlm.nih.gov/snp/${snp.rsid}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium text-sm"
+                            className="text-indigo-800 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium text-sm"
                           >
                             {snp.rsid}
                           </a>
@@ -681,7 +683,7 @@ function SNPExplorerPage() {
                             onClick={() => toggleFavorite(snp.rsid)}
                             className={`p-2 rounded-lg transition-colors touch-target ${
                               favorites.has(snp.rsid)
-                                ? 'text-amber-500 hover:text-amber-600 bg-amber-50 dark:bg-amber-900/20'
+                                ? 'text-amber-700 hover:text-amber-800 bg-amber-50 dark:bg-amber-900/20'
                                 : 'text-slate-400 hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-slate-800'
                             }`}
                             title={favorites.has(snp.rsid) ? 'Remove from favorites' : 'Add to favorites'}
@@ -779,7 +781,7 @@ function SNPExplorerPage() {
                   </div>
                   <button
                     onClick={() => setShowFavoritesOnly(true)}
-                    className="text-sm text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
+                    className="text-sm text-indigo-800 hover:text-indigo-900 dark:text-indigo-400"
                   >
                     Show favorites only
                   </button>

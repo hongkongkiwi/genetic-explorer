@@ -253,7 +253,7 @@ export function ChromosomeVisualizer({
             <h2 className="text-xl font-bold text-slate-900 dark:text-white">
               Chromosome {chromosome}
             </h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
+            <p className="text-sm text-slate-600 dark:text-slate-400">
               {formatBasePairs(chrInfo.length)} • {chrInfo.bands.length} bands
             </p>
           </div>
@@ -640,7 +640,7 @@ function SNPTooltipContent({
         Genotype: <span className="font-mono font-medium">{snp.genotype}</span>
       </div>
       {snp.category && (
-        <div className="text-xs text-slate-500 dark:text-slate-500">
+        <div className="text-xs text-slate-600 dark:text-slate-500">
           Category: {snp.category}
         </div>
       )}
@@ -693,6 +693,7 @@ function SNPDetailPanel({
         <button
           onClick={onClose}
           className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+          aria-label="Close"
         >
           <X className="w-4 h-4" />
         </button>
@@ -787,11 +788,11 @@ function getImpactColorClass(impact: string): string {
     case 'high':
       return 'text-red-600 dark:text-red-400 font-medium';
     case 'moderate':
-      return 'text-amber-600 dark:text-amber-400';
+      return 'text-amber-700 dark:text-amber-400';
     case 'low':
-      return 'text-blue-600 dark:text-blue-400';
+      return 'text-blue-700 dark:text-blue-400';
     case 'protective':
-      return 'text-emerald-600 dark:text-emerald-400';
+      return 'text-emerald-700 dark:text-emerald-400';
     default:
       return 'text-slate-600 dark:text-slate-400';
   }

@@ -234,7 +234,7 @@ function GenomesPage() {
               />
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-slate-500 dark:text-slate-400">Sort by:</span>
+              <span className="text-sm text-slate-600 dark:text-slate-400">Sort by:</span>
               <select
                 value={sortField}
                 onChange={(e) => setSortField(e.target.value as SortField)}
@@ -248,6 +248,7 @@ function GenomesPage() {
               <button
                 onClick={() => setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc')}
                 className="p-2 border border-slate-300 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800"
+                aria-label={`Sort ${sortDirection === 'asc' ? 'descending' : 'ascending'}`}
               >
                 <ArrowUpDown className={`w-4 h-4 transition-transform ${sortDirection === 'desc' ? 'rotate-180' : ''}`} />
               </button>
@@ -342,7 +343,7 @@ function GenomeCard({ genome, onDelete, isExpanded, onToggle }: GenomeCardProps)
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-4 flex-1 min-w-0">
             <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center flex-shrink-0">
-              <Dna className="w-7 h-7 text-indigo-600 dark:text-indigo-400" />
+              <Dna className="w-7 h-7 text-indigo-700 dark:text-indigo-400" />
             </div>
             
             <div className="flex-1 min-w-0">
@@ -351,7 +352,7 @@ function GenomeCard({ genome, onDelete, isExpanded, onToggle }: GenomeCardProps)
                   {genome.filename}
                 </h3>
                 {genome.compressionType && (
-                  <span className="px-2 py-0.5 bg-slate-100 dark:bg-slate-700 rounded text-slate-600 dark:text-slate-400 text-xs">
+                  <span className="px-2 py-0.5 bg-slate-100 dark:bg-slate-700 rounded text-slate-700 dark:text-slate-400 text-xs">
                     {genome.compressionType.toUpperCase()}
                   </span>
                 )}
@@ -368,11 +369,11 @@ function GenomeCard({ genome, onDelete, isExpanded, onToggle }: GenomeCardProps)
                   <Database className="w-4 h-4" />
                   {genome.storedSnps.toLocaleString()} SNPs
                 </span>
-                <span className="text-slate-500 dark:text-slate-500 flex items-center gap-1">
+                <span className="text-slate-600 dark:text-slate-500 flex items-center gap-1">
                   <HardDrive className="w-4 h-4" />
                   {genome.fileSize}
                 </span>
-                <span className="text-slate-500 dark:text-slate-500 flex items-center gap-1">
+                <span className="text-slate-600 dark:text-slate-500 flex items-center gap-1">
                   <Clock className="w-4 h-4" />
                   {formatDistanceToNow(new Date(genome.processedAt), { addSuffix: true })}
                 </span>
@@ -380,7 +381,7 @@ function GenomeCard({ genome, onDelete, isExpanded, onToggle }: GenomeCardProps)
               
               <div className="flex items-center gap-2 mt-2">
                 <Shield className="w-3 h-3 text-green-500" />
-                <span className="text-xs text-slate-500 dark:text-slate-500 font-mono truncate">
+                <span className="text-xs text-slate-600 dark:text-slate-500 font-mono truncate">
                   SHA256: {genome.checksum}
                 </span>
               </div>
@@ -415,6 +416,7 @@ function GenomeCard({ genome, onDelete, isExpanded, onToggle }: GenomeCardProps)
               onClick={onToggle}
               className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 dark:text-slate-400 dark:hover:text-indigo-400 dark:hover:bg-indigo-900/20 rounded-lg transition-colors"
               title="View reports"
+              aria-label={isExpanded ? 'Collapse' : 'View reports'}
             >
               {isExpanded ? (
                 <ChevronUp className="w-5 h-5" />
@@ -426,6 +428,7 @@ function GenomeCard({ genome, onDelete, isExpanded, onToggle }: GenomeCardProps)
               onClick={onDelete}
               className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 dark:text-slate-400 dark:hover:text-red-400 dark:hover:bg-red-900/20 rounded-lg transition-colors"
               title="Delete genome"
+              aria-label="Delete genome"
             >
               <Trash2 className="w-5 h-5" />
             </button>
@@ -458,7 +461,7 @@ function GenomeCard({ genome, onDelete, isExpanded, onToggle }: GenomeCardProps)
                 </div>
                 <div className="text-center">
                   <p className="font-medium text-sm text-slate-900 dark:text-white">{report.label}</p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                  <p className="text-xs text-slate-600 dark:text-slate-400">
                     {report.available ? 'View Report' : 'Coming Soon'}
                   </p>
                 </div>
@@ -483,10 +486,10 @@ function StatCard({
   color: string;
 }) {
   const colors: Record<string, string> = {
-    indigo: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400',
-    blue: 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
-    green: 'bg-green-50 text-green-600 dark:bg-green-900/30 dark:text-green-400',
-    purple: 'bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
+    indigo: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400',
+    blue: 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+    green: 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+    purple: 'bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
   };
 
   return (

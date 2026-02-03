@@ -300,7 +300,7 @@ function DashboardPage() {
               {data.updates.length === 0 ? (
                 <Card className="p-8 text-center">
                   <Sparkles className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                  <p className="text-slate-500 dark:text-slate-400">
+                  <p className="text-slate-600 dark:text-slate-400">
                     No new updates in the selected time range
                   </p>
                 </Card>
@@ -386,13 +386,13 @@ function DashboardPage() {
                         <Card className="p-4 hover:shadow-md transition-all group">
                           <div className="flex items-start gap-3">
                             <div className="w-10 h-10 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center group-hover:scale-110 transition-transform">
-                              <Dna className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                              <Dna className="w-5 h-5 text-indigo-700 dark:text-indigo-400" />
                             </div>
                             <div className="flex-1 min-w-0">
                               <h3 className="font-medium text-slate-900 dark:text-white truncate">
                                 {genome.filename}
                               </h3>
-                              <p className="text-sm text-slate-500 dark:text-slate-400">
+                              <p className="text-sm text-slate-600 dark:text-slate-400">
                                 {genome.snpCount.toLocaleString()} SNPs • {formatDistanceToNow(new Date(genome.processedAt), { addSuffix: true })}
                               </p>
                             </div>
@@ -456,13 +456,13 @@ function DashboardPage() {
                         className="flex items-center gap-3 p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
                       >
                         <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                          <FileText className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                          <FileText className="w-5 h-5 text-purple-700 dark:text-purple-400" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-slate-900 dark:text-white text-sm truncate">
                             {report.genomeName}
                           </p>
-                          <p className="text-xs text-slate-500 dark:text-slate-400">
+                          <p className="text-xs text-slate-600 dark:text-slate-400">
                             {formatDistanceToNow(new Date(report.generatedAt), { addSuffix: true })}
                           </p>
                         </div>
@@ -526,11 +526,11 @@ function StatCard({
   highlight?: boolean;
 }) {
   const colors: Record<string, string> = {
-    indigo: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400',
-    purple: 'bg-purple-50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400',
-    blue: 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400',
-    green: 'bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400',
-    amber: 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400',
+    indigo: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-400',
+    purple: 'bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400',
+    blue: 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400',
+    green: 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400',
+    amber: 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400',
   };
 
   const content = (
@@ -583,7 +583,7 @@ function QuickActionCard({
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="font-medium text-slate-900 dark:text-white text-sm">{title}</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400">{description}</p>
+            <p className="text-xs text-slate-600 dark:text-slate-400">{description}</p>
           </div>
         </div>
       </Card>
@@ -598,14 +598,14 @@ function AncestryCard({ ancestry }: { ancestry?: DashboardData['ancestry'] }) {
       <Card className="p-4 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 border-emerald-200 dark:border-emerald-800">
         <div className="flex items-start gap-3">
           <div className="w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
-            <Globe className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            <Globe className="w-5 h-5 text-emerald-700 dark:text-emerald-400" />
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="font-medium text-slate-900 dark:text-white">Ancestry</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Discover your ethnic origins</p>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">Discover your ethnic origins</p>
             <Link 
               to="/ancestry"
-              className="inline-flex items-center gap-1 mt-3 text-sm font-medium text-emerald-600 hover:text-emerald-700 dark:text-emerald-400"
+              className="inline-flex items-center gap-1 mt-3 text-sm font-medium text-emerald-700 hover:text-emerald-800 dark:text-emerald-400"
             >
               Explore
               <ArrowRight className="w-3 h-3" />
@@ -620,7 +620,7 @@ function AncestryCard({ ancestry }: { ancestry?: DashboardData['ancestry'] }) {
     <Card className="p-4 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 border-emerald-200 dark:border-emerald-800">
       <div className="flex items-start gap-3">
         <div className="w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
-          <Globe className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+          <Globe className="w-5 h-5 text-emerald-700 dark:text-emerald-400" />
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="font-medium text-slate-900 dark:text-white">Ancestry</h3>
@@ -632,7 +632,7 @@ function AncestryCard({ ancestry }: { ancestry?: DashboardData['ancestry'] }) {
               {ancestry.topEthnicity}
             </p>
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">
+          <p className="text-xs text-slate-600 dark:text-slate-500 mt-1">
             {ancestry.regions} regions detected
           </p>
         </div>
@@ -651,10 +651,10 @@ function TraitsCard({ traits }: { traits?: DashboardData['traits'] }) {
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="font-medium text-slate-900 dark:text-white">Traits</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Fun facts about your DNA</p>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">Fun facts about your DNA</p>
             <Link 
               to="/traits"
-              className="inline-flex items-center gap-1 mt-3 text-sm font-medium text-purple-600 hover:text-purple-700 dark:text-purple-400"
+              className="inline-flex items-center gap-1 mt-3 text-sm font-medium text-purple-700 hover:text-purple-800 dark:text-purple-400"
             >
               Discover
               <ArrowRight className="w-3 h-3" />
@@ -700,7 +700,7 @@ function CarrierCard({ carrier }: { carrier?: DashboardData['carrierStatus'] }) 
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="font-medium text-slate-900 dark:text-white">Carrier Status</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Check carrier variants</p>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">Check carrier variants</p>
             <Link 
               to="/carrier"
               className="inline-flex items-center gap-1 mt-3 text-sm font-medium text-rose-600 hover:text-rose-700 dark:text-rose-400"
@@ -719,14 +719,14 @@ function CarrierCard({ carrier }: { carrier?: DashboardData['carrierStatus'] }) 
       <Card className="p-4 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border-amber-200 dark:border-amber-800">
         <div className="flex items-start gap-3">
           <div className="w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center">
-            <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+            <AlertCircle className="w-5 h-5 text-amber-700 dark:text-amber-400" />
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="font-medium text-slate-900 dark:text-white">Carrier Status</h3>
             <p className="text-sm text-amber-700 dark:text-amber-400 mt-1">
               {carrier.relevantVariants} variants detected
             </p>
-            <p className="text-xs text-amber-600 dark:text-amber-500 mt-2 flex items-center gap-1">
+            <p className="text-xs text-amber-700 dark:text-amber-500 mt-2 flex items-center gap-1">
               <Info className="w-3 h-3" />
               Consult recommended
             </p>
@@ -740,7 +740,7 @@ function CarrierCard({ carrier }: { carrier?: DashboardData['carrierStatus'] }) 
     <Card className="p-4 bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 border-emerald-200 dark:border-emerald-800">
       <div className="flex items-start gap-3">
         <div className="w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
-          <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+          <CheckCircle className="w-5 h-5 text-emerald-700 dark:text-emerald-400" />
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="font-medium text-slate-900 dark:text-white">Carrier Status</h3>
@@ -762,14 +762,14 @@ function RelativesCard({ relatives }: { relatives?: DashboardData['relatives'] }
       <Card className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-800">
         <div className="flex items-start gap-3">
           <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
-            <Users2 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            <Users2 className="w-5 h-5 text-blue-700 dark:text-blue-400" />
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="font-medium text-slate-900 dark:text-white">DNA Relatives</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Connect with relatives</p>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">Connect with relatives</p>
             <Link 
               to="/relatives"
-              className="inline-flex items-center gap-1 mt-3 text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400"
+              className="inline-flex items-center gap-1 mt-3 text-sm font-medium text-blue-700 hover:text-blue-800 dark:text-blue-400"
             >
               Learn More
               <ArrowRight className="w-3 h-3" />
@@ -784,7 +784,7 @@ function RelativesCard({ relatives }: { relatives?: DashboardData['relatives'] }
     <Card className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-800">
       <div className="flex items-start gap-3">
         <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
-          <Users2 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+          <Users2 className="w-5 h-5 text-blue-700 dark:text-blue-400" />
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="font-medium text-slate-900 dark:text-white">DNA Relatives</h3>

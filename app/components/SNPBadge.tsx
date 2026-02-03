@@ -223,7 +223,7 @@ export function ChangelogEntry({ entry, isNew, onMarkRead }: ChangelogEntryProps
         {isNew && onMarkRead && (
           <button
             onClick={onMarkRead}
-            className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+            className="text-xs text-blue-700 hover:text-blue-800 font-medium"
           >
             Mark read
           </button>

@@ -26,12 +26,12 @@ const typeConfig: Record<string, { icon: React.ElementType; color: string; bgCol
   },
   sharing_invite: { 
     icon: Sparkles, 
-    color: 'text-purple-600', 
+    color: 'text-purple-700', 
     bgColor: 'bg-purple-100' 
   },
   genome_complete: { 
     icon: Check, 
-    color: 'text-green-600', 
+    color: 'text-green-700', 
     bgColor: 'bg-green-100' 
   },
   security: { 
@@ -111,7 +111,7 @@ export function UpdateNotificationCenter({ className }: UpdateNotificationCenter
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllAsRead}
-                className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 flex items-center gap-1"
+                className="text-sm text-indigo-700 dark:text-indigo-400 hover:text-indigo-800 flex items-center gap-1"
               >
                 <CheckCheck className="w-4 h-4" />
                 Mark all read
@@ -197,6 +197,7 @@ function NotificationItem({ notification, onMarkAsRead, onDelete }: Notification
                   onClick={(e) => onMarkAsRead(e, notification.id)}
                   className="p-1 hover:bg-slate-200 dark:hover:bg-slate-600 rounded"
                   title="Mark as read"
+                  aria-label="Mark as read"
                 >
                   <Check className="w-3 h-3 text-slate-500" />
                 </button>
@@ -205,6 +206,7 @@ function NotificationItem({ notification, onMarkAsRead, onDelete }: Notification
                 onClick={(e) => onDelete(e, notification.id)}
                 className="p-1 hover:bg-slate-200 dark:hover:bg-slate-600 rounded"
                 title="Delete"
+                aria-label="Delete notification"
               >
                 <Trash2 className="w-3 h-3 text-slate-500" />
               </button>

@@ -153,7 +153,7 @@ function SharingPage() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
-            <Users className="w-8 h-8 text-blue-600" />
+            <Users className="w-8 h-8 text-blue-700" />
             Family Sharing
           </h1>
           <p className="text-slate-600 dark:text-slate-400 mt-1">
@@ -290,7 +290,7 @@ function SharingPage() {
                 <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">
                   No Shared Profiles
                 </h3>
-                <p className="text-slate-500 dark:text-slate-400">
+                <p className="text-slate-600 dark:text-slate-400">
                   When someone shares their genetic profile with you, it will appear here.
                 </p>
               </Card>
@@ -306,7 +306,7 @@ function SharingPage() {
                         <p className="font-medium text-slate-900 dark:text-white">
                           {share.ownerName || share.ownerEmail}
                         </p>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">
+                        <p className="text-sm text-slate-600 dark:text-slate-400">
                           Shared {share.genomeNickname ? `"${share.genomeNickname}"` : 'all profiles'}
                         </p>
                         <div className="flex items-center gap-2 mt-1">
@@ -334,7 +334,7 @@ function SharingPage() {
                 <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">
                   No Active Shares
                 </h3>
-                <p className="text-slate-500 dark:text-slate-400 mb-4">
+                <p className="text-slate-600 dark:text-slate-400 mb-4">
                   You haven't shared your genetic profiles with anyone yet.
                 </p>
                 <Button onClick={() => setShowInviteForm(true)}>
@@ -353,7 +353,7 @@ function SharingPage() {
                         <p className="font-medium text-slate-900 dark:text-white">
                           {share.sharedWithName || share.sharedWithEmail}
                         </p>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">
+                        <p className="text-sm text-slate-600 dark:text-slate-400">
                           Can access {share.genomeNickname ? `"${share.genomeNickname}"` : 'all your profiles'}
                         </p>
                         <div className="flex items-center gap-2 mt-1">

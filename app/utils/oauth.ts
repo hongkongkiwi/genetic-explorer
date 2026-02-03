@@ -32,7 +32,14 @@ const OAUTH_CONFIG: Record<OAuthProvider, {
 };
 
 // In-memory state storage for CSRF protection (in production, use Redis or similar)
-const stateStore = new Map<string, { provider: OAuthProvider; createdAt: number }>();
+interface StateData {
+  provider: OAuthProvider;
+  redirectTo: string;
+  link: boolean;
+  createdAt: number;
+}
+
+const stateStore = new Map<string, StateData>();
 
 /**
  * Check if an OAuth provider is configured
@@ -56,6 +63,20 @@ export function getConfiguredProviders(): OAuthProvider[] {
 }
 
 /**
+ * Generate OAuth state with additional data
+ */
+export function generateOAuthState(data: { provider: OAuthProvider; redirectTo: string; link: boolean }): string {
+  const state = crypto.randomBytes(32).toString('hex');
+  stateStore.set(state, {
+    provider: data.provider,
+    redirectTo: data.redirectTo,
+    link: data.link,
+    createdAt: Date.now(),
+  });
+  return state;
+}
+
+/**
  * Generate OAuth authorization URL
  */
 export function getOAuthAuthorizationUrl(provider: OAuthProvider, redirectUri: string, state?: string): string {
@@ -65,12 +86,8 @@ export function getOAuthAuthorizationUrl(provider: OAuthProvider, redirectUri: s
     throw new Error(`${provider} OAuth is not configured`);
   }
 
-  // Generate state for CSRF protection
-  const oauthState = state || crypto.randomBytes(32).toString('hex');
-  stateStore.set(oauthState, {
-    provider,
-    createdAt: Date.now(),
-  });
+  // Generate state for CSRF protection if not provided
+  const oauthState = state || generateOAuthState({ provider, redirectTo: '/dashboard', link: false });
 
   // Clean up old states (older than 10 minutes)
   const tenMinutesAgo = Date.now() - 10 * 60 * 1000;
@@ -115,6 +132,31 @@ export function validateOAuthState(state: string): OAuthProvider | null {
   stateStore.delete(state);
 
   return stateData.provider;
+}
+
+/**
+ * Get OAuth state data without consuming it (for callback processing)
+ */
+export function getOAuthStateData(state: string): StateData | null {
+  const stateData = stateStore.get(state);
+  if (!stateData) {
+    return null;
+  }
+
+  // Check if state is expired (10 minutes)
+  if (Date.now() - stateData.createdAt > 10 * 60 * 1000) {
+    stateStore.delete(state);
+    return null;
+  }
+
+  return stateData;
+}
+
+/**
+ * Consume OAuth state after processing
+ */
+export function consumeOAuthState(state: string): void {
+  stateStore.delete(state);
 }
 
 /**

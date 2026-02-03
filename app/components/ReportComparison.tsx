@@ -244,7 +244,7 @@ export function ReportComparison({ genomes }: ReportComparisonProps) {
                           >
                             <td className="px-4 py-3">
                               <div>
-                                <span className="font-mono font-medium text-indigo-600 dark:text-indigo-400">
+                                <span className="font-mono font-medium text-indigo-700 dark:text-indigo-400">
                                   {diff.rsid}
                                 </span>
                                 {diff.gene && (

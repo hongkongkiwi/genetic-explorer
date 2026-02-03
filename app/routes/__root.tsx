@@ -8,6 +8,7 @@ import { MobileNav } from '~/components/MobileNav';
 import { ErrorBoundary } from '~/components/ErrorBoundary';
 import { OnboardingModal } from '~/components/Onboarding';
 import { useAppShortcuts, KeyboardShortcutsModal, useShortcutsModal } from '~/hooks/useKeyboardShortcuts';
+import { LiveAnnouncerProvider } from '~/components/LiveAnnouncer';
 import { useEffect, useState } from 'react';
 import appCss from '~/styles.css?url';
 
@@ -86,9 +87,11 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <CsrfProvider>
-          <ErrorBoundary>
-            <AppContent mounted={mounted} />
-          </ErrorBoundary>
+          <LiveAnnouncerProvider>
+            <ErrorBoundary>
+              <AppContent mounted={mounted} />
+            </ErrorBoundary>
+          </LiveAnnouncerProvider>
         </CsrfProvider>
       </AuthProvider>
     </QueryClientProvider>
@@ -174,14 +177,7 @@ function AppContent({ mounted }: { mounted: boolean }) {
         {/* Keyboard shortcuts help modal */}
         <KeyboardShortcutsModal isOpen={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
         
-        {/* Accessibility announcer for screen readers */}
-        <div 
-          role="status" 
-          aria-live="polite" 
-          aria-atomic="true"
-          className="sr-only"
-          id="a11y-announcer"
-        />
+
         
         <Scripts />
       </body>

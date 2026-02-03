@@ -160,11 +160,11 @@ function NotificationsPage() {
         <Card className="p-4 sm:p-6">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-              <Mail className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              <Mail className="w-5 h-5 text-blue-700 dark:text-blue-400" />
             </div>
             <div>
               <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Email Notifications</h2>
-              <p className="text-sm text-slate-500 dark:text-slate-400">Receive updates via email</p>
+              <p className="text-sm text-slate-600 dark:text-slate-400">Receive updates via email</p>
             </div>
           </div>
 
@@ -226,7 +226,7 @@ function NotificationsPage() {
         <Card className="p-4 sm:p-6">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-              <Bell className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              <Bell className="w-5 h-5 text-purple-700 dark:text-purple-400" />
             </div>
             <div>
               <h2 className="text-lg font-semibold text-slate-900 dark:text-white">In-App Notifications</h2>

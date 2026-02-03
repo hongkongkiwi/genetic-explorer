@@ -170,7 +170,7 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
             aria-controls="search-results"
           />
           <div className="flex items-center gap-2">
-            <kbd className="hidden sm:inline-block px-2 py-1 bg-slate-100 dark:bg-slate-700 rounded text-xs text-slate-500">
+            <kbd className="hidden sm:inline-block px-2 py-1 bg-slate-100 dark:bg-slate-700 rounded text-xs text-slate-600">
               ESC
             </kbd>
             {query && (
@@ -180,6 +180,7 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
                   inputRef.current?.focus();
                 }}
                 className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700"
+                aria-label="Clear search"
               >
                 <X className="w-4 h-4 text-slate-400" />
               </button>
@@ -194,7 +195,7 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
           className="max-h-96 overflow-y-auto"
         >
           {results.length === 0 ? (
-            <div className="p-8 text-center text-slate-500 dark:text-slate-400">
+            <div className="p-8 text-center text-slate-600 dark:text-slate-400">
               {query ? (
                 <>
                   <Search className="w-12 h-12 mx-auto mb-3 opacity-50" />
@@ -238,7 +239,7 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
                     <div className={cn(
                       'w-10 h-10 rounded-lg flex items-center justify-center',
                       isSelected 
-                        ? 'bg-indigo-100 dark:bg-indigo-800 text-indigo-600 dark:text-indigo-400'
+                        ? 'bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-400'
                         : 'bg-slate-100 dark:bg-slate-700 text-slate-500'
                     )}>
                       <Icon className="w-5 h-5" />

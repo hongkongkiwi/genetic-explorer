@@ -40,8 +40,8 @@ export function MobileNav() {
               className={cn(
                 'flex flex-col items-center justify-center flex-1 h-full gap-1 min-w-0 px-1 touch-target',
                 isActive
-                  ? 'text-indigo-600 dark:text-indigo-400'
-                  : 'text-slate-500 dark:text-slate-400'
+                  ? 'text-indigo-700 dark:text-indigo-400'
+                  : 'text-slate-600 dark:text-slate-400'
               )}
               aria-current={isActive ? 'page' : undefined}
             >

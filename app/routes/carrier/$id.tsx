@@ -9,7 +9,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useEffect, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Navbar } from '~/components/Navbar';
+import { Breadcrumb, predefinedBreadcrumbs } from '~/components/Breadcrumb';
 import { CarrierStatusCard, CarrierSummaryCard } from '~/components/CarrierStatusCard';
 import { CarrierReportSummary } from '~/components/carrier/CarrierReportSummary';
 import { GeneticCounselingCTA } from '~/components/carrier/GeneticCounselingCTA';
@@ -400,7 +400,6 @@ function CarrierReportPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50">
-        <Navbar />
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
             <motion.div
@@ -422,7 +421,6 @@ function CarrierReportPage() {
   if (error || !report) {
     return (
       <div className="min-h-screen bg-slate-50">
-        <Navbar />
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center py-12">
             <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
@@ -430,7 +428,7 @@ function CarrierReportPage() {
             <p className="text-slate-600 mb-4">{error || 'Report could not be loaded'}</p>
             <Link
               to="/carrier"
-              className="text-blue-600 hover:text-blue-800 font-medium"
+              className="text-blue-700 hover:text-blue-800 font-medium"
             >
               Back to Carrier Screening
             </Link>
@@ -445,9 +443,12 @@ function CarrierReportPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <Navbar />
-      
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Breadcrumb */}
+        <div className="mb-6">
+          <Breadcrumb items={predefinedBreadcrumbs.carrier(report?.condition)} />
+        </div>
+        
         {/* Prominent Medical Disclaimer - Top */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -480,7 +481,7 @@ function CarrierReportPage() {
         >
           <Link
             to="/genomes"
-            className="inline-flex items-center text-sm text-slate-500 hover:text-blue-600 mb-4"
+            className="inline-flex items-center text-sm text-slate-600 hover:text-blue-700 mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-1" />
             Back to Genomes
@@ -885,7 +886,7 @@ function CarrierReportPage() {
           className="mt-12 p-6 bg-amber-50 border-2 border-amber-200 rounded-xl"
         >
           <div className="flex items-start gap-3">
-            <AlertTriangle className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" />
+            <AlertTriangle className="w-6 h-6 text-amber-700 flex-shrink-0 mt-0.5" />
             <div>
               <h3 className="font-bold text-amber-900 mb-2">Medical Disclaimer</h3>
               <p className="text-sm text-amber-800 leading-relaxed">
@@ -940,7 +941,7 @@ function ShareModal({ onClose, report }: { onClose: () => void; report: CarrierR
       >
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold text-slate-900">Share with Partner</h2>
-          <button onClick={onClose} className="p-1 hover:bg-slate-100 rounded-lg">
+          <button onClick={onClose} className="p-1 hover:bg-slate-100 rounded-lg" aria-label="Close">
             <X className="w-5 h-5 text-slate-500" />
           </button>
         </div>

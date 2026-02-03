@@ -149,7 +149,7 @@ export function KeyboardShortcutsModal({ isOpen, onClose }: { isOpen: boolean; o
           ))}
         </div>
 
-        <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
+        <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
           <Keyboard className="w-4 h-4" />
           <span>Press <kbd className="px-1 bg-white dark:bg-slate-700 rounded">?</kbd> anytime to show this help</span>
         </div>

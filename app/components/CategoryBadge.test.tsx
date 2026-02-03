@@ -155,31 +155,31 @@ describe('CategoryBadge', () => {
   it('applies color classes for drug_metabolism category', () => {
     render(<CategoryBadge category="drug_metabolism" />);
     const badge = screen.getByText('Drug Metabolism').parentElement;
-    expect(badge).toHaveClass('bg-purple-500/20', 'text-purple-400', 'border-purple-500/30');
+    expect(badge).toHaveClass('bg-purple-500/20', 'text-purple-700', 'border-purple-500/30');
   });
 
   it('applies color classes for methylation category', () => {
     render(<CategoryBadge category="methylation" />);
     const badge = screen.getByText('Methylation').parentElement;
-    expect(badge).toHaveClass('bg-blue-500/20', 'text-blue-400', 'border-blue-500/30');
+    expect(badge).toHaveClass('bg-blue-500/20', 'text-blue-700', 'border-blue-500/30');
   });
 
   it('applies color classes for nutrition category', () => {
     render(<CategoryBadge category="nutrition" />);
     const badge = screen.getByText('Nutrition').parentElement;
-    expect(badge).toHaveClass('bg-green-500/20', 'text-green-400', 'border-green-500/30');
+    expect(badge).toHaveClass('bg-green-500/20', 'text-green-700', 'border-green-500/30');
   });
 
   it('applies color classes for fitness category', () => {
     render(<CategoryBadge category="fitness" />);
     const badge = screen.getByText('Fitness').parentElement;
-    expect(badge).toHaveClass('bg-orange-500/20', 'text-orange-400', 'border-orange-500/30');
+    expect(badge).toHaveClass('bg-orange-500/20', 'text-orange-700', 'border-orange-500/30');
   });
 
   it('applies color classes for cardiovascular category', () => {
     render(<CategoryBadge category="cardiovascular" />);
     const badge = screen.getByText('Cardiovascular').parentElement;
-    expect(badge).toHaveClass('bg-red-500/20', 'text-red-400', 'border-red-500/30');
+    expect(badge).toHaveClass('bg-red-500/20', 'text-red-700', 'border-red-500/30');
   });
 
   it('applies base styling classes', () => {

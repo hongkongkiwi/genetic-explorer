@@ -141,7 +141,7 @@ export function RelativeDetailModal({
                   className="w-full h-full rounded-full object-cover"
                 />
               ) : (
-                <User className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
+                <User className="w-8 h-8 text-indigo-700 dark:text-indigo-400" />
               )}
             </div>
 
@@ -220,6 +220,7 @@ export function RelativeDetailModal({
               size="sm"
               onClick={handleHide}
               className="text-slate-500 hover:text-red-600"
+              aria-label="Hide match"
             >
               <EyeOff className="w-4 h-4" />
             </Button>
@@ -228,6 +229,7 @@ export function RelativeDetailModal({
               size="sm"
               onClick={onClose}
               className="text-slate-400 hover:text-slate-600"
+              aria-label="Close modal"
             >
               <X className="w-5 h-5" />
             </Button>

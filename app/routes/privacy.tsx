@@ -31,7 +31,7 @@ function PrivacyPage() {
 
           <section className="mb-8">
             <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-              <Eye className="w-5 h-5 text-blue-600" />
+              <Eye className="w-5 h-5 text-blue-700" />
               1. Overview
             </h2>
             <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
@@ -71,7 +71,7 @@ function PrivacyPage() {
 
           <section className="mb-8">
             <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-              <Lock className="w-5 h-5 text-amber-600" />
+              <Lock className="w-5 h-5 text-amber-700" />
               3. How We Store Your Data
             </h2>
             <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4 mb-4">
@@ -181,7 +181,7 @@ function PrivacyPage() {
             <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
               For users in the European Union, we comply with GDPR requirements. You have the right to access, 
               rectify, erase, and port your data. To exercise these rights, contact us at{' '}
-              <a href="mailto:privacy@geneticexplorer.com" className="text-blue-600 hover:text-blue-500">
+              <a href="mailto:privacy@geneticexplorer.com" className="text-blue-700 hover:text-blue-800">
                 privacy@geneticexplorer.com
               </a>.
             </p>
@@ -202,7 +202,7 @@ function PrivacyPage() {
       </Card>
 
       <div className="mt-8 text-center">
-        <p className="text-sm text-slate-500 dark:text-slate-400">
+        <p className="text-sm text-slate-600 dark:text-slate-400">
           For more information, please also review our{' '}
           <Link to="/terms" className="text-blue-600 hover:text-blue-500">Terms of Service</Link>.
         </p>

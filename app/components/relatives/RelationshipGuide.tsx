@@ -151,7 +151,7 @@ export function RelationshipGuide({ className, compact = false }: RelationshipGu
         <CardContent className="p-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center flex-shrink-0">
-              <Users className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+              <Users className="w-5 h-5 text-indigo-700 dark:text-indigo-400" />
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="font-medium text-slate-900 dark:text-white">Relationship Guide</h3>

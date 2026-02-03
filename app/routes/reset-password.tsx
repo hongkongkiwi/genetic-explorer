@@ -205,7 +205,7 @@ function ResetPasswordPage() {
                     ) : (
                       <XCircle className="w-4 h-4 text-slate-300 mr-2" />
                     )}
-                    <span className={req.met ? 'text-green-600 dark:text-green-400' : 'text-slate-500 dark:text-slate-400'}>
+                    <span className={req.met ? 'text-green-700 dark:text-green-400' : 'text-slate-600 dark:text-slate-400'}>
                       {req.label}
                     </span>
                   </div>

@@ -443,12 +443,12 @@ export function ChromosomeBrowser({
           <MiniLegend onClick={() => setShowLegend(!showLegend)} />
 
           {/* Export */}
-          <Button variant="ghost" size="sm" onClick={handleExport}>
+          <Button variant="ghost" size="sm" onClick={handleExport} aria-label="Export image">
             <Download className="w-4 h-4" />
           </Button>
 
           {/* Fullscreen */}
-          <Button variant="ghost" size="sm" onClick={() => setIsFullscreen(!isFullscreen)}>
+          <Button variant="ghost" size="sm" onClick={() => setIsFullscreen(!isFullscreen)} aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}>
             {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
           </Button>
         </div>
@@ -686,7 +686,7 @@ export function ChromosomeBrowser({
                   />
                 </div>
                 {tooltip.snp.gene && (
-                  <div className="text-sm text-indigo-600 dark:text-indigo-400">
+                  <div className="text-sm text-indigo-700 dark:text-indigo-400">
                     {tooltip.snp.gene}
                   </div>
                 )}
@@ -760,16 +760,16 @@ export function ChromosomeBrowser({
       <div className="px-4 py-2 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1 bg-white dark:bg-slate-800 rounded-lg p-1 border border-slate-200 dark:border-slate-700">
-            <Button variant="ghost" size="sm" onClick={handleZoomOut} disabled={zoom <= 1}>
+            <Button variant="ghost" size="sm" onClick={handleZoomOut} disabled={zoom <= 1} aria-label="Zoom out">
               <ZoomOut className="w-4 h-4" />
             </Button>
             <span className="text-sm font-mono w-14 text-center text-slate-700 dark:text-slate-300">
               {Math.round(zoom * 100)}%
             </span>
-            <Button variant="ghost" size="sm" onClick={handleZoomIn} disabled={zoom >= 10}>
+            <Button variant="ghost" size="sm" onClick={handleZoomIn} disabled={zoom >= 10} aria-label="Zoom in">
               <ZoomIn className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="sm" onClick={handleReset} disabled={zoom === 1}>
+            <Button variant="ghost" size="sm" onClick={handleReset} disabled={zoom === 1} aria-label="Reset zoom">
               <RotateCcw className="w-4 h-4" />
             </Button>
           </div>

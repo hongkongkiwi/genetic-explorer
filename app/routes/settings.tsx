@@ -2,7 +2,8 @@ import { useEffect } from 'react';
 import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
 import { useAuth } from '~/hooks/useAuth';
 import { Card } from '~/components/ui/Card';
-import { Settings, Shield, Trash2, Bell, Clock, ChevronRight, Lock, User, AlertTriangle } from 'lucide-react';
+import { Settings, Shield, Trash2, Bell, Clock, ChevronRight, Lock, User, AlertTriangle, Monitor, Link2, Eye } from 'lucide-react';
+import { Breadcrumb, predefinedBreadcrumbs } from '~/components/Breadcrumb';
 
 export const Route = createFileRoute('/settings')({
   component: SettingsPage,
@@ -30,6 +31,11 @@ function SettingsPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
+      {/* Breadcrumb */}
+      <div className="mb-6">
+        <Breadcrumb items={predefinedBreadcrumbs.settings.root()} />
+      </div>
+      
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
           <Settings className="w-8 h-8 text-slate-600" />
@@ -44,7 +50,7 @@ function SettingsPage() {
         {/* Account Section */}
         <Card className="p-4 sm:p-6">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-            <User className="w-5 h-5 text-blue-600" />
+            <User className="w-5 h-5 text-blue-700" />
             Account
           </h2>
           <div className="space-y-3">
@@ -58,7 +64,7 @@ function SettingsPage() {
                 </div>
                 <div>
                   <p className="font-medium text-slate-900 dark:text-white">Profile Information</p>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">Update your personal details</p>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">Update your personal details</p>
                 </div>
               </div>
               <ChevronRight className="w-5 h-5 text-slate-400" />
@@ -70,7 +76,7 @@ function SettingsPage() {
             >
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                  <Bell className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                  <Bell className="w-5 h-5 text-purple-700 dark:text-purple-400" />
                 </div>
                 <div>
                   <p className="font-medium text-slate-900 dark:text-white">Notifications</p>
@@ -85,21 +91,85 @@ function SettingsPage() {
         {/* Security Section */}
         <Card className="p-4 sm:p-6">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-            <Shield className="w-5 h-5 text-green-600" />
+            <Shield className="w-5 h-5 text-green-700" />
             Security
           </h2>
           <div className="space-y-3">
+            <Link
+              to="/settings/security"
+              className="flex items-center justify-between p-4 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                  <Link2 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <p className="font-medium text-slate-900 dark:text-white">Connected Accounts</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Manage social login connections</p>
+                </div>
+              </div>
+              <ChevronRight className="w-5 h-5 text-slate-400" />
+            </Link>
+
+            <Link
+              to="/settings/2fa"
+              className="flex items-center justify-between p-4 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                  <Lock className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                </div>
+                <div>
+                  <p className="font-medium text-slate-900 dark:text-white">Two-Factor Authentication</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Add extra security to your account</p>
+                </div>
+              </div>
+              <ChevronRight className="w-5 h-5 text-slate-400" />
+            </Link>
+
+            <Link
+              to="/settings/sessions"
+              className="flex items-center justify-between p-4 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-cyan-100 dark:bg-cyan-900/30 flex items-center justify-center">
+                  <Monitor className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
+                </div>
+                <div>
+                  <p className="font-medium text-slate-900 dark:text-white">Active Sessions</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Manage your logged-in devices</p>
+                </div>
+              </div>
+              <ChevronRight className="w-5 h-5 text-slate-400" />
+            </Link>
+
             <Link
               to="/activity"
               className="flex items-center justify-between p-4 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
             >
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-                  <Clock className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                  <Clock className="w-5 h-5 text-amber-700 dark:text-amber-400" />
                 </div>
                 <div>
                   <p className="font-medium text-slate-900 dark:text-white">Activity Log</p>
                   <p className="text-sm text-slate-500 dark:text-slate-400">Review your account activity</p>
+                </div>
+              </div>
+              <ChevronRight className="w-5 h-5 text-slate-400" />
+            </Link>
+
+            <Link
+              to="/settings/privacy"
+              className="flex items-center justify-between p-4 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
+                  <Eye className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+                </div>
+                <div>
+                  <p className="font-medium text-slate-900 dark:text-white">Privacy</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Manage data export and privacy settings</p>
                 </div>
               </div>
               <ChevronRight className="w-5 h-5 text-slate-400" />
@@ -126,7 +196,7 @@ function SettingsPage() {
         {/* Family Sharing */}
         <Card className="p-4 sm:p-6">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-            <Bell className="w-5 h-5 text-indigo-600" />
+            <Bell className="w-5 h-5 text-indigo-700" />
             Family Sharing
           </h2>
           <p className="text-slate-600 dark:text-slate-400 mb-4">

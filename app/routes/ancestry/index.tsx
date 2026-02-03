@@ -190,7 +190,7 @@ function AncestryLandingPage() {
               </ul>
               <Link
                 to="/upload"
-                className="inline-flex items-center gap-2 text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 font-semibold"
+                className="inline-flex items-center gap-2 text-emerald-700 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300 font-semibold"
               >
                 Get Your Ancestry Report
                 <ArrowRight className="w-5 h-5" />
@@ -207,7 +207,7 @@ function AncestryLandingPage() {
                 <div className="flex items-center justify-between mb-6">
                   <div>
                     <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Ancestry Composition</h3>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">Sample Report Preview</p>
+                    <p className="text-sm text-slate-600 dark:text-slate-400">Sample Report Preview</p>
                   </div>
                   <Globe className="w-8 h-8 text-emerald-500" />
                 </div>
@@ -301,7 +301,7 @@ function AncestryLandingPage() {
               </div>
               <Card className="relative p-6 pt-8 h-full">
                 <div className="w-12 h-12 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mb-4">
-                  <item.icon className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                  <item.icon className="w-6 h-6 text-emerald-700 dark:text-emerald-400" />
                 </div>
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
                   {item.title}

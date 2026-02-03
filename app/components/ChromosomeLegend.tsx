@@ -86,13 +86,14 @@ export function ChromosomeLegend({
       )}>
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-medium text-slate-900 dark:text-white flex items-center gap-2">
-            <Info className="w-4 h-4 text-slate-500" />
+            <Info className="w-4 h-4 text-slate-600" />
             Legend
           </span>
           {onClose && (
             <button 
               onClick={onClose}
               className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+              aria-label="Close legend"
             >
               <X className="w-4 h-4" />
             </button>
@@ -127,7 +128,7 @@ export function ChromosomeLegend({
       <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
-            <Info className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+            <Info className="w-4 h-4 text-indigo-700 dark:text-indigo-400" />
           </div>
           <div>
             <h3 className="font-semibold text-slate-900 dark:text-white">Legend</h3>
@@ -140,6 +141,7 @@ export function ChromosomeLegend({
           <button 
             onClick={onClose}
             className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors"
+            aria-label="Close legend"
           >
             <X className="w-4 h-4 text-slate-500" />
           </button>

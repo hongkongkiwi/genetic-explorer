@@ -92,7 +92,7 @@ function FAQPage() {
     <div className="max-w-4xl mx-auto px-4 py-8">
       <div className="mb-8 text-center">
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-blue-100 dark:bg-blue-900/30 mb-4">
-          <HelpCircle className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+          <HelpCircle className="w-8 h-8 text-blue-700 dark:text-blue-400" />
         </div>
         <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
           Frequently Asked Questions

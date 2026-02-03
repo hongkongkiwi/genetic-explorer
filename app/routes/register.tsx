@@ -104,7 +104,7 @@ function RegisterPage() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 px-4">
         <Card className="w-full max-w-md p-8 text-center">
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 flex items-center justify-center">
-            <CheckCircle className="w-8 h-8 text-green-600" />
+            <CheckCircle className="w-8 h-8 text-green-700" />
           </div>
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
             Account Created!
@@ -267,7 +267,7 @@ function RegisterPage() {
               Already have an account?{' '}
               <Link
                 to="/login"
-                className="font-medium text-blue-600 hover:text-blue-500"
+                className="font-medium text-blue-700 hover:text-blue-800"
               >
                 Sign in
               </Link>
@@ -275,7 +275,7 @@ function RegisterPage() {
           </div>
         </Card>
 
-        <p className="mt-8 text-center text-xs text-slate-500 dark:text-slate-500">
+        <p className="mt-8 text-center text-xs text-slate-600 dark:text-slate-500">
           By creating an account, you agree to our privacy policy. Your genetic data stays on your device.
         </p>
       </div>
