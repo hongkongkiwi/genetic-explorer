@@ -125,18 +125,24 @@ function initDatabase() {
     CREATE TABLE IF NOT EXISTS sharing_permissions (
       id TEXT PRIMARY KEY,
       owner_id TEXT NOT NULL,
-      shared_with_id TEXT NOT NULL,
+      shared_with_id TEXT,
       genome_id TEXT,
+      share_type TEXT NOT NULL DEFAULT 'friend',
+      sensitivity_level TEXT NOT NULL DEFAULT 'normal',
+      include_raw_data INTEGER DEFAULT 0,
+      allow_matching INTEGER DEFAULT 0,
+      can_download INTEGER DEFAULT 0,
+      can_share INTEGER DEFAULT 0,
       permission_level TEXT NOT NULL DEFAULT 'view',
       expires_at DATETIME,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      created_by TEXT NOT NULL,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       status TEXT DEFAULT 'active',
       message TEXT,
+      relationship_type TEXT,
       FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE,
       FOREIGN KEY (shared_with_id) REFERENCES users(id) ON DELETE CASCADE,
       FOREIGN KEY (genome_id) REFERENCES genomes(id) ON DELETE CASCADE,
-      FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE,
       UNIQUE(owner_id, shared_with_id, genome_id)
     )
   `);
@@ -269,6 +275,49 @@ function initDatabase() {
       last_used_at DATETIME,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
       UNIQUE(credential_id)
+    )
+  `);
+
+  // User privacy settings table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS user_privacy_settings (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL UNIQUE,
+      show_sensitive_data INTEGER DEFAULT 0,
+      disclaimer_agreed_at DATETIME,
+      default_share_level TEXT DEFAULT 'normal',
+      confirm_before_viewing INTEGER DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+
+  // Sharing links table (for public/shared links)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS sharing_links (
+      id TEXT PRIMARY KEY,
+      permission_id TEXT NOT NULL,
+      token TEXT NOT NULL UNIQUE,
+      clicks INTEGER DEFAULT 0,
+      max_clicks INTEGER DEFAULT 50,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      expires_at DATETIME,
+      FOREIGN KEY (permission_id) REFERENCES sharing_permissions(id) ON DELETE CASCADE
+    )
+  `);
+
+  // Sharing history/audit table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS sharing_audit_log (
+      id TEXT PRIMARY KEY,
+      permission_id TEXT NOT NULL,
+      action TEXT NOT NULL,
+      actor_id TEXT NOT NULL,
+      details TEXT,
+      ip_address TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (permission_id) REFERENCES sharing_permissions(id) ON DELETE CASCADE
     )
   `);
 
@@ -1498,7 +1547,7 @@ export function getSNPsPaginated(
   // Get total count
   const countQuery = db.prepare(`
     SELECT COUNT(*) as total
-    FROM genome_snps gs
+    FROM snps gs
     WHERE ${whereClause}
   `);
   const { total } = countQuery.get(...params) as { total: number };
@@ -1516,16 +1565,16 @@ export function getSNPsPaginated(
   const orderDir = sortDirection.toUpperCase();
 
   const dataQuery = db.prepare(`
-    SELECT 
+    SELECT
       gs.rsid,
-      gs.gene,
+      '' as gene,
       gs.chromosome,
       gs.position,
       gs.genotype,
-      gs.category,
-      gs.clinical_impact as clinicalImpact,
+      '' as category,
+      '' as clinicalImpact,
       sd.description as summary
-    FROM genome_snps gs
+    FROM snps gs
     LEFT JOIN snp_database sd ON sd.rsid = gs.rsid
     WHERE ${whereClause}
     ORDER BY ${orderBy} ${orderDir}
@@ -1616,15 +1665,15 @@ export function globalSearch(
       
       UNION ALL
       
-      SELECT 
+      SELECT
         rsid as id,
         'snp' as type,
         rsid as title,
-        COALESCE(gene, 'Unknown') || ' - ' || genotype as subtitle,
+        'Unknown - ' || genotype as subtitle,
         '/explorer?rsid=' || rsid as href,
         2 as priority
-      FROM genome_snps
-      WHERE user_id = ? AND (rsid LIKE ? OR gene LIKE ?)
+      FROM snps
+      WHERE genome_id IN (SELECT id FROM genomes WHERE user_id = ?) AND rsid LIKE ?
       GROUP BY rsid
       
       UNION ALL
