@@ -1,0 +1,43 @@
+{
+  "name": "Genetic Explorer",
+  "description": "AI-powered genetic analysis platform",
+  "repository": "https://github.com/yourusername/genetic-explorer",
+  "logo": "https://geneticexplorer.com/logo.png",
+  "keywords": ["genetics", "dna", "health", "ai", "analysis"],
+  "image": "heroku/nodejs",
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ],
+  "env": {
+    "NODE_ENV": {
+      "value": "production"
+    },
+    "OPENAI_API_KEY": {
+      "description": "OpenAI API key for genetic analysis",
+      "required": true
+    },
+    "SESSION_SECRET": {
+      "description": "Secret for session encryption (generate a random string)",
+      "generator": "secret",
+      "required": true
+    },
+    "DATABASE_URL": {
+      "value": "./data/genetic_explorer.db"
+    },
+    "UPLOADS_DIR": {
+      "value": "./uploads"
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  },
+  "addons": [],
+  "scripts": {
+    "postdeploy": "echo 'Deployment complete'"
+  }
+}

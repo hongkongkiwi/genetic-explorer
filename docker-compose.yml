@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  genetic-explorer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: genetic-explorer
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOST=0.0.0.0
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - SESSION_SECRET=${SESSION_SECRET:-genetic-explorer-secret-key-change-in-production}
+      - DATABASE_URL=./data/genetic_explorer.db
+      - UPLOADS_DIR=./uploads
+    volumes:
+      # Persist database
+      - ./data:/app/data
+      # Persist uploads
+      - ./uploads:/app/uploads
+      # Logs
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: Add a reverse proxy with SSL
+  # nginx:
+  #   image: nginx:alpine
+  #   container_name: genetic-explorer-nginx
+  #   restart: unless-stopped
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/nginx.conf:ro
+  #     - ./ssl:/etc/nginx/ssl:ro
+  #   depends_on:
+  #     - genetic-explorer

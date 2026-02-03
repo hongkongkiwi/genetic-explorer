@@ -1,0 +1,146 @@
+# Northflank deployment configuration for Genetic Explorer
+# https://northflank.com/docs/v1/application/deploying-applications
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: genetic-explorer
+  description: AI-Powered Genetic Analysis Platform
+spec:
+  # Build configuration
+  build:
+    type: dockerfile
+    dockerfilePath: Dockerfile
+    context: .
+    
+  # Deployment configuration
+  deployment:
+    # Number of instances
+    replicas: 1
+    
+    # Resource allocation
+    resources:
+      requests:
+        cpu: 500m
+        memory: 1Gi
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+    
+    # Environment variables
+    env:
+      # Core
+      - name: NODE_ENV
+        value: production
+      - name: PORT
+        value: "3000"
+      - name: HOST
+        value: 0.0.0.0
+      
+      # Database (will use persistent storage)
+      - name: DATABASE_URL
+        value: /data/genetic_explorer.db
+      - name: UPLOADS_DIR
+        value: /app/uploads
+      
+      # Security (use secrets in production)
+      - name: SESSION_SECRET
+        valueFrom:
+          secretKeyRef:
+            name: genetic-explorer-secrets
+            key: session-secret
+      
+      # Optional: OpenAI for analysis
+      - name: OPENAI_API_KEY
+        valueFrom:
+          secretKeyRef:
+            name: genetic-explorer-secrets
+            key: openai-api-key
+            optional: true
+      
+      # Email configuration
+      - name: EMAIL_PROVIDER
+        value: resend
+      - name: EMAIL_FROM
+        value: noreply@geneticexplorer.com
+      - name: RESEND_API_KEY
+        valueFrom:
+          secretKeyRef:
+            name: genetic-explorer-secrets
+            key: resend-api-key
+            optional: true
+      
+      # Application URL (set by Northflank)
+      - name: APP_URL
+        valueFrom:
+          fieldRef:
+            fieldPath: status.ingress.hosts[0]
+    
+    # Persistent storage for database and uploads
+    storage:
+      - name: data
+        mountPath: /data
+        size: 10Gi
+        accessMode: ReadWriteOnce
+      - name: uploads
+        mountPath: /app/uploads
+        size: 50Gi
+        accessMode: ReadWriteOnce
+    
+    # Health checks
+    healthCheck:
+      http:
+        path: /api/health
+        port: 3000
+      initialDelaySeconds: 30
+      periodSeconds: 30
+      timeoutSeconds: 5
+      failureThreshold: 3
+      successThreshold: 1
+    
+    # Startup probe
+    startupProbe:
+      http:
+        path: /api/health
+        port: 3000
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 3
+      failureThreshold: 30
+
+  # Networking
+  networking:
+    # Public access
+    ingress:
+      enabled: true
+      port: 3000
+      
+    # Custom domains (optional)
+    # domains:
+    #   - name: genetic-explorer.example.com
+    #     tls: true
+
+  # Scaling (optional - for horizontal scaling)
+  # scaling:
+  #   minReplicas: 1
+  #   maxReplicas: 3
+  #   metrics:
+  #     - type: cpu
+  #       targetAverageUtilization: 70
+  #     - type: memory
+  #       targetAverageUtilization: 80
+
+---
+# Secret template (create via Northflank dashboard or CLI)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: genetic-explorer-secrets
+type: Opaque
+stringData:
+  # Generate with: openssl rand -base64 32
+  session-secret: "REPLACE_WITH_YOUR_SESSION_SECRET"
+  # Get from: https://platform.openai.com/api-keys
+  openai-api-key: "REPLACE_WITH_YOUR_OPENAI_KEY"
+  # Get from: https://resend.com/api-keys
+  resend-api-key: "REPLACE_WITH_YOUR_RESEND_KEY"

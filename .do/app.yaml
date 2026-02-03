@@ -1,0 +1,55 @@
+name: genetic-explorer
+region: nyc
+
+services:
+  - name: web
+    source_dir: /
+    dockerfile_path: Dockerfile
+    github:
+      repo: yourusername/genetic-explorer
+      branch: main
+      deploy_on_push: true
+    http_port: 3000
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    health_check:
+      http_path: /api/health
+      port: 3000
+      initial_delay_seconds: 30
+      period_seconds: 10
+      timeout_seconds: 5
+      success_threshold: 1
+      failure_threshold: 3
+    envs:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3000"
+      - key: DATABASE_URL
+        value: /data/genetic_explorer.db
+      - key: UPLOADS_DIR
+        value: /app/uploads
+      - key: OPENAI_API_KEY
+        value: ""
+        type: SECRET
+        required: true
+      - key: SESSION_SECRET
+        value: ""
+        type: SECRET
+        required: true
+    
+    # Persistent storage for database
+    volumes:
+      - name: data
+        mount_path: /data
+        size_gigabytes: 1
+
+# Static site configuration (optional - if you want to deploy frontend separately)
+# static_sites:
+#   - name: static
+#     source_dir: /
+#     build_command: npm ci && npm run build
+#     output_dir: .output/public
+#     index_document: index.html
+#     error_document: index.html
+#     catchall_document: index.html

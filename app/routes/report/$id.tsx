@@ -1,0 +1,365 @@
+import { createFileRoute, Link } from '@tanstack/react-router';
+import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
+import { Navbar } from '~/components/Navbar';
+import { ReportCard } from '~/components/ReportCard';
+import { 
+  ArrowLeft, 
+  FileText, 
+  Download, 
+  Share2,
+  AlertCircle,
+  Sparkles,
+  Dna,
+  TrendingUp,
+  Shield,
+  Activity,
+  Printer,
+} from 'lucide-react';
+import { analyzeGenomeComprehensive, generateQuickSummary } from '~/utils/comprehensiveAnalysis';
+import { getGenome } from '~/utils/database';
+import { generatePDF, printToPDF } from '~/utils/pdfExport';
+import type { GenomeData, HealthReport } from '~/types/genetics';
+
+export const Route = createFileRoute('/report/$id')({
+  component: ReportPage,
+});
+
+function ReportPage() {
+  const { id } = Route.useParams();
+  const [genome, setGenome] = useState<GenomeData | null>(null);
+  const [report, setReport] = useState<HealthReport | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'all' | 'critical' | 'drugs' | 'protocol'>('all');
+
+  useEffect(() => {
+    loadReport();
+  }, [id]);
+
+  const loadReport = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Get genome data
+      const genomeData = getGenome(id);
+      if (!genomeData) {
+        setError('Genome not found');
+        return;
+      }
+      
+      setGenome(genomeData);
+
+      // Run comprehensive analysis
+      const result = await analyzeGenomeComprehensive(genomeData);
+      setReport(result.report);
+    } catch (err) {
+      console.error('Report generation error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to generate report');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePrint = () => {
+    printToPDF();
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!report || !genome) return;
+    
+    try {
+      // Generate HTML for PDF
+      const htmlBlob = await generatePDF(report, genome);
+      const url = URL.createObjectURL(htmlBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `genetic-report-${genome.filename.replace(/\.[^/.]+$/, '')}.html`;
+      a.click();
+      URL.revokeObjectURL(url);
+      
+      alert('HTML report downloaded. Open in browser and print to PDF for best results.');
+    } catch (error) {
+      console.error('PDF generation failed:', error);
+      alert('Failed to generate PDF. Try using Print instead.');
+    }
+  };
+
+  const handleDownload = () => {
+    if (!report) return;
+    
+    const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `genetic-report-${id}.json`;
+    a.click();
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <Navbar />
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="text-center">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+              className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full mx-auto mb-6"
+            />
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">Generating Your Report</h2>
+            <p className="text-slate-600 max-w-md mx-auto">
+              Analyzing your genetic variants against our comprehensive database...
+              This may take 30-60 seconds.
+            </p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (error || !report) {
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <Navbar />
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center py-12">
+            <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">Error Loading Report</h2>
+            <p className="text-slate-600 mb-4">{error || 'Report could not be generated'}</p>
+            <Link
+              to="/genomes"
+              className="text-indigo-600 hover:text-indigo-800 font-medium"
+            >
+              Back to Genomes
+            </Link>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Filter sections based on active tab
+  const filteredSections = report.sections.filter(section => {
+    if (activeTab === 'all') return true;
+    if (activeTab === 'critical') return section.priority === 'critical' || section.priority === 'high';
+    if (activeTab === 'drugs') return section.type === 'drug';
+    if (activeTab === 'protocol') return section.type === 'protocol';
+    return true;
+  });
+
+  const criticalCount = report.sections.filter(s => s.priority === 'critical' || s.priority === 'high').length;
+
+  return (
+    <div className="min-h-screen bg-slate-50">
+      <Navbar />
+      
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <Link
+            to="/genomes"
+            className="inline-flex items-center text-sm text-slate-500 hover:text-indigo-600 mb-4"
+          >
+            <ArrowLeft className="w-4 h-4 mr-1" />
+            Back to Genomes
+          </Link>
+
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <FileText className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-slate-900">Genetic Health Report</h1>
+                <p className="text-slate-600">
+                  {genome?.filename} • Generated {new Date(report.generatedAt).toLocaleDateString()}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={handlePrint}
+                className="flex items-center gap-2 px-4 py-2 border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50 transition-colors"
+              >
+                <Printer className="w-4 h-4" />
+                <span className="hidden sm:inline">Print</span>
+              </button>
+              <button
+                onClick={handleDownloadPDF}
+                className="flex items-center gap-2 px-4 py-2 border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50 transition-colors"
+              >
+                <Download className="w-4 h-4" />
+                <span className="hidden sm:inline">Export PDF</span>
+              </button>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Stats Overview */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
+        >
+          <StatCard
+            icon={Dna}
+            label="Variants Analyzed"
+            value={report.summary.totalVariants.toString()}
+            color="indigo"
+          />
+          <StatCard
+            icon={AlertCircle}
+            label="High Impact"
+            value={report.summary.highImpact.toString()}
+            color="orange"
+          />
+          <StatCard
+            icon={Shield}
+            label="Risk Assessments"
+            value={report.diseaseRisks.length.toString()}
+            color="red"
+          />
+          <StatCard
+            icon={Activity}
+            label="Categories"
+            value={Object.keys(report.summary.categories).length.toString()}
+            color="green"
+          />
+        </motion.div>
+
+        {/* Executive Summary */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl shadow-lg p-8 mb-8 text-white"
+        >
+          <div className="flex items-start gap-4">
+            <Sparkles className="w-8 h-8 text-yellow-300 flex-shrink-0 mt-1" />
+            <div>
+              <h2 className="text-2xl font-bold mb-3">Executive Summary</h2>
+              <p className="text-indigo-100 text-lg leading-relaxed">
+                {report.executiveSummary}
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Critical Alert */}
+        {criticalCount > 0 && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-red-50 border border-red-200 rounded-xl p-6 mb-8"
+          >
+            <div className="flex items-start gap-4">
+              <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0 mt-1" />
+              <div>
+                <h3 className="font-bold text-red-900 mb-1">
+                  {criticalCount} Critical Finding{criticalCount > 1 ? 's' : ''} Detected
+                </h3>
+                <p className="text-red-700">
+                  Some variants may require medical attention. Please consult with a healthcare provider.
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Tabs */}
+        <div className="flex flex-wrap gap-2 mb-6">
+          {[
+            { id: 'all', label: 'All Sections', count: report.sections.length },
+            { id: 'critical', label: 'Critical', count: criticalCount },
+            { id: 'drugs', label: 'Drug Response', count: report.drugMetabolism?.length || 0 },
+            { id: 'protocol', label: 'Protocol', count: 1 },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                activeTab === tab.id
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
+              }`}
+            >
+              {tab.label}
+              {tab.count > 0 && (
+                <span className={`ml-2 px-1.5 py-0.5 rounded text-xs ${
+                  activeTab === tab.id ? 'bg-indigo-500' : 'bg-slate-100'
+                }`}>
+                  {tab.count}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* Report Sections */}
+        <div className="grid grid-cols-1 gap-6">
+          {filteredSections.map((section, index) => (
+            <ReportCard
+              key={section.id}
+              section={section}
+              index={index}
+            />
+          ))}
+        </div>
+
+        {/* Disclaimer */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="mt-12 bg-amber-50 border border-amber-200 rounded-xl p-6"
+        >
+          <h3 className="font-semibold text-amber-900 mb-2 flex items-center gap-2">
+            <Shield className="w-5 h-5" />
+            Important Disclaimer
+          </h3>
+          <p className="text-sm text-amber-800">
+            This report is for educational and informational purposes only. It is not intended to diagnose, 
+            treat, or replace professional medical advice. Always consult with a qualified healthcare provider 
+            before making any medical decisions. Genetic risk factors represent predispositions, not certainties, 
+            and environmental and lifestyle factors play significant roles in health outcomes.
+          </p>
+        </motion.div>
+      </main>
+    </div>
+  );
+}
+
+function StatCard({ 
+  icon: Icon, 
+  label, 
+  value, 
+  color 
+}: { 
+  icon: any; 
+  label: string; 
+  value: string; 
+  color: string;
+}) {
+  const colors: Record<string, string> = {
+    indigo: 'bg-indigo-50 text-indigo-600 border-indigo-200',
+    blue: 'bg-blue-50 text-blue-600 border-blue-200',
+    green: 'bg-green-50 text-green-600 border-green-200',
+    orange: 'bg-orange-50 text-orange-600 border-orange-200',
+    red: 'bg-red-50 text-red-600 border-red-200',
+  };
+
+  return (
+    <div className={`rounded-xl border-2 p-4 ${colors[color]}`}>
+      <Icon className="w-6 h-6 mb-2" />
+      <p className="text-2xl font-bold">{value}</p>
+      <p className="text-sm opacity-80">{label}</p>
+    </div>
+  );
+}

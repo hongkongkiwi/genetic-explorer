@@ -1,0 +1,31 @@
+# Heroku-specific Dockerfile
+FROM node:20-alpine
+
+# Install build dependencies
+RUN apk add --no-cache python3 make g++ sqlite-libs
+
+WORKDIR /app
+
+# Copy package files
+COPY package.json package-lock.json* ./
+
+# Install dependencies
+RUN npm ci --only=production
+
+# Copy source code
+COPY . .
+
+# Build the application
+RUN npm run build
+
+# Create data and uploads directories
+RUN mkdir -p data uploads/genomes uploads/temp uploads/exports
+
+# Heroku sets PORT dynamically
+ENV NODE_ENV=production
+ENV HOST=0.0.0.0
+ENV DATABASE_URL=./data/genetic_explorer.db
+ENV UPLOADS_DIR=./uploads
+
+# Heroku requires binding to $PORT
+CMD ["sh", "-c", "npm start -- --port ${PORT:-3000}"]

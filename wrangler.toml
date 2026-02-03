@@ -1,0 +1,43 @@
+name = "genetic-explorer"
+main = "dist/worker.js"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Cloudflare Workers environment variables
+[vars]
+NODE_ENV = "production"
+
+# Secrets (set these with wrangler secret put)
+# OPENAI_API_KEY
+# SESSION_SECRET
+# ZILLIZ_ENDPOINT
+# ZILLIZ_TOKEN
+# GOOGLE_CLIENT_ID
+# GOOGLE_CLIENT_SECRET
+# GITHUB_CLIENT_ID
+# GITHUB_CLIENT_SECRET
+
+# D1 Database binding
+[[d1_databases]]
+binding = "DB"
+database_name = "genetic-explorer-db"
+database_id = "your-database-id-here"
+
+# R2 Storage binding for uploads
+[[r2_buckets]]
+binding = "UPLOADS"
+bucket_name = "genetic-explorer-uploads"
+
+# KV namespace for sessions
+[[kv_namespaces]]
+binding = "SESSIONS"
+id = "your-kv-namespace-id-here"
+
+[build]
+command = "npm run build:cf"
+
+[env.production]
+name = "genetic-explorer-prod"
+
+[env.staging]
+name = "genetic-explorer-staging"

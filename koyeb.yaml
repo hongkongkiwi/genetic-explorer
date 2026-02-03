@@ -1,0 +1,35 @@
+name: genetic-explorer
+service:
+  type: web
+  ports:
+    - port: 3000
+      protocol: http
+  docker:
+    dockerfile: Dockerfile
+  env:
+    - name: NODE_ENV
+      value: production
+    - name: PORT
+      value: "3000"
+    - name: DATABASE_URL
+      value: /data/genetic_explorer.db
+    - name: UPLOADS_DIR
+      value: /app/uploads
+    - name: OPENAI_API_KEY
+      secret: openai-api-key
+    - name: SESSION_SECRET
+      secret: session-secret
+  instance_type: nano
+  scalings:
+    min: 0
+    max: 1
+  routes:
+    - path: /
+  health_checks:
+    - port: 3000
+      protocol: http
+      path: /api/health
+      method: GET
+  volumes:
+    - path: /data
+      size: 1Gi
