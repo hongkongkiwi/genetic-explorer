@@ -460,6 +460,40 @@ export function getGenome(id: string): GenomeData | null {
   };
 }
 
+export interface SnpData {
+  rsid: string;
+  chromosome: string;
+  position: number;
+  genotype: string;
+  frequency?: string;
+}
+
+/**
+ * Get all SNPs for a specific genome
+ */
+export function getUserSNPs(genomeId: string): SnpData[] {
+  const db = getDb();
+
+  const snps = db.prepare(`
+    SELECT rsid, chromosome, position, genotype
+    FROM snps
+    WHERE genome_id = ?
+    ORDER BY chromosome, position
+  `).all(genomeId) as {
+    rsid: string;
+    chromosome: string;
+    position: number;
+    genotype: string;
+  }[];
+
+  return snps.map(s => ({
+    rsid: s.rsid,
+    chromosome: s.chromosome,
+    position: s.position,
+    genotype: s.genotype,
+  }));
+}
+
 export interface GenomeMetadata {
   id: string;
   filename: string;
@@ -1092,7 +1126,9 @@ export function verifyAndUseBackupCode(userId: string, code: string): boolean {
   const db = getDb();
   const crypto = require('crypto');
   const normalizedCode = code.replace(/-/g, '').toUpperCase();
-  const codeHash = crypto.pbkdf2Sync(normalizedCode, 'backup-code-salt', 100000, 32, 'sha256').toString('hex');
+  // Use the same salt derivation as hashBackupCode
+  const salt = `${userId}-backup-code-salt`;
+  const codeHash = crypto.pbkdf2Sync(normalizedCode, salt, 100000, 32, 'sha256').toString('hex');
 
   // Find and mark the code as used
   const result = db.prepare(`

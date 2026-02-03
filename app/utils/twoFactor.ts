@@ -425,11 +425,13 @@ export function generateBackupCodes(): string[] {
 }
 
 /**
- * Hash a backup code for storage
+ * Hash a backup code for storage using user-specific salt
  */
-export function hashBackupCode(code: string): string {
+export function hashBackupCode(code: string, userId?: string): string {
   const normalizedCode = code.replace(/-/g, '').toUpperCase();
-  return crypto.pbkdf2Sync(normalizedCode, 'backup-code-salt', 100000, 32, 'sha256').toString('hex');
+  // Use userId + constant salt for additional security, or fallback to constant
+  const salt = userId ? `${userId}-backup-code-salt` : 'backup-code-salt';
+  return crypto.pbkdf2Sync(normalizedCode, salt, 100000, 32, 'sha256').toString('hex');
 }
 
 /**

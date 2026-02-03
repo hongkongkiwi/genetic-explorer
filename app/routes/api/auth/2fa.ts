@@ -137,7 +137,7 @@ export const APIRouteVerify = createAPIFileRoute('/api/auth/2fa/verify')({
         if (isValid) {
           // Generate backup codes
           const backupCodes = generateBackupCodes();
-          const hashedCodes = backupCodes.map(hashBackupCode);
+          const hashedCodes = backupCodes.map((code: string) => hashBackupCode(code, auth.id));
           saveBackupCodes(auth.id, hashedCodes);
 
           // Enable 2FA
@@ -170,7 +170,7 @@ export const APIRouteVerify = createAPIFileRoute('/api/auth/2fa/verify')({
 
           // Generate backup codes
           const backupCodes = generateBackupCodes();
-          const hashedCodes = backupCodes.map(hashBackupCode);
+          const hashedCodes = backupCodes.map((code: string) => hashBackupCode(code, auth.id));
           saveBackupCodes(auth.id, hashedCodes);
 
           // Enable 2FA
@@ -196,7 +196,7 @@ export const APIRouteVerify = createAPIFileRoute('/api/auth/2fa/verify')({
           saveTotpSecret(auth.id, secret);
 
           const backupCodes = generateBackupCodes();
-          const hashedCodes = backupCodes.map(hashBackupCode);
+          const hashedCodes = backupCodes.map((code: string) => hashBackupCode(code, auth.id));
           saveBackupCodes(auth.id, hashedCodes);
 
           setTwoFactorEnabled(auth.id, true);
@@ -214,7 +214,7 @@ export const APIRouteVerify = createAPIFileRoute('/api/auth/2fa/verify')({
 
         if (isValid) {
           const backupCodes = generateBackupCodes();
-          const hashedCodes = backupCodes.map(hashBackupCode);
+          const hashedCodes = backupCodes.map((code: string) => hashBackupCode(code, auth.id));
           saveBackupCodes(auth.id, hashedCodes);
 
           setTwoFactorEnabled(auth.id, true);
