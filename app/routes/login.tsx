@@ -41,7 +41,18 @@ function LoginPage() {
     const result = await login(email, password, rememberMe);
 
     if (result.success) {
-      navigate({ to: '/' });
+      // Check if 2FA is required
+      if (result.requires2FA && result.pendingToken) {
+        navigate({ 
+          to: '/verify-2fa',
+          search: {
+            token: result.pendingToken,
+            methods: result.methods?.join(','),
+          }
+        });
+      } else {
+        navigate({ to: '/' });
+      }
     } else {
       setError(result.error || 'Login failed');
     }

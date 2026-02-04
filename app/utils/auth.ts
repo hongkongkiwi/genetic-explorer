@@ -88,7 +88,12 @@ export async function registerUser(data: RegisterData): Promise<AuthResult> {
 }
 
 // Login user
-export async function loginUser(data: LoginData, ipAddress?: string, userAgent?: string): Promise<AuthResult> {
+export async function loginUser(
+  data: LoginData, 
+  ipAddress?: string, 
+  userAgent?: string,
+  createSessionImmediately: boolean = true
+): Promise<AuthResult> {
   try {
     // Find user
     const userWithPassword = getUserByEmail(data.email);
@@ -112,15 +117,20 @@ export async function loginUser(data: LoginData, ipAddress?: string, userAgent?:
     // Update last login
     updateUserLastLogin(userWithPassword.id);
 
+    // Remove password hash from user object
+    const { passwordHash, ...user } = userWithPassword;
+
+    // If not creating session immediately (for 2FA flow), return user without session
+    if (!createSessionImmediately) {
+      return { success: true, user };
+    }
+
     // Create session
     const sessionToken = generateSessionToken();
     const durationDays = data.rememberMe ? 30 : SESSION_DURATION_DAYS;
     const expiresAt = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000);
 
     createSession(userWithPassword.id, sessionToken, expiresAt, ipAddress, userAgent);
-
-    // Remove password hash from user object
-    const { passwordHash, ...user } = userWithPassword;
 
     return { success: true, user, sessionToken };
   } catch (error) {

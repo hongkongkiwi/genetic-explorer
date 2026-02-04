@@ -9,6 +9,7 @@ import { ErrorBoundary } from '~/components/ErrorBoundary';
 import { OnboardingModal } from '~/components/Onboarding';
 import { useAppShortcuts, KeyboardShortcutsModal, useShortcutsModal } from '~/hooks/useKeyboardShortcuts';
 import { LiveAnnouncerProvider } from '~/components/LiveAnnouncer';
+import { ToastProvider } from '~/components/Toast';
 import { useEffect, useState } from 'react';
 import appCss from '~/styles.css?url';
 
@@ -88,9 +89,11 @@ function RootComponent() {
       <AuthProvider>
         <CsrfProvider>
           <LiveAnnouncerProvider>
-            <ErrorBoundary>
-              <AppContent mounted={mounted} />
-            </ErrorBoundary>
+            <ToastProvider>
+              <ErrorBoundary>
+                <AppContent mounted={mounted} />
+              </ErrorBoundary>
+            </ToastProvider>
           </LiveAnnouncerProvider>
         </CsrfProvider>
       </AuthProvider>

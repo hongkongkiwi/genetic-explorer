@@ -1,9 +1,14 @@
 import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
 import { loginUser } from '~/utils/auth';
-import { logActivity } from '~/utils/database';
+import { logActivity, getUserByEmail } from '~/utils/database';
 import { rateLimitAuth, createRateLimitHeaders, getClientIp } from '~/utils/rateLimit';
 import { detectSuspiciousActivity, logSecurityEvent } from '~/utils/security';
+import { 
+  createPending2FASession, 
+  generate2FAPendingToken,
+  get2FAStatus 
+} from '~/utils/twoFactor';
 
 export const APIRoute = createAPIFileRoute('/api/auth/login')({
   POST: async ({ request }) => {
@@ -50,30 +55,73 @@ export const APIRoute = createAPIFileRoute('/api/auth/login')({
 
       const userAgent = request.headers.get('user-agent') || undefined;
 
-      const result = await loginUser({ email, password, rememberMe }, ipAddress, userAgent);
+      // First, verify credentials without creating session
+      const result = await loginUser({ email, password, rememberMe }, ipAddress, userAgent, false);
 
-      if (result.success && result.user && result.sessionToken) {
-        // Log the successful login
-        logActivity(result.user.id, 'user_login', 'user', result.user.id, { email }, ipAddress);
+      if (result.success && result.user) {
+        // Check if 2FA is enabled
+        const twoFAStatus = get2FAStatus(result.user.id);
+        
+        if (twoFAStatus.enabled) {
+          // Create pending 2FA session instead of full login
+          const pendingToken = generate2FAPendingToken();
+          const availableMethods = [];
+          
+          if (twoFAStatus.totpEnabled) availableMethods.push('totp');
+          if (twoFAStatus.passkeyEnabled) availableMethods.push('passkey');
+          availableMethods.push('backup'); // Always allow backup codes
+          
+          createPending2FASession(
+            pendingToken,
+            result.user.id,
+            result.user.email,
+            availableMethods
+          );
+          
+          logSecurityEvent('2fa_challenge_initiated', {
+            ip: ipAddress,
+            email: email,
+            methods: availableMethods,
+          }, 'info');
+          
+          return json({
+            success: true,
+            requires2FA: true,
+            pendingToken,
+            methods: availableMethods,
+            user: {
+              id: result.user.id,
+              email: result.user.email,
+              displayName: result.user.displayName,
+            },
+          }, {
+            status: 200,
+            headers,
+          });
+        }
+        
+        // No 2FA - complete login
+        if (result.sessionToken) {
+          // Log the successful login
+          logActivity(result.user.id, 'user_login', 'user', result.user.id, { email }, ipAddress);
 
-        // Set session cookie
-        const maxAge = rememberMe ? 30 * 24 * 60 * 60 : 7 * 24 * 60 * 60; // 30 days or 7 days
-        
-        // Add rate limit headers to successful response
-        headers.append('Set-Cookie', `session_token=${result.sessionToken}; HttpOnly; Secure; SameSite=Strict; Max-Age=${maxAge}; Path=/`);
-        
-        return json({
-          success: true,
-          user: {
-            id: result.user.id,
-            email: result.user.email,
-            displayName: result.user.displayName,
-          },
-          sessionToken: result.sessionToken,
-        }, {
-          status: 200,
-          headers,
-        });
+          const maxAge = rememberMe ? 30 * 24 * 60 * 60 : 7 * 24 * 60 * 60;
+          headers.append('Set-Cookie', `session_token=${result.sessionToken}; HttpOnly; Secure; SameSite=Strict; Max-Age=${maxAge}; Path=/`);
+          
+          return json({
+            success: true,
+            user: {
+              id: result.user.id,
+              email: result.user.email,
+              displayName: result.user.displayName,
+            },
+            sessionToken: result.sessionToken,
+            requires2FA: false,
+          }, {
+            status: 200,
+            headers,
+          });
+        }
       }
 
       // Log failed login
@@ -90,3 +138,27 @@ export const APIRoute = createAPIFileRoute('/api/auth/login')({
     }
   },
 });
+
+// Helper function to get 2FA status (import or define)
+function get2FAStatus(userId: string): { enabled: boolean; totpEnabled: boolean; passkeyEnabled: boolean } {
+  const { getDb } = require('~/utils/database');
+  const db = getDb();
+  
+  const user = db.prepare(`
+    SELECT two_factor_enabled FROM users WHERE id = ?
+  `).get(userId) as { two_factor_enabled: number } | undefined;
+
+  const totpSecret = db.prepare(`
+    SELECT secret FROM totp_secrets WHERE user_id = ? AND verified = 1
+  `).get(userId) as { secret: string } | undefined;
+
+  const passkeys = db.prepare(`
+    SELECT COUNT(*) as count FROM passkeys WHERE user_id = ?
+  `).get(userId) as { count: number } | undefined;
+
+  return {
+    enabled: (user?.two_factor_enabled || 0) === 1,
+    totpEnabled: !!totpSecret,
+    passkeyEnabled: (passkeys?.count || 0) > 0,
+  };
+}

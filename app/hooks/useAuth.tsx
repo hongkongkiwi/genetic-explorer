@@ -23,7 +23,14 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (email: string, password: string, rememberMe?: boolean) => Promise<{ success: boolean; error?: string }>;
+  login: (email: string, password: string, rememberMe?: boolean) => Promise<{ 
+    success: boolean; 
+    error?: string;
+    requires2FA?: boolean;
+    pendingToken?: string;
+    methods?: string[];
+    user?: User;
+  }>;
   register: (email: string, password: string, displayName?: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -70,6 +77,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = await response.json();
 
       if (data.success) {
+        // Check if 2FA is required
+        if (data.requires2FA) {
+          return { 
+            success: true, 
+            requires2FA: true,
+            pendingToken: data.pendingToken,
+            methods: data.methods,
+            user: data.user,
+          };
+        }
+        
         setUser(data.user);
         return { success: true };
       } else {
