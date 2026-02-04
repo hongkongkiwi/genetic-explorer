@@ -355,19 +355,26 @@ export function getKMSProvider(): string {
   return getKMSConfig()?.provider || 'environment';
 }
 
-// For now, we'll store in memory only (implement database storage if needed)
-// In a multi-instance deployment, you'd want to store this in a shared cache
-let persistedEncryptedKey: Buffer | null = null;
+// Import database functions for persistent storage of encrypted data key
+// This allows the key to survive restarts without requiring KMS API calls
+import { loadEncryptedDataKey, saveEncryptedDataKey } from './database';
 
 async function loadEncryptedDataKeyFromDatabase(): Promise<Buffer | null> {
-  // In production, this should query a database or shared cache
-  // For now, we use module-level variable (works for single-instance)
-  return persistedEncryptedKey;
+  try {
+    return loadEncryptedDataKey();
+  } catch (error) {
+    console.warn('Failed to load encrypted data key from database:', error);
+    return null;
+  }
 }
 
 async function saveEncryptedDataKeyToDatabase(encryptedKey: Buffer): Promise<void> {
-  // In production, this should save to database or shared cache
-  persistedEncryptedKey = encryptedKey;
+  try {
+    saveEncryptedDataKey(encryptedKey);
+  } catch (error) {
+    console.error('Failed to save encrypted data key to database:', error);
+    throw error;
+  }
 }
 
 /**
@@ -377,7 +384,15 @@ async function saveEncryptedDataKeyToDatabase(encryptedKey: Buffer): Promise<voi
 export async function rotateDataKey(): Promise<void> {
   console.log('Rotating data key...');
   cachedDataKey = null;
-  persistedEncryptedKey = null;
+  
+  // Delete the old key from database to force generation of new key
+  try {
+    const { deleteSystemSetting } = await import('./database');
+    deleteSystemSetting('kms_encrypted_data_key');
+  } catch (error) {
+    console.warn('Failed to delete old data key from database:', error);
+  }
+  
   await getDataKey();
   console.log('Data key rotated successfully');
 }

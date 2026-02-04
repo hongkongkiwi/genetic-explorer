@@ -560,6 +560,17 @@ function initDatabase() {
     )
   `);
 
+  // System settings table - for storing encrypted data key and other system config
+  // This allows KMS data key to persist across restarts without additional API calls
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS system_settings (
+      key TEXT PRIMARY KEY,
+      value BLOB NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
   // Add OAuth columns to users table (for quick lookup)
   try {
     db.exec(`ALTER TABLE users ADD COLUMN oauth_provider TEXT`);
@@ -3158,4 +3169,60 @@ export function isMatchHidden(userId: string, matchUserId: string): boolean {
   `).get(userId, matchUserId);
   
   return !!result;
+}
+
+
+// ============================================================================
+// System Settings - for KMS data key persistence
+// ============================================================================
+
+/**
+ * Save encrypted data key to database
+ * Allows KMS data key to persist across restarts without additional API calls
+ */
+export function saveSystemSetting(key: string, value: Buffer): void {
+  const db = getDb();
+  db.prepare(`
+    INSERT INTO system_settings (key, value, updated_at)
+    VALUES (?, ?, datetime('now'))
+    ON CONFLICT(key) DO UPDATE SET
+      value = excluded.value,
+      updated_at = datetime('now')
+  `).run(key, value);
+}
+
+/**
+ * Load system setting from database
+ */
+export function loadSystemSetting(key: string): Buffer | null {
+  const db = getDb();
+  const result = db.prepare(`
+    SELECT value FROM system_settings WHERE key = ?
+  `).get(key) as { value: Buffer } | undefined;
+  
+  return result?.value || null;
+}
+
+/**
+ * Delete system setting
+ */
+export function deleteSystemSetting(key: string): void {
+  const db = getDb();
+  db.prepare(`DELETE FROM system_settings WHERE key = ?`).run(key);
+}
+
+/**
+ * Save encrypted data key for KMS persistence
+ * This is the encrypted data key (encrypted by cloud KMS)
+ */
+export function saveEncryptedDataKey(encryptedKey: Buffer): void {
+  saveSystemSetting('kms_encrypted_data_key', encryptedKey);
+}
+
+/**
+ * Load encrypted data key from database
+ * Returns null if no key exists (will need to generate new one)
+ */
+export function loadEncryptedDataKey(): Buffer | null {
+  return loadSystemSetting('kms_encrypted_data_key');
 }
