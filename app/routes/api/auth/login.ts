@@ -10,6 +10,9 @@ import {
   get2FAStatus 
 } from '~/utils/twoFactor';
 import { userRequiresTermsAcceptance, getUserTermsStatus } from '~/utils/terms';
+import { canUserLogin, getFormattedRemainingTime } from '~/utils/twoFactorDisableDelay';
+import { sendSecurityNotification } from '~/utils/securityNotifications';
+import { isNewDevice } from '~/utils/securityNotifications';
 
 export const APIRoute = createAPIFileRoute('/api/auth/login')({
   POST: async ({ request }) => {
@@ -60,6 +63,29 @@ export const APIRoute = createAPIFileRoute('/api/auth/login')({
       const result = await loginUser({ email, password, rememberMe }, ipAddress, userAgent, false);
 
       if (result.success && result.user) {
+        // Check if user is in 2FA disable delay period
+        const loginCheck = canUserLogin(result.user.id);
+        if (!loginCheck.allowed) {
+          logSecurityEvent('login_blocked_2fa_delay', {
+            ip: ipAddress,
+            email: email,
+            userId: result.user.id,
+            remainingTime: loginCheck.remainingTime,
+          }, 'warning');
+          
+          return json({
+            success: false,
+            error: loginCheck.reason,
+            blockedBy2FADelay: true,
+            remainingTime: loginCheck.remainingTime,
+            formattedRemaining: loginCheck.remainingTime ? getFormattedRemainingTime(loginCheck.remainingTime) : undefined,
+            effectiveAt: loginCheck.effectiveAt,
+          }, {
+            status: 403,
+            headers,
+          });
+        }
+
         // Check if user has accepted current terms
         const requiresTermsAcceptance = userRequiresTermsAcceptance(result.user.id);
         
@@ -135,6 +161,17 @@ export const APIRoute = createAPIFileRoute('/api/auth/login')({
 
           const maxAge = rememberMe ? 30 * 24 * 60 * 60 : 7 * 24 * 60 * 60;
           headers.append('Set-Cookie', `session_token=${result.sessionToken}; HttpOnly; Secure; SameSite=Strict; Max-Age=${maxAge}; Path=/`);
+          
+          // Send security notification for new device login
+          if (userAgent && isNewDevice(result.user.id, userAgent, ipAddress || '')) {
+            sendSecurityNotification(
+              result.user.id,
+              'login_new_device',
+              { ipAddress },
+              ipAddress || undefined,
+              userAgent
+            );
+          }
           
           return json({
             success: true,

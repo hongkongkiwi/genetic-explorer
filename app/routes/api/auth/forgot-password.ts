@@ -4,6 +4,8 @@ import { getUserByEmail, generatePasswordResetToken, storePasswordResetToken } f
 import { sendEmail } from '~/utils/email';
 import PasswordResetEmail from '~/emails/PasswordReset';
 import * as React from 'react';
+import { sendSecurityNotification } from '~/utils/securityNotifications';
+import { getClientIp } from '~/utils/rateLimit';
 
 export const APIRoute = createAPIFileRoute('/api/auth/forgot-password')({
   POST: async ({ request }) => {
@@ -54,6 +56,17 @@ export const APIRoute = createAPIFileRoute('/api/auth/forgot-password')({
         // Still return success to prevent email enumeration
         // But log the error for monitoring
       }
+
+      // Send security notification
+      const ipAddress = getClientIp(request);
+      const userAgent = request.headers.get('user-agent');
+      sendSecurityNotification(
+        user.id,
+        'password_reset_requested',
+        {},
+        ipAddress || undefined,
+        userAgent || undefined
+      );
 
       return json({ 
         success: true, 
