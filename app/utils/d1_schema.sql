@@ -297,6 +297,36 @@ CREATE INDEX IF NOT EXISTS idx_2fa_disable_requests_user_id ON two_factor_disabl
 CREATE INDEX IF NOT EXISTS idx_2fa_disable_requests_status ON two_factor_disable_requests(status);
 CREATE INDEX IF NOT EXISTS idx_2fa_disable_requests_effective_at ON two_factor_disable_requests(effective_at);
 
+-- Notification preferences table
+CREATE TABLE IF NOT EXISTS notification_preferences (
+  user_id TEXT PRIMARY KEY,
+  preferences TEXT NOT NULL,
+  quiet_hours_enabled INTEGER DEFAULT 0,
+  quiet_hours_start TEXT,
+  quiet_hours_end TEXT,
+  quiet_hours_timezone TEXT DEFAULT 'UTC',
+  updated_at TEXT DEFAULT (datetime('now')),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Notification queue for digest scheduling
+CREATE TABLE IF NOT EXISTS notification_queue (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  category TEXT NOT NULL,
+  event_type TEXT NOT NULL,
+  payload TEXT NOT NULL,
+  scheduled_at TEXT,
+  created_at TEXT DEFAULT (datetime('now')),
+  sent_at TEXT,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Notification indexes
+CREATE INDEX IF NOT EXISTS idx_notification_prefs_user ON notification_preferences(user_id);
+CREATE INDEX IF NOT EXISTS idx_notification_queue_user ON notification_queue(user_id);
+CREATE INDEX IF NOT EXISTS idx_notification_queue_scheduled ON notification_queue(scheduled_at);
+
 CREATE INDEX IF NOT EXISTS idx_research_updates_rsid ON research_updates(rsid);
 CREATE INDEX IF NOT EXISTS idx_research_updates_date ON research_updates(date);
 

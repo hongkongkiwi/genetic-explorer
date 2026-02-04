@@ -413,6 +413,158 @@ export function validateEncryptionConfig(): { valid: boolean; errors: string[] }
   };
 }
 
+// ============================================================================
+// Deterministic Encryption for Searchable Fields (Email Addresses)
+// ============================================================================
+//
+// Deterministic encryption uses a fixed IV derived from the plaintext,
+// so the same plaintext always produces the same ciphertext.
+// This allows searching/lookup while still providing encryption at rest.
+//
+// SECURITY NOTE: This is less secure than randomized encryption because:
+// 1. Patterns in the data are preserved (identical emails = identical ciphertexts)
+// 2. Brute force attacks are possible if the attacker knows the key space
+//
+// Use only for fields that MUST be searchable (like email for login)
+
+const DETERMINISTIC_ALGORITHM = 'aes-256-siv'; // Synthetic IV mode for deterministic encryption
+
+/**
+ * Generate a deterministic IV from the plaintext using HMAC
+ * This ensures the same plaintext always produces the same IV
+ */
+function generateDeterministicIV(plaintext: string, key: Buffer): Buffer {
+  // Use HMAC to derive a consistent IV from the plaintext
+  const hmac = crypto.createHmac('sha256', key);
+  hmac.update(plaintext);
+  return hmac.digest().slice(0, IV_LENGTH);
+}
+
+export interface DeterministicEncryptedData {
+  ciphertext: string;
+  iv: string;
+  authTag: string;
+  version: number;
+  deterministic: true;
+}
+
+/**
+ * Encrypt data deterministically (same input = same output)
+ * Uses AES-256-GCM with IV derived from plaintext via HMAC
+ * 
+ * Use case: Email addresses that need to be looked up by exact match
+ */
+export function encryptDeterministic(plaintext: string, key: Buffer): DeterministicEncryptedData {
+  // Derive deterministic IV from plaintext
+  const iv = generateDeterministicIV(plaintext, key);
+
+  // Create cipher with deterministic IV
+  const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
+
+  // Encrypt the data
+  let ciphertext = cipher.update(plaintext, 'utf8', 'base64');
+  ciphertext += cipher.final('base64');
+
+  // Get authentication tag
+  const authTag = cipher.getAuthTag();
+
+  return {
+    ciphertext,
+    iv: iv.toString('base64'),
+    authTag: authTag.toString('base64'),
+    version: 1,
+    deterministic: true,
+  };
+}
+
+/**
+ * Decrypt deterministically encrypted data
+ */
+export function decryptDeterministic(encrypted: DeterministicEncryptedData, key: Buffer): string {
+  // Verify version
+  if (encrypted.version !== 1) {
+    throw new Error(`Unsupported encryption version: ${encrypted.version}`);
+  }
+
+  // Create decipher
+  const iv = Buffer.from(encrypted.iv, 'base64');
+  const authTag = Buffer.from(encrypted.authTag, 'base64');
+
+  const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
+  decipher.setAuthTag(authTag);
+
+  // Decrypt the data
+  let plaintext = decipher.update(encrypted.ciphertext, 'base64', 'utf8');
+  plaintext += decipher.final('utf8');
+
+  return plaintext;
+}
+
+/**
+ * Encrypt email address deterministically for storage
+ * Allows lookup by email while keeping it encrypted at rest
+ */
+export function encryptEmail(email: string, key: Buffer): DeterministicEncryptedData {
+  // Normalize email (lowercase, trim)
+  const normalizedEmail = email.toLowerCase().trim();
+  return encryptDeterministic(normalizedEmail, key);
+}
+
+/**
+ * Decrypt email address
+ */
+export function decryptEmail(encrypted: DeterministicEncryptedData, key: Buffer): string {
+  return decryptDeterministic(encrypted, key);
+}
+
+/**
+ * Search for email by generating the deterministic ciphertext
+ * Returns the encrypted form that can be used in database queries
+ */
+export function getEmailSearchToken(email: string, key: Buffer): string {
+  const encrypted = encryptEmail(email, key);
+  return JSON.stringify(encrypted);
+}
+
+/**
+ * Verify if a plaintext email matches an encrypted email
+ * Useful for login without decrypting stored emails
+ */
+export function verifyEmail(plaintextEmail: string, encryptedEmailJson: string, key: Buffer): boolean {
+  try {
+    const encrypted = JSON.parse(encryptedEmailJson) as DeterministicEncryptedData;
+    const decrypted = decryptDeterministic(encrypted, key);
+    // Constant-time comparison to prevent timing attacks
+    const expected = plaintextEmail.toLowerCase().trim();
+    if (decrypted.length !== expected.length) {
+      return false;
+    }
+    return crypto.timingSafeEqual(Buffer.from(decrypted), Buffer.from(expected));
+  } catch {
+    return false;
+  }
+}
+
+// ============================================================================
+// User-specific Deterministic Encryption Helpers
+// ============================================================================
+
+/**
+ * Encrypt email for a specific user
+ */
+export function encryptEmailForUser(email: string, userId: string): DeterministicEncryptedData {
+  const userKey = getUserEncryptionKey(userId);
+  return encryptEmail(email, userKey);
+}
+
+/**
+ * Verify email for a specific user
+ */
+export function verifyEmailForUser(plaintextEmail: string, encryptedEmailJson: string, userId: string): boolean {
+  const userKey = getUserEncryptionKey(userId);
+  return verifyEmail(plaintextEmail, encryptedEmailJson, userKey);
+}
+
 export default {
   encrypt,
   decrypt,
@@ -429,4 +581,10 @@ export default {
   initializeEncryption,
   getMasterKey,
   getMasterKeySync,
+  encryptDeterministic,
+  decryptDeterministic,
+  encryptEmail,
+  decryptEmail,
+  getEmailSearchToken,
+  verifyEmail,
 };

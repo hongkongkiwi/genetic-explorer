@@ -71,16 +71,16 @@ function SettingsPage() {
             </Link>
 
             <Link
-              to="/notifications"
+              to="/settings/notifications"
               className="flex items-center justify-between p-4 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                  <Bell className="w-5 h-5 text-purple-700 dark:text-purple-400" />
+                <div className="w-10 h-10 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
+                  <Bell className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                 </div>
                 <div>
                   <p className="font-medium text-slate-900 dark:text-white">Notifications</p>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">Choose how you receive updates</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Choose what emails and alerts you receive</p>
                 </div>
               </div>
               <ChevronRight className="w-5 h-5 text-slate-400" />

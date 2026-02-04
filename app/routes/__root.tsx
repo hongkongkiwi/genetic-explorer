@@ -10,6 +10,7 @@ import { OnboardingModal } from '~/components/Onboarding';
 import { useAppShortcuts, KeyboardShortcutsModal, useShortcutsModal } from '~/hooks/useKeyboardShortcuts';
 import { LiveAnnouncerProvider } from '~/components/LiveAnnouncer';
 import { ToastProvider } from '~/components/Toast';
+import { CookieConsentBanner } from '~/components/CookieConsent';
 import { useEffect, useState } from 'react';
 import appCss from '~/styles.css?url';
 
@@ -180,7 +181,8 @@ function AppContent({ mounted }: { mounted: boolean }) {
         {/* Keyboard shortcuts help modal */}
         <KeyboardShortcutsModal isOpen={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
         
-
+        {/* Cookie consent banner */}
+        <CookieConsentBanner />
         
         <Scripts />
       </body>

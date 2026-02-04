@@ -6,6 +6,12 @@
 
 import { sendEmail } from './email';
 import { getUserById } from './database';
+import { 
+  shouldSendNotification, 
+  queueNotificationForDigest,
+  type NotificationCategory,
+  EVENT_CATEGORIES 
+} from './notificationPreferences';
 
 interface SecurityEvent {
   userId: string;
@@ -36,9 +42,9 @@ const EVENT_NAMES: Record<SecurityEventType, string> = {
   login_suspicious: 'Suspicious Login Attempt',
   password_changed: 'Password Changed',
   email_changed: 'Email Address Changed',
-  2fa_enabled: 'Two-Factor Authentication Enabled',
-  2fa_disabled: 'Two-Factor Authentication Disabled',
-  2fa_disabled_with_delay: 'Two-Factor Authentication Disabled (24hr Delay Active)',
+  '2fa_enabled': 'Two-Factor Authentication Enabled',
+  '2fa_disabled': 'Two-Factor Authentication Disabled',
+  '2fa_disabled_with_delay': 'Two-Factor Authentication Disabled (24hr Delay Active)',
   backup_codes_regenerated: 'Backup Codes Regenerated',
   session_terminated: 'Session Terminated',
   all_sessions_terminated: 'All Sessions Terminated',
@@ -49,6 +55,7 @@ const EVENT_NAMES: Record<SecurityEventType, string> = {
 
 /**
  * Send security notification email
+ * Respects user notification preferences
  */
 export async function sendSecurityNotification(
   userId: string,
@@ -66,6 +73,23 @@ export async function sendSecurityNotification(
 
     // Don't send if user has no email
     if (!user.email) {
+      return;
+    }
+
+    // Check user preferences
+    const notificationCheck = shouldSendNotification(userId, eventType, 'email');
+    
+    if (!notificationCheck.shouldSend) {
+      console.log(`Notification skipped for ${eventType}: ${notificationCheck.reason}`);
+      
+      // Queue for digest if applicable
+      if (notificationCheck.queueForDigest) {
+        queueNotificationForDigest(userId, eventType, {
+          ...details,
+          ipAddress,
+          userAgent,
+        });
+      }
       return;
     }
 

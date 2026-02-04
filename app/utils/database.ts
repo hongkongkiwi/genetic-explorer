@@ -11,6 +11,8 @@ import { encrypt, decrypt, getUserEncryptionKey } from './encryption';
 import { initTermsTables } from './terms';
 import { initSessionManagementTables } from './sessionManagement';
 import { initTwoFactorDisableDelayTables } from './twoFactorDisableDelay';
+import { initNotificationPreferencesTables } from './notificationPreferences';
+import { logError, logWarn, logInfo } from './secureLogger';
 
 let db: Database.Database | null = null;
 
@@ -120,10 +122,10 @@ function initDatabase() {
     const hasEncryptedGenotype = tableInfo.some(col => col.name === 'genotype_encrypted');
     
     if (hasPlaintextGenotype && !hasEncryptedGenotype) {
-      console.log('🔐 Migrating SNPs to encrypted storage...');
+      logInfo('Database', 'Migrating SNPs to encrypted storage...');
       db.exec(`ALTER TABLE snps ADD COLUMN genotype_encrypted TEXT`);
       // Data migration would happen here in production
-      console.log('✅ SNPs table ready for encryption migration');
+      logInfo('Database', 'SNPs table ready for encryption migration');
     }
   } catch (e) {
     // Migration check failed, continue anyway
@@ -644,6 +646,9 @@ function initDatabase() {
   
   // Initialize 2FA disable delay tables
   initTwoFactorDisableDelayTables();
+  
+  // Initialize notification preferences tables
+  initNotificationPreferencesTables();
 }
 
 /**
@@ -848,7 +853,7 @@ export function getGenomeFile(id: string): Buffer | null {
     
     return readFileSync(genome.storage_path);
   } catch (error) {
-    console.error(`Failed to read genome file ${id}:`, error);
+    logError('Database', error, { context: 'readGenomeFile', genomeId: id });
     return null;
   }
 }
@@ -868,7 +873,7 @@ export function verifyGenomeIntegrity(id: string): boolean {
 
     return currentChecksum === genome.checksum_sha256;
   } catch (error) {
-    console.error(`Integrity check failed for genome ${id}:`, error);
+    logError('Database', error, { context: 'verifyGenomeIntegrity', genomeId: id });
     return false;
   }
 }
@@ -922,7 +927,7 @@ export function getGenome(id: string): GenomeData | null {
         genotype: decrypted,
       };
     } catch (e) {
-      console.error(`Failed to decrypt SNP ${s.rsid}:`, e);
+      logError('Database', e, { context: 'decryptSNP', rsid: s.rsid });
       return {
         rsid: s.rsid,
         chromosome: s.chromosome,
@@ -990,7 +995,7 @@ export function getUserSNPs(genomeId: string, userId?: string): SnpData[] {
         genotype: decrypted,
       };
     } catch (e) {
-      console.error(`Failed to decrypt SNP ${s.rsid}:`, e);
+      logError('Database', e, { context: 'decryptSNP', rsid: s.rsid });
       return {
         rsid: s.rsid,
         chromosome: s.chromosome,
@@ -1041,7 +1046,7 @@ export function deleteGenome(id: string): void {
     try {
       unlinkSync(genome.storage_path);
     } catch (error) {
-      console.warn(`Failed to delete genome file ${genome.storage_path}:`, error);
+      logWarn('Database', `Failed to delete genome file`, { path: genome.storage_path });
     }
   }
 }
@@ -1655,7 +1660,7 @@ export function getTotpSecret(userId: string): string | null {
     
     return decrypted;
   } catch (error) {
-    console.error('Failed to decrypt TOTP secret:', error);
+    logError('Database', error, { context: 'decryptTOTPSecret' });
     return null;
   }
 }
@@ -3381,7 +3386,7 @@ export function deleteAllUserGenomes(userId: string): {
         unlinkSync(genome.storage_path);
         deletedFiles.push(genome.storage_path);
       } catch (error) {
-        console.warn(`Failed to delete genome file ${genome.storage_path}:`, error);
+        logWarn('Database', `Failed to delete genome file`, { path: genome.storage_path });
         failedFiles.push(genome.storage_path);
       }
     }

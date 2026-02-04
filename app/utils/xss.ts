@@ -27,6 +27,31 @@ const RICH_TEXT_CONFIG = {
 };
 
 /**
+ * HTML entity decoder - decodes entities like &lt; to <
+ * Uses DOMParser which is safer than innerHTML
+ */
+function decodeHtmlEntities(text: string): string {
+  if (typeof window === 'undefined') {
+    // Server-side: use regex-based decoding
+    return text
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&#x27;/g, "'")
+      .replace(/&#x2F;/g, '/')
+      .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(parseInt(code, 10)));
+  }
+  
+  // Client-side: use DOMParser (safe, doesn't execute scripts)
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(`<!DOCTYPE html><html><body><textarea>${text}</textarea></body></html>`, 'text/html');
+  const textarea = doc.querySelector('textarea');
+  return textarea ? textarea.textContent || '' : text;
+}
+
+/**
  * Sanitize user input to plain text
  * Removes ALL HTML tags and attributes
  */
@@ -38,10 +63,8 @@ export function sanitizePlainText(input: string): string {
   // Use DOMPurify to strip all HTML
   const sanitized = DOMPurify.sanitize(input, STRICT_CONFIG);
   
-  // Additional safety: decode HTML entities and re-encode for safety
-  const textarea = document.createElement('textarea');
-  textarea.innerHTML = sanitized;
-  return textarea.value;
+  // Decode HTML entities
+  return decodeHtmlEntities(sanitized);
 }
 
 /**
