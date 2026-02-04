@@ -27,7 +27,6 @@ export const APIRouteGet = createAPIFileRoute('/api/notifications/preferences')(
         success: true,
         preferences: {
           categories: preferences.categories,
-          quietHours: preferences.quietHours,
           updatedAt: preferences.updatedAt,
         },
         options,
@@ -54,9 +53,9 @@ export const APIRouteUpdate = createAPIFileRoute('/api/notifications/preferences
     try {
       const auth = requireAuth(request);
       const body = await request.json();
-      const { categories, quietHours } = body;
+      const { categories } = body;
 
-      if (!categories && !quietHours) {
+      if (!categories) {
         return json(
           { success: false, error: 'No preferences provided' },
           { status: 400 }
@@ -64,70 +63,33 @@ export const APIRouteUpdate = createAPIFileRoute('/api/notifications/preferences
       }
 
       // Validate category updates
-      if (categories) {
-        for (const [category, prefs] of Object.entries(categories)) {
-          // Validate channels
-          if (prefs && typeof prefs === 'object' && 'channels' in prefs) {
-            const validChannels = ['email', 'push', 'in_app'];
-            const channels = (prefs as CategoryPreference).channels;
-            
-            if (!Array.isArray(channels)) {
-              return json(
-                { success: false, error: `Invalid channels for ${category}` },
-                { status: 400 }
-              );
-            }
-            
-            for (const channel of channels) {
-              if (!validChannels.includes(channel)) {
-                return json(
-                  { success: false, error: `Invalid channel: ${channel}` },
-                  { status: 400 }
-                );
-              }
-            }
-          }
-
-          // Validate digest frequency
-          if (prefs && typeof prefs === 'object' && 'digestFrequency' in prefs) {
-            const validFrequencies = ['immediate', 'daily', 'weekly', 'never'];
-            const freq = (prefs as CategoryPreference).digestFrequency;
-            
-            if (freq && !validFrequencies.includes(freq)) {
-              return json(
-                { success: false, error: `Invalid digest frequency: ${freq}` },
-                { status: 400 }
-              );
-            }
-          }
-        }
-      }
-
-      // Validate quiet hours
-      if (quietHours) {
-        if (quietHours.enabled) {
-          const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+      for (const [category, prefs] of Object.entries(categories)) {
+        // Validate channels
+        if (prefs && typeof prefs === 'object' && 'channels' in prefs) {
+          const validChannels = ['email', 'push', 'in_app'];
+          const channels = (prefs as CategoryPreference).channels;
           
-          if (!quietHours.start || !timeRegex.test(quietHours.start)) {
+          if (!Array.isArray(channels)) {
             return json(
-              { success: false, error: 'Invalid quiet hours start time (HH:mm format required)' },
+              { success: false, error: `Invalid channels for ${category}` },
               { status: 400 }
             );
           }
           
-          if (!quietHours.end || !timeRegex.test(quietHours.end)) {
-            return json(
-              { success: false, error: 'Invalid quiet hours end time (HH:mm format required)' },
-              { status: 400 }
-            );
+          for (const channel of channels) {
+            if (!validChannels.includes(channel)) {
+              return json(
+                { success: false, error: `Invalid channel: ${channel}` },
+                { status: 400 }
+              );
+            }
           }
         }
       }
 
       const result = updateNotificationPreferences(
         auth.id,
-        categories as Record<NotificationCategory, Partial<CategoryPreference>>,
-        quietHours
+        categories as Record<NotificationCategory, Partial<CategoryPreference>>
       );
 
       if (!result.success) {
@@ -145,7 +107,6 @@ export const APIRouteUpdate = createAPIFileRoute('/api/notifications/preferences
         message: 'Preferences updated successfully',
         preferences: {
           categories: updated.categories,
-          quietHours: updated.quietHours,
           updatedAt: updated.updatedAt,
         },
       });

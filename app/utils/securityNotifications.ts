@@ -7,8 +7,7 @@
 import { sendEmail } from './email';
 import { getUserById } from './database';
 import { 
-  shouldSendNotification, 
-  queueNotificationForDigest,
+  shouldSendNotification,
   type NotificationCategory,
   EVENT_CATEGORIES 
 } from './notificationPreferences';
@@ -81,15 +80,6 @@ export async function sendSecurityNotification(
     
     if (!notificationCheck.shouldSend) {
       console.log(`Notification skipped for ${eventType}: ${notificationCheck.reason}`);
-      
-      // Queue for digest if applicable
-      if (notificationCheck.queueForDigest) {
-        queueNotificationForDigest(userId, eventType, {
-          ...details,
-          ipAddress,
-          userAgent,
-        });
-      }
       return;
     }
 

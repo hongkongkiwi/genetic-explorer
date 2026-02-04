@@ -7,7 +7,7 @@ A beautiful, comprehensive web application for exploring and analyzing personal 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.1-06B6D4?logo=tailwindcss)](https://tailwindcss.com/)
 [![Vitest](https://img.shields.io/badge/Vitest-Testing-6E9F18?logo=vitest)](https://vitest.dev/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-Genetic%20Explorer%20License-blue.svg)](LICENSE)
 
 ![Genetic Explorer](https://images.unsplash.com/photo-1530026405186-ed1f139313f8?w=1200&h=400&fit=crop)
 
@@ -487,7 +487,16 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the **Genetic Explorer License**.
+
+### Quick Summary
+- ✅ **Free for personal use** - Analyze your own genetic data
+- ✅ **Free for research & education** - Academic and non-profit use welcome
+- ✅ **Free to modify** - Contribute improvements back to the project
+- ❌ **No competing services** - Cannot create competing SaaS/genetic analysis platforms
+- 💼 **Commercial use requires license** - Contact us for commercial licensing
+
+See [LICENSE](LICENSE) for full terms and [COMMERCIAL_LICENSE.md](COMMERCIAL_LICENSE.md) for commercial use inquiries.
 
 ## 🙏 Acknowledgments
 

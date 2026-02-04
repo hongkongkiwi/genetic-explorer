@@ -10,13 +10,11 @@ import {
   Mail, 
   Shield, 
   Megaphone, 
-  Clock,
   Check,
   AlertTriangle,
   Info,
   Save,
   Loader2,
-  Moon,
   Smartphone,
   Monitor
 } from 'lucide-react';
@@ -28,25 +26,15 @@ interface PreferenceOption {
   description: string;
   mandatory: boolean;
   channels: string[];
-  allowDigest: boolean;
 }
 
 interface CategoryPreference {
   enabled: boolean;
   channels: string[];
-  digestFrequency?: 'immediate' | 'daily' | 'weekly' | 'never';
-}
-
-interface QuietHours {
-  enabled: boolean;
-  start: string;
-  end: string;
-  timezone: string;
 }
 
 interface Preferences {
   categories: Record<string, CategoryPreference>;
-  quietHours?: QuietHours;
 }
 
 export const Route = createFileRoute('/settings/notifications')({
@@ -106,7 +94,6 @@ function NotificationsSettingsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           categories: preferences.categories,
-          quietHours: preferences.quietHours,
         }),
       });
 
@@ -152,34 +139,6 @@ function NotificationsSettingsPage() {
     updateCategory(category, { channels });
   };
 
-  const toggleQuietHours = () => {
-    if (!preferences) return;
-    
-    setPreferences({
-      ...preferences,
-      quietHours: {
-        enabled: !preferences.quietHours?.enabled,
-        start: preferences.quietHours?.start || '22:00',
-        end: preferences.quietHours?.end || '08:00',
-        timezone: preferences.quietHours?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
-      },
-    });
-    setHasChanges(true);
-  };
-
-  const updateQuietHours = (field: 'start' | 'end', value: string) => {
-    if (!preferences?.quietHours) return;
-    
-    setPreferences({
-      ...preferences,
-      quietHours: {
-        ...preferences.quietHours,
-        [field]: value,
-      },
-    });
-    setHasChanges(true);
-  };
-
   const getCategoryIcon = (category: string) => {
     switch (category) {
       case 'security_critical':
@@ -189,8 +148,6 @@ function NotificationsSettingsPage() {
         return <Megaphone className="w-5 h-5 text-purple-500" />;
       case 'research_updates':
         return <Info className="w-5 h-5 text-blue-500" />;
-      case 'digest':
-        return <Clock className="w-5 h-5 text-amber-500" />;
       default:
         return <Bell className="w-5 h-5 text-slate-500" />;
     }
@@ -253,65 +210,6 @@ function NotificationsSettingsPage() {
               For your protection, critical security notifications like password changes and 
               new device logins will always be sent. These are marked with a lock icon below.
             </p>
-          </div>
-        </div>
-      </Card>
-
-      {/* Quiet Hours */}
-      <Card className="p-4 sm:p-6 mb-6">
-        <div className="flex items-start gap-4">
-          <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center flex-shrink-0">
-            <Moon className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="font-semibold text-slate-900 dark:text-white">Quiet Hours</h2>
-                <p className="text-sm text-slate-600 dark:text-slate-400">
-                  Pause non-critical notifications during specific hours
-                </p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={preferences.quietHours?.enabled || false}
-                  onChange={toggleQuietHours}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
-              </label>
-            </div>
-
-            {preferences.quietHours?.enabled && (
-              <div className="mt-4 flex flex-wrap items-center gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                    Start Time
-                  </label>
-                  <input
-                    type="time"
-                    value={preferences.quietHours.start}
-                    onChange={(e) => updateQuietHours('start', e.target.value)}
-                    className="px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-                  />
-                </div>
-                <div className="text-slate-400">to</div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                    End Time
-                  </label>
-                  <input
-                    type="time"
-                    value={preferences.quietHours.end}
-                    onChange={(e) => updateQuietHours('end', e.target.value)}
-                    className="px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-                  />
-                </div>
-                <div className="text-sm text-slate-500 dark:text-slate-400">
-                  {Intl.DateTimeFormat().resolvedOptions().timeZone}
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </Card>
@@ -405,25 +303,6 @@ function NotificationsSettingsPage() {
                           </label>
                         )}
                       </div>
-
-                      {option.allowDigest && option.category !== 'digest' && (
-                        <div className="mt-4">
-                          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                            Delivery Frequency:
-                          </label>
-                          <select
-                            value={pref.digestFrequency || 'immediate'}
-                            onChange={(e) => updateCategory(option.category, { 
-                              digestFrequency: e.target.value as any 
-                            })}
-                            className="px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm"
-                          >
-                            <option value="immediate">Immediate</option>
-                            <option value="daily">Daily Digest</option>
-                            <option value="weekly">Weekly Digest</option>
-                          </select>
-                        </div>
-                      )}
                     </div>
                   )}
                 </div>

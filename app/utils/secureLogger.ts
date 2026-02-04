@@ -3,7 +3,13 @@
  * 
  * Prevents sensitive information from being logged to console.
  * Sanitizes error messages to avoid information leakage.
+ * 
+ * Uses Loglayer for structured logging with Axiom integration
+ * and Sentry for error tracking.
  */
+
+import { logger, logError as logErrorToSystem } from './logging';
+import { isSentryConfigured, captureException } from './sentry';
 
 // Patterns that might indicate sensitive data
 const SENSITIVE_PATTERNS = [
@@ -80,52 +86,60 @@ export function sanitizeError(error: Error | string | unknown): string {
 }
 
 /**
- * Secure console logging - only logs in development
+ * Secure console logging - uses Loglayer with sanitization
  */
-export function logError(context: string, error: Error | string | unknown, metadata?: Record<string, unknown>): void {
+export function logError(
+  context: string, 
+  error: Error | string | unknown, 
+  metadata?: Record<string, unknown>
+): void {
   const sanitizedMessage = sanitizeError(error);
+  const sanitizedMetadata = metadata ? 
+    Object.fromEntries(
+      Object.entries(metadata).map(([k, v]) => [
+        k, 
+        typeof v === 'string' ? sanitizeLogMessage(v) : v
+      ])
+    ) : {};
+
+  // Use structured logging
+  const errorObj = error instanceof Error ? error : new Error(String(error));
   
-  // In production, don't log to console - use proper logging service
-  if (process.env.NODE_ENV === 'production') {
-    // Send to secure logging service (Sentry, Datadog, etc.)
-    // This is a placeholder - implement actual integration
-    if (typeof window !== 'undefined' && (window as any).Sentry) {
-      (window as any).Sentry.captureException(error, {
-        extra: { context, metadata },
-      });
-    }
-    return;
+  logErrorToSystem(errorObj, {
+    context,
+    ...sanitizedMetadata,
+  });
+
+  // Also report to Sentry if configured
+  if (isSentryConfigured() && error instanceof Error) {
+    captureException(error, { context, ...sanitizedMetadata });
   }
-  
-  // Development logging with sanitization
-  const sanitizedMetadata = metadata ? sanitizeLogMessage(JSON.stringify(metadata)) : '';
-  console.error(`[${context}] ${sanitizedMessage}`, sanitizedMetadata);
 }
 
 /**
  * Secure console warn
  */
-export function logWarn(context: string, message: string, metadata?: Record<string, unknown>): void {
+export function logWarn(
+  context: string, 
+  message: string, 
+  metadata?: Record<string, unknown>
+): void {
   const sanitizedMessage = sanitizeLogMessage(message);
   
-  if (process.env.NODE_ENV === 'production') {
-    // Send to monitoring service
-    return;
-  }
-  
-  const sanitizedMetadata = metadata ? sanitizeLogMessage(JSON.stringify(metadata)) : '';
-  console.warn(`[${context}] ${sanitizedMessage}`, sanitizedMetadata);
+  logger
+    .withContext({ context, level: 'warn', ...metadata })
+    .warn(sanitizedMessage);
 }
 
 /**
- * Secure console info (development only)
+ * Secure console info (development only via Loglayer)
  */
 export function logInfo(context: string, message: string): void {
-  if (process.env.NODE_ENV === 'production') {
-    return; // No info logs in production
-  }
+  const sanitizedMessage = sanitizeLogMessage(message);
   
-  console.log(`[${context}] ${sanitizeLogMessage(message)}`);
+  logger
+    .withContext({ context, level: 'info' })
+    .info(sanitizedMessage);
 }
 
 /**
@@ -147,6 +161,55 @@ export function createSafeError(
   return safeError;
 }
 
+/**
+ * Log a security event with automatic Sentry reporting
+ */
+export function logSecurityEvent(
+  event: string,
+  details: Record<string, unknown>,
+  severity: 'low' | 'medium' | 'high' | 'critical' = 'low'
+): void {
+  // Sanitize details
+  const sanitizedDetails = Object.fromEntries(
+    Object.entries(details).map(([k, v]) => [
+      k,
+      typeof v === 'string' ? sanitizeLogMessage(v) : v
+    ])
+  );
+
+  logger
+    .withContext({
+      eventType: 'security',
+      severity,
+      ...sanitizedDetails,
+    })
+    .warn(`Security Event: ${event}`);
+
+  // Report high/critical severity to Sentry
+  if ((severity === 'high' || severity === 'critical') && isSentryConfigured()) {
+    captureException(new Error(`Security Event: ${event}`), sanitizedDetails);
+  }
+}
+
+/**
+ * Log an audit event
+ */
+export function logAuditEvent(
+  action: string,
+  userId: string,
+  resource: string,
+  details?: Record<string, unknown>
+): void {
+  logger
+    .withContext({
+      eventType: 'audit',
+      userId,
+      resource,
+      ...details,
+    })
+    .info(`Audit: ${action}`);
+}
+
 export default {
   sanitizeLogMessage,
   sanitizeError,
@@ -154,4 +217,6 @@ export default {
   logWarn,
   logInfo,
   createSafeError,
+  logSecurityEvent,
+  logAuditEvent,
 };
