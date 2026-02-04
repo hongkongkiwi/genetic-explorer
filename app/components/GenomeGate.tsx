@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from '@tanstack/react-router';
 import { Dna, Upload, Lock, ChevronRight } from 'lucide-react';
 import { useGenomeStatus } from '~/hooks/useGenomeStatus';
-import { Button } from '~/components/ui/button';
+import { Button } from '~/components/ui/Button';
 import {
   Card,
   CardContent,

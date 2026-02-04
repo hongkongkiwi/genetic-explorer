@@ -9,8 +9,8 @@ import {
   getPapersForSNP,
   getDrugInteractionsForGene,
   getGWASStudiesForSNP,
-} from './researchDatabase';
-import { syncSNPFromNCBI, syncClinVarForSNP, syncPubMedPapersForSNP } from './researchSync';
+} from '~/utils/research/database';
+import { syncSNPFromNCBI, syncClinVarForSNP, syncPubMedPapersForSNP } from '~/utils/research/sync';
 
 export interface EnhancedVariant extends GeneticVariant {
   clinvarRecords: Awaited<ReturnType<typeof getClinVarForSNP>>;

@@ -78,7 +78,7 @@ export {
   generateFullReport,
 } from './llm';
 
-export type { ActionableProtocol } from './llm';
+// Note: generateActionableProtocol returns a complex inline type
 
 export {
   generateAIHealthReport,

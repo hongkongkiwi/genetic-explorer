@@ -7,7 +7,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { X, Cookie } from 'lucide-react';
-import { Button } from './ui/button';
+import { Button } from './ui/Button';
 
 export type CookieConsent = 'granted' | 'denied' | 'pending';
 

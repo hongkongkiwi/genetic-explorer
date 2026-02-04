@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Trash2, AlertTriangle, Dna, Download } from 'lucide-react';
 import { useGenomeStatus } from '~/hooks/useGenomeStatus';
-import { Button } from '~/components/ui/button';
+import { Button } from '~/components/ui/Button';
 import {
   Card,
   CardContent,
