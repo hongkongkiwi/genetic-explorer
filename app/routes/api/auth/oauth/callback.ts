@@ -8,6 +8,30 @@ import {
   consumeOAuthState,
   OAuthProvider,
 } from '~/utils/oauth';
+
+// Allowed redirect paths (prevent open redirect attacks)
+const ALLOWED_REDIRECT_PATHS = ['/dashboard', '/settings', '/profile', '/'];
+
+/**
+ * Validate and sanitize redirect URL
+ * Prevents open redirect vulnerabilities
+ */
+function validateRedirectPath(path: string): string {
+  // Only allow relative paths
+  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) {
+    return '/dashboard';
+  }
+  
+  // Get pathname without query string
+  const pathname = path.split('?')[0];
+  
+  // Check against allowlist
+  if (!ALLOWED_REDIRECT_PATHS.includes(pathname)) {
+    return '/dashboard';
+  }
+  
+  return path;
+}
 import {
   getUserByOAuth,
   getUserByEmailForOAuth,
@@ -142,7 +166,8 @@ export const APIRoute = createAPIFileRoute('/api/auth/oauth/callback')({
 
       if (stateData) {
         provider = stateData.provider;
-        redirectTo = stateData.redirectTo;
+        // SECURITY: Validate redirect path to prevent open redirect
+        redirectTo = validateRedirectPath(stateData.redirectTo);
         linkMode = stateData.link;
         consumeOAuthState(state);
       } else {

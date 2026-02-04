@@ -6,8 +6,10 @@
  * Uses adm-zip for zip files (if available)
  */
 
-import { gunzipSync, constants as zlibConstants } from 'zlib';
+import { gunzipSync, constants as zlibConstants, createGunzip } from 'zlib';
 import crypto from 'crypto';
+
+const MAX_DECOMPRESSED_SIZE = 500 * 1024 * 1024; // 500MB max
 
 export interface DecompressionResult {
   content: string;
@@ -44,6 +46,32 @@ export function getOriginalFilename(filename: string): string {
 }
 
 /**
+ * Safely decompress gzip buffer with size limit
+ * Prevents zip bomb / decompression bomb attacks
+ */
+function safeGunzip(buffer: Buffer, maxSize: number = MAX_DECOMPRESSED_SIZE): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const stream = createGunzip();
+    const chunks: Buffer[] = [];
+    let size = 0;
+    
+    stream.on('data', (chunk: Buffer) => {
+      size += chunk.length;
+      if (size > maxSize) {
+        stream.destroy();
+        reject(new Error(`Decompressed size exceeds maximum allowed (${maxSize} bytes)`));
+        return;
+      }
+      chunks.push(chunk);
+    });
+    
+    stream.on('end', () => resolve(Buffer.concat(chunks)));
+    stream.on('error', reject);
+    stream.end(buffer);
+  });
+}
+
+/**
  * Decompress buffer based on detected type
  */
 export async function decompressBuffer(
@@ -56,7 +84,8 @@ export async function decompressBuffer(
   switch (compressionType) {
     case 'gzip':
       try {
-        const decompressed = gunzipSync(buffer);
+        // Use safe decompression to prevent zip bomb attacks
+        const decompressed = await safeGunzip(buffer, MAX_DECOMPRESSED_SIZE);
         return {
           content: decompressed.toString('utf-8'),
           originalFilename,
