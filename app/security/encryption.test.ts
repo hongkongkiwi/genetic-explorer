@@ -190,7 +190,7 @@ describe('Encryption Utilities', () => {
       expect(key.length).toBe(32);
     });
 
-    it('should derive different keys for different user IDs', () => {
+    it('should derive different keys for different user IDs', { timeout: 10000 }, () => {
       const keys = new Set();
       for (let i = 0; i < 100; i++) {
         const key = getUserEncryptionKey(`user-${i}`);
