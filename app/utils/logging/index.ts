@@ -13,25 +13,40 @@
  */
 
 import { LogLayer, type LogLayerConfig } from 'loglayer';
-import { AxiomTransport, isAxiomConfigured } from './axiomTransport';
+import { AxiomTransport, isAxiomConfigured } from '../axiomTransport';
+
+// Simple console transport for LogLayer
+class ConsoleTransport {
+  id = 'console';
+  
+  log(level: string, message: string, metadata?: Record<string, unknown>) {
+    const timestamp = new Date().toISOString();
+    const meta = metadata ? ` ${JSON.stringify(metadata)}` : '';
+    console.log(`[${timestamp}] ${level.toUpperCase()}: ${message}${meta}`);
+  }
+  
+  trace(message: string, metadata?: Record<string, unknown>) { this.log('trace', message, metadata); }
+  debug(message: string, metadata?: Record<string, unknown>) { this.log('debug', message, metadata); }
+  info(message: string, metadata?: Record<string, unknown>) { this.log('info', message, metadata); }
+  warn(message: string, metadata?: Record<string, unknown>) { this.log('warn', message, metadata); }
+  error(message: string, metadata?: Record<string, unknown>) { this.log('error', message, metadata); }
+  fatal(message: string, metadata?: Record<string, unknown>) { this.log('fatal', message, metadata); }
+}
 
 // Initialize transports
-const transports: AxiomTransport[] = [];
+const transports: (AxiomTransport | ConsoleTransport)[] = [];
 
 // Add Axiom transport if configured
 if (isAxiomConfigured()) {
   transports.push(new AxiomTransport());
 }
 
-// Always add console transport in development, or as fallback in production
-const shouldUseConsole = process.env.NODE_ENV !== 'production' || !isAxiomConfigured();
+// Always add console transport as fallback
+transports.push(new ConsoleTransport());
 
-// Build config
+// Build config - LogLayer requires at least one transport
 const config: LogLayerConfig = {
-  // Use Axiom transport if configured
-  ...(transports.length > 0 && { transport: transports.length === 1 ? transports[0] : transports }),
-  // Enable console debug if needed
-  consoleDebug: shouldUseConsole,
+  transport: transports.length === 1 ? transports[0] : transports,
 };
 
 /**

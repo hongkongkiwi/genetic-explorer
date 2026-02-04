@@ -11,7 +11,7 @@ import {
   CHROMOSOME_SIZES,
   GENOME_STATS 
 } from './genomeCoverage';
-import type { SNP } from './genomeParser';
+import type { SNP } from './genome/parser';
 
 describe('Genome Coverage', () => {
   const createSnp = (rsid: string, chromosome: string, position: number): SNP => ({

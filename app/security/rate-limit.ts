@@ -12,7 +12,7 @@ import {
   rateLimitAuthDistributed,
   resetDistributedRateLimit,
   getDistributedRateLimitStats,
-} from './distributedRateLimit';
+} from '~/utils/distributed-rate-limit';
 
 interface RateLimitEntry {
   count: number;

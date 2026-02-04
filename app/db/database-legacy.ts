@@ -2,17 +2,17 @@ import Database from 'better-sqlite3';
 import { v4 as uuidv4 } from 'uuid';
 import crypto from 'crypto';
 import type { SNP, AnalysisReport, GenomeData } from '~/types/genetics';
-import { initializeResearchDatabase } from './researchDatabase';
-import { runMigrations } from './databaseMigrations';
-import { createIndexes, analyzeTables } from './databaseIndexes';
+// Dynamic import to avoid circular dependency
+import { runMigrations } from './migrations';
+import { createIndexes, analyzeTables } from './indexes';
 import { writeFileSync, mkdirSync, existsSync, readFileSync, unlinkSync } from 'fs';
 import { join } from 'path';
 import { encrypt, decrypt, getUserEncryptionKey } from '~/security';
-import { initTermsTables } from './terms';
-import { initSessionManagementTables } from './sessionManagement';
-import { initTwoFactorDisableDelayTables } from './twoFactorDisableDelay';
-import { initNotificationPreferencesTables } from './notificationPreferences';
-import { logError, logWarn, logInfo } from './secureLogger';
+import { initTermsTables } from '~/utils/terms';
+import { initSessionManagementTables } from '~/utils/sessionManagement';
+import { initTwoFactorDisableDelayTables } from '~/utils/twoFactorDisableDelay';
+import { initNotificationPreferencesTables } from '~/auth/notification-preferences';
+import { logError, logWarn, logInfo } from '~/utils/secureLogger';
 
 let db: Database.Database | null = null;
 
@@ -35,7 +35,10 @@ export function getDb(): Database.Database {
     db.pragma('page_size = 4096'); // Optimal page size for most systems
     
     initDatabase();
-    initializeResearchDatabase();
+    // Dynamic import to avoid circular dependency
+    void import('~/utils/research/database').then(({ initializeResearchDatabase }) => {
+      initializeResearchDatabase(db);
+    });
     runMigrations(db);
   }
   return db;
@@ -824,6 +827,8 @@ export function saveGenome(
     const batch = snps.slice(i, i + BATCH_SIZE);
     const insertBatch = db.transaction((batchSnps: SNP[]) => {
       for (const snp of batchSnps) {
+        // Skip SNPs without genotype data
+        if (!snp.genotype) continue;
         // Encrypt genotype before storage
         const encrypted = encrypt(snp.genotype, userKey);
         insertSNP.run(id, snp.rsid, snp.chromosome, snp.position, JSON.stringify(encrypted));

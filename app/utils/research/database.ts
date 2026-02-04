@@ -10,7 +10,7 @@
  */
 
 import Database from 'better-sqlite3';
-import { getDatabase } from '~/db';
+import { getDb as getDatabase } from '~/db/database-legacy';
 
 // Types for research data
 export interface ResearchSNP {
@@ -113,8 +113,8 @@ export interface GWASStudy {
 /**
  * Initialize research database tables
  */
-export function initializeResearchDatabase() {
-  const db = getDatabase();
+export function initializeResearchDatabase(dbInstance?: Database.Database) {
+  const db = dbInstance || getDatabase();
 
   // Research SNPs table - consolidated SNP info from multiple sources
   db.exec(`

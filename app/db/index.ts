@@ -113,24 +113,22 @@ export {
 } from './database-legacy';
 
 // Re-export from indexes and migrations
-export { createIndexes, analyzeTables, rebuildIndexes } from './databaseIndexes';
-export { runMigrations } from './databaseMigrations';
+export { createIndexes, analyzeTables, rebuildIndexes } from './indexes';
+export { runMigrations } from './migrations';
 
-// Connection helpers
+// Connection helpers - using legacy getDb for now
 export {
   getDb as getDatabase,
-  initDatabase,
-  closeDatabase,
-} from './connection';
+} from './database-legacy';
 
-// New domain-specific exports (for forward compatibility)
-export * from './genomes';
-export * from './ancestry';
-export * from './carrier';
-export * from './traits';
-export * from './relatives';
-export * from './users';
-export * from './oauth';
-export * from './sharing';
-export * from './auth';
-export * from './health-profiles';
+// New domain-specific exports (for forward compatibility) - TODO: create these modules
+// export * from './genomes';
+// export * from './ancestry';
+// export * from './carrier';
+// export * from './traits';
+// export * from './relatives';
+// export * from './users';
+// export * from './oauth';
+// export * from './sharing';
+// export * from './auth';
+// export * from './health-profiles';

@@ -7,7 +7,7 @@ import {
   validateGenomeData,
   getGenomeStats,
   detectSource,
-} from './genomeParser';
+} from './parser';
 import type { SNP } from '~/types/genetics';
 
 // Test data generators

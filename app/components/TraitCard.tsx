@@ -3,7 +3,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Button } from '~/components/ui/Button';
 import { Badge } from '~/components/ui/Badge';
 import type { TraitResult, ConfidenceLevel } from '~/types/traits';
-import { formatConfidence, getConfidenceColor } from '~/utils/traitsAnalysis';
+import { formatConfidence, getConfidenceColor } from '~/analysis/traits';
 import { cn } from '~/lib/utils';
 
 interface TraitCardProps {

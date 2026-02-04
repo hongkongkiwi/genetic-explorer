@@ -24,7 +24,7 @@ import { SNP } from './genomeParser';
 
 // Identity-informative SNPs (highly polymorphic, stable within individual)
 // These are commonly used in forensics and genetic genealogy for identification
-const IDENTITY_SNPS: Array<{
+export const IDENTITY_SNPS: Array<{
   rsid: string;
   chromosome: string;
   position: number;
@@ -64,7 +64,7 @@ const PARTIAL_THRESHOLD = 0.70;    // 70-90% = partial match (different chip?)
 const MISMATCH_THRESHOLD = 0.70;   // <70% = different person
 
 // Minimum number of identity SNPs required for verification
-const MIN_REQUIRED_SNPS = 10;
+export const MIN_REQUIRED_SNPS = 10;
 
 // ============================================================================
 // Types
@@ -447,11 +447,5 @@ export function formatIdentityReport(result: IdentityVerificationResult): string
   return lines.join('\n');
 }
 
-export default {
-  verifyIdentity,
-  genotypesMatch,
-  getDangerZoneConfig,
-  formatIdentityReport,
-  IDENTITY_SNPS,
-  MIN_REQUIRED_SNPS,
-};
+// Export genotypesMatch which is not exported at definition
+export { genotypesMatch };

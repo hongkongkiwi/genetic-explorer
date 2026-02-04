@@ -12,7 +12,7 @@
  */
 
 import crypto from 'crypto';
-import { getMasterKey as getKMSMasterKey, isCloudKMSEnabled, getKMSProvider } from './kms';
+import { getMasterKey as getKMSMasterKey, isCloudKMSEnabled, getKMSProvider } from '~/utils/kms';
 
 // ============================================================================
 // Configuration

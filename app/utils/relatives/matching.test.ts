@@ -11,7 +11,7 @@ import {
   getCloseFamilyMatches,
   getDistantMatches,
   determineSide,
-} from './relativeMatching';
+} from './matching';
 import type { SNP, GenomeData } from '~/types/genetics';
 import type { IBD_Segment } from '~/types/relatives';
 

@@ -3,15 +3,15 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { UploadZone } from './UploadZone';
 
 // Mock the DNA validation utilities
-vi.mock('~/utils/dnaValidation', async () => {
-  const actual = await vi.importActual('~/utils/dnaValidation');
+vi.mock('~/utils/genome/dna-validation', async () => {
+  const actual = await vi.importActual('~/utils/genome/dna-validation');
   return {
     ...actual as any,
     validateDnaFile: vi.fn(),
   };
 });
 
-import { validateDnaFile } from '~/utils/dnaValidation';
+import { validateDnaFile } from '~/utils/genome/dna-validation';
 
 describe('UploadZone', () => {
   const mockOnUpload = vi.fn();

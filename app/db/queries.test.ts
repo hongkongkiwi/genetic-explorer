@@ -6,7 +6,7 @@ import {
   analyzeSNP,
   analyzeGenome,
   getDrugInteractions,
-} from './databaseQueries';
+} from './queries';
 import type { SNP, GeneticVariant, DrugInteraction } from '~/types/genetics';
 
 describe('Database Queries', () => {

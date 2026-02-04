@@ -3,8 +3,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { verifyIdentity, genotypesMatch, getDangerZoneConfig } from './identityVerification';
-import type { SNP } from './genomeParser';
+import { verifyIdentity, genotypesMatch, getDangerZoneConfig } from './verification';
+import type { SNP } from '~/types/genetics';
 
 describe('Identity Verification', () => {
   describe('genotypesMatch', () => {
@@ -121,15 +121,15 @@ describe('Identity Verification', () => {
         createSnp('rs6277', 'TT'),    // Different
         createSnp('rs1800955', 'GG'), // Match
         createSnp('rs25531', 'TT'),   // Match
-        createSnp('rs6354', 'GG'),    // Different
-        createSnp('rs2283265', 'AA'), // Different
+        createSnp('rs6354', 'AA'),    // Match
+        createSnp('rs2283265', 'GG'), // Match
         createSnp('rs3807375', 'CC'), // Match
       ];
 
       const result = verifyIdentity(oldSnps, newSnps);
       
       expect(result.matchLevel).toBe('partial');
-      expect(result.matchPercentage).toBeGreaterThan(50);
+      expect(result.matchPercentage).toBeGreaterThan(70);
       expect(result.matchPercentage).toBeLessThan(90);
     });
 

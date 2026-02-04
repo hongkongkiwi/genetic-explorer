@@ -9,7 +9,7 @@ import {
   getCompressionDisplayName,
   getFileTypeInfo,
   needsDecompression,
-} from './dnaValidation';
+} from './dna-validation';
 
 describe('dnaValidation', () => {
   describe('detectCompression', () => {

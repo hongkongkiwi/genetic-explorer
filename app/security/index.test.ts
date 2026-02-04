@@ -9,7 +9,7 @@ import {
   hashForLogging,
   maskEmail,
   detectSuspiciousActivity,
-} from './security';
+} from './security-core';
 
 describe('Security Utilities', () => {
   describe('getSecurityHeaders', () => {

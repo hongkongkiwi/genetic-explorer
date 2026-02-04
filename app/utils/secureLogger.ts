@@ -8,8 +8,8 @@
  * and Sentry for error tracking.
  */
 
-import { logger, logError as logErrorToSystem } from './logging';
-import { isSentryConfigured, captureException } from './sentry';
+import { logger, logError as logErrorToSystem } from './logging/index';
+import { isSentryConfigured, captureException } from './logging/sentry';
 
 // Patterns that might indicate sensitive data
 const SENSITIVE_PATTERNS = [

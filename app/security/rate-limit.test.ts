@@ -7,7 +7,7 @@ import {
   resetRateLimit,
   getRateLimitStats,
   getClientIp 
-} from './rateLimit';
+} from './rate-limit';
 
 describe('Rate Limiting', () => {
   beforeEach(() => {

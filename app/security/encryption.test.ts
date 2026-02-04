@@ -444,7 +444,7 @@ describe('Encryption Utilities', () => {
       const validation = validateEncryptionConfig();
       
       expect(validation.valid).toBe(false);
-      expect(validation.errors).toContain('ENCRYPTION_MASTER_KEY is not set');
+      expect(validation.errors).toContain('ENCRYPTION_MASTER_KEY is not set (and no cloud KMS configured)');
     });
 
     it('should report error when master key is too short', () => {

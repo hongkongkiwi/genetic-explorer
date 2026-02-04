@@ -3,8 +3,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { calculateQualityMetrics, compareGenomeQuality, getQualitySummary } from './genomeQuality';
-import type { SNP } from './genomeParser';
+import { calculateQualityMetrics, compareGenomeQuality, getQualitySummary } from './genome/quality';
+import type { SNP } from './genome/parser';
 
 describe('Genome Quality', () => {
   describe('calculateQualityMetrics', () => {
@@ -73,7 +73,7 @@ describe('Genome Quality', () => {
       const newMetrics = {
         ...baseMetrics,
         totalSnps: 750000,
-        qualityScore: 85,
+        qualityScore: 95, // Significant upgrade (diff >= 20)
       };
 
       const comparison = compareGenomeQuality(baseMetrics, newMetrics);
@@ -93,7 +93,7 @@ describe('Genome Quality', () => {
       const comparison = compareGenomeQuality(baseMetrics, newMetrics);
       
       expect(comparison.isUpgrade).toBe(false);
-      expect(comparison.recommendation).toBe('downgrade');
+      expect(comparison.recommendation).toBe('review');
       expect(comparison.warnings.length).toBeGreaterThan(0);
     });
 

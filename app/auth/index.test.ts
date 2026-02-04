@@ -23,6 +23,12 @@ vi.mock('~/db', () => ({
   createSession: vi.fn(),
   getSessionByToken: vi.fn(),
   deleteSession: vi.fn(),
+  deleteUserSessions: vi.fn(),
+}));
+
+// Mock notification preferences
+vi.mock('./notification-preferences', () => ({
+  initializeDefaultPreferences: vi.fn(),
 }));
 
 import {
@@ -33,6 +39,7 @@ import {
   getSessionByToken,
   deleteSession,
   updateUserLastLogin,
+  deleteUserSessions,
 } from '~/db';
 
 describe('Auth Utilities', () => {

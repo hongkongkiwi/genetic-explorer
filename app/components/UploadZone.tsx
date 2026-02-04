@@ -7,7 +7,7 @@ import {
   detectCompression, 
   getFormatDisplayName,
   type DnaFileValidation 
-} from '~/utils/dnaValidation';
+} from '~/utils/genome/dna-validation';
 
 interface UploadZoneProps {
   onUpload: (file: File, validation: DnaFileValidation) => void;

@@ -387,7 +387,7 @@ export async function rotateDataKey(): Promise<void> {
   
   // Delete the old key from database to force generation of new key
   try {
-    const { deleteSystemSetting } = await import('./database');
+    const { deleteSystemSetting } = await import('~/db');
     deleteSystemSetting('kms_encrypted_data_key');
   } catch (error) {
     console.warn('Failed to delete old data key from database:', error);

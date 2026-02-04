@@ -30,6 +30,7 @@ interface LogEntry {
  * Falls back silently if Axiom is not configured
  */
 export class AxiomTransport {
+  id = 'axiom';
   private client: Axiom | null = null;
   private dataset: string | null = null;
   private isEnabled: boolean = false;

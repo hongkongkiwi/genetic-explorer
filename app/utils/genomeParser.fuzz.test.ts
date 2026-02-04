@@ -13,7 +13,7 @@
 
 import { describe, it, expect } from 'vitest';
 import fc from 'fast-check'; // Property-based testing library
-import { parseGeneticData, validateGenomeData, SNP } from './genomeParser';
+import { parseGeneticData, validateGenomeData, SNP } from './genome/parser';
 
 // ============================================================================
 // Arbitrary Generators for Genetic Data

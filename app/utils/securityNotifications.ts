@@ -4,13 +4,13 @@
  * Sends email notifications to users for security-related events
  */
 
-import { sendEmail } from './email';
+import { sendEmail } from '~/email';
 import { getUserById } from '~/db';
 import { 
   shouldSendNotification,
   type NotificationCategory,
   EVENT_CATEGORIES 
-} from './notificationPreferences';
+} from '~/auth/notification-preferences';
 
 interface SecurityEvent {
   userId: string;

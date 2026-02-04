@@ -98,7 +98,7 @@ import {
   type SharingInvite,
   type GenomeMetadata,
   type SaveGenomeResult,
-} from './database';
+} from './database-legacy';
 
 // Test data helpers
 const createMockSNPs = (count: number = 10) => {
@@ -224,13 +224,12 @@ describe('Database Operations', () => {
       });
 
       it('should return null for inactive users', () => {
-        // We need to access the database directly to set user as inactive
-        // Since we can't easily import getDb due to module-level side effects,
-        // we'll test this differently - create user and verify they're found when active
-        const user = createUser(getUniqueEmail('inactive'), 'password_hash');
+        // Create a user with unique email and verify they can be found when active
+        const email = getUniqueEmail('inactive');
+        const user = createUser(email, 'password_hash');
         
         // Initially active, should be found
-        expect(getUserByEmail('inactive@example.com')).not.toBeNull();
+        expect(getUserByEmail(email)).not.toBeNull();
       });
     });
 

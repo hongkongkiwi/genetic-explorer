@@ -5,7 +5,7 @@ import { UploadZone } from '~/components/UploadZone';
 import { AnalysisProgress } from '~/components/AnalysisProgress';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, AlertCircle, FileText, Info } from 'lucide-react';
-import type { DnaFileValidation } from '~/utils/dnaValidation';
+import type { DnaFileValidation } from '~/utils/genome/dna-validation';
 
 export const Route = createFileRoute('/upload')({
   component: UploadPage,
