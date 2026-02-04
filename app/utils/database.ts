@@ -499,6 +499,50 @@ function initDatabase() {
     )
   `);
 
+  // Magic link tokens table (replaces in-memory storage)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS magic_link_tokens (
+      token TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      email TEXT NOT NULL,
+      used INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      expires_at DATETIME NOT NULL,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+
+  // OAuth state tokens table (replaces in-memory storage)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS oauth_state_tokens (
+      state TEXT PRIMARY KEY,
+      provider TEXT NOT NULL,
+      redirect_to TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      expires_at DATETIME NOT NULL
+    )
+  `);
+
+  // Email verification codes table (replaces in-memory storage)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS email_verification_codes (
+      user_id TEXT PRIMARY KEY,
+      code TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      expires_at DATETIME NOT NULL,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+
+  // Rate limiting table (for distributed deployments)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS rate_limit_entries (
+      key TEXT PRIMARY KEY,
+      count INTEGER DEFAULT 0,
+      reset_at DATETIME NOT NULL
+    )
+  `);
+
   // Add OAuth columns to users table (for quick lookup)
   try {
     db.exec(`ALTER TABLE users ADD COLUMN oauth_provider TEXT`);

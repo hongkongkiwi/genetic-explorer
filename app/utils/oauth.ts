@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import type { OAuthProfile } from './database';
+import { getDb } from './database';
 
 // OAuth provider types
 export type OAuthProvider = 'google' | 'github';
@@ -31,15 +32,7 @@ const OAUTH_CONFIG: Record<OAuthProvider, {
   },
 };
 
-// In-memory state storage for CSRF protection (in production, use Redis or similar)
-interface StateData {
-  provider: OAuthProvider;
-  redirectTo: string;
-  link: boolean;
-  createdAt: number;
-}
-
-const stateStore = new Map<string, StateData>();
+const STATE_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes
 
 /**
  * Check if an OAuth provider is configured
@@ -62,17 +55,26 @@ export function getConfiguredProviders(): OAuthProvider[] {
   return configured;
 }
 
+interface OAuthStateData {
+  provider: OAuthProvider;
+  redirectTo: string;
+  link: boolean;
+}
+
 /**
  * Generate OAuth state with additional data
+ * Stores in database for persistence across restarts
  */
 export function generateOAuthState(data: { provider: OAuthProvider; redirectTo: string; link: boolean }): string {
   const state = crypto.randomBytes(32).toString('hex');
-  stateStore.set(state, {
-    provider: data.provider,
-    redirectTo: data.redirectTo,
-    link: data.link,
-    createdAt: Date.now(),
-  });
+  const db = getDb();
+  const expiresAt = new Date(Date.now() + STATE_EXPIRY_MS);
+  
+  db.prepare(`
+    INSERT INTO oauth_state_tokens (state, provider, redirect_to, expires_at)
+    VALUES (?, ?, ?, ?)
+  `).run(state, data.provider, data.redirectTo, expiresAt.toISOString());
+  
   return state;
 }
 
@@ -89,13 +91,8 @@ export function getOAuthAuthorizationUrl(provider: OAuthProvider, redirectUri: s
   // Generate state for CSRF protection if not provided
   const oauthState = state || generateOAuthState({ provider, redirectTo: '/dashboard', link: false });
 
-  // Clean up old states (older than 10 minutes)
-  const tenMinutesAgo = Date.now() - 10 * 60 * 1000;
-  for (const [key, value] of stateStore.entries()) {
-    if (value.createdAt < tenMinutesAgo) {
-      stateStore.delete(key);
-    }
-  }
+  // Clean up expired states
+  cleanupExpiredOAuthState();
 
   const params = new URLSearchParams({
     client_id: config.clientId,
@@ -117,46 +114,69 @@ export function getOAuthAuthorizationUrl(provider: OAuthProvider, redirectUri: s
  * Validate and consume OAuth state
  */
 export function validateOAuthState(state: string): OAuthProvider | null {
-  const stateData = stateStore.get(state);
-  if (!stateData) {
-    return null;
-  }
-
-  // Check if state is expired (10 minutes)
-  if (Date.now() - stateData.createdAt > 10 * 60 * 1000) {
-    stateStore.delete(state);
-    return null;
-  }
-
+  const db = getDb();
+  const now = new Date().toISOString();
+  
+  const result = db.prepare(`
+    SELECT provider FROM oauth_state_tokens
+    WHERE state = ? AND expires_at > ?
+  `).get(state, now) as { provider: OAuthProvider } | undefined;
+  
+  if (!result) return null;
+  
   // Consume the state (one-time use)
-  stateStore.delete(state);
-
-  return stateData.provider;
+  db.prepare(`DELETE FROM oauth_state_tokens WHERE state = ?`).run(state);
+  
+  return result.provider;
 }
 
 /**
  * Get OAuth state data without consuming it (for callback processing)
  */
-export function getOAuthStateData(state: string): StateData | null {
-  const stateData = stateStore.get(state);
-  if (!stateData) {
-    return null;
-  }
-
-  // Check if state is expired (10 minutes)
-  if (Date.now() - stateData.createdAt > 10 * 60 * 1000) {
-    stateStore.delete(state);
-    return null;
-  }
-
-  return stateData;
+export function getOAuthStateData(state: string): OAuthStateData | null {
+  const db = getDb();
+  const now = new Date().toISOString();
+  
+  const result = db.prepare(`
+    SELECT provider, redirect_to, expires_at
+    FROM oauth_state_tokens
+    WHERE state = ? AND expires_at > ?
+  `).get(state, now) as { 
+    provider: OAuthProvider; 
+    redirect_to: string;
+    expires_at: string;
+  } | undefined;
+  
+  if (!result) return null;
+  
+  return {
+    provider: result.provider,
+    redirectTo: result.redirect_to,
+    link: false, // Link flag stored separately or derived from context
+  };
 }
 
 /**
  * Consume OAuth state after processing
  */
 export function consumeOAuthState(state: string): void {
-  stateStore.delete(state);
+  const db = getDb();
+  db.prepare(`DELETE FROM oauth_state_tokens WHERE state = ?`).run(state);
+}
+
+/**
+ * Clean up expired OAuth state tokens
+ * Call periodically (e.g., via cron job)
+ */
+export function cleanupExpiredOAuthState(): number {
+  const db = getDb();
+  const now = new Date().toISOString();
+  
+  const result = db.prepare(`
+    DELETE FROM oauth_state_tokens WHERE expires_at < ?
+  `).run(now);
+  
+  return result.changes;
 }
 
 /**

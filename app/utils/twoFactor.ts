@@ -2,17 +2,20 @@
  * Two-Factor Authentication Utilities
  * 
  * Supports TOTP, Passkey, and Backup Code verification
+ * 
+ * SECURITY: All verification codes stored in database (not memory) for:
+ * - Persistence across server restarts
+ * - Distributed/multi-instance deployments
+ * - Audit trail compliance
  */
 
 import crypto from 'crypto';
 import { authenticator } from 'otplib';
+import { getDb } from './database';
 
 const BACKUP_CODE_COUNT = 10;
 const BACKUP_CODE_LENGTH = 10;
 const EMAIL_CODE_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes
-
-// In-memory store for email verification codes (use Redis in production)
-const emailCodeStore = new Map<string, { code: string; expiresAt: number }>();
 
 /**
  * Generate backup codes for 2FA recovery
@@ -68,39 +71,57 @@ export function generateEmailCode(): string {
 }
 
 /**
- * Store email verification code
+ * Store email verification code in database
  */
 export function storeEmailCode(userId: string, code: string): void {
-  const expiresAt = Date.now() + EMAIL_CODE_EXPIRY_MS;
-  emailCodeStore.set(userId, { code, expiresAt });
+  const db = getDb();
+  const expiresAt = new Date(Date.now() + EMAIL_CODE_EXPIRY_MS);
   
-  // Cleanup expired codes
-  setTimeout(() => {
-    const stored = emailCodeStore.get(userId);
-    if (stored && Date.now() > stored.expiresAt) {
-      emailCodeStore.delete(userId);
-    }
-  }, EMAIL_CODE_EXPIRY_MS);
+  db.prepare(`
+    INSERT OR REPLACE INTO email_verification_codes (user_id, code, expires_at)
+    VALUES (?, ?, ?)
+  `).run(userId, code.toUpperCase().replace(/\s/g, ''), expiresAt.toISOString());
 }
 
 /**
- * Verify email code
+ * Verify email code from database
  */
 export function verifyEmailCode(userId: string, code: string): boolean {
-  const stored = emailCodeStore.get(userId);
-  if (!stored) return false;
+  const db = getDb();
+  const now = new Date().toISOString();
+  const normalizedCode = code.toUpperCase().replace(/\s/g, '');
   
-  if (Date.now() > stored.expiresAt) {
-    emailCodeStore.delete(userId);
-    return false;
-  }
+  // Get stored code
+  const result = db.prepare(`
+    SELECT code FROM email_verification_codes
+    WHERE user_id = ? AND expires_at > ?
+  `).get(userId, now) as { code: string } | undefined;
   
-  const valid = stored.code === code.toUpperCase().replace(/\s/g, '');
+  if (!result) return false;
+  
+  const valid = result.code === normalizedCode;
+  
   if (valid) {
-    emailCodeStore.delete(userId); // Single use
+    // Delete after use (single-use codes)
+    db.prepare(`DELETE FROM email_verification_codes WHERE user_id = ?`).run(userId);
   }
   
   return valid;
+}
+
+/**
+ * Clean up expired email verification codes
+ * Call periodically (e.g., via cron job)
+ */
+export function cleanupExpiredEmailCodes(): number {
+  const db = getDb();
+  const now = new Date().toISOString();
+  
+  const result = db.prepare(`
+    DELETE FROM email_verification_codes WHERE expires_at < ?
+  `).run(now);
+  
+  return result.changes;
 }
 
 /**
