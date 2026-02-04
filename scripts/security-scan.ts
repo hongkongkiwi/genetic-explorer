@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env tsx
 /**
  * Security Scan Script
  * 
@@ -9,16 +9,20 @@
  * 4. Environment variable checks
  */
 
-const { execSync } = require('child_process');
-const fs = require('fs');
-const path = require('path');
+import { execSync } from 'child_process';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const EXIT_CODES = {
   SUCCESS: 0,
   VULNERABILITIES_FOUND: 1,
   SECRETS_FOUND: 2,
   CONFIG_ERROR: 3,
-};
+} as const;
 
 // Colors for terminal output
 const colors = {
@@ -27,17 +31,39 @@ const colors = {
   green: '\x1b[32m',
   yellow: '\x1b[33m',
   blue: '\x1b[34m',
-};
+} as const;
 
-function log(message, color = 'reset') {
+type ColorName = keyof typeof colors;
+
+function log(message: string, color: ColorName = 'reset'): void {
   console.log(`${colors[color]}${message}${colors.reset}`);
+}
+
+interface AuditMetadata {
+  vulnerabilities: {
+    critical: number;
+    high: number;
+    moderate: number;
+    low: number;
+    info: number;
+  };
+}
+
+interface AuditResult {
+  metadata: AuditMetadata;
+  vulnerabilities: Record<string, {
+    severity: string;
+    via: Array<{ title?: string }>;
+    range: string;
+    fixAvailable?: boolean;
+  }>;
 }
 
 // ============================================================================
 // 1. Dependency Vulnerability Scan
 // ============================================================================
 
-function runDependencyScan() {
+function runDependencyScan(): boolean {
   log('\n🔍 Running dependency vulnerability scan...', 'blue');
   
   try {
@@ -47,7 +73,7 @@ function runDependencyScan() {
       cwd: path.join(__dirname, '..'),
     });
     
-    const audit = JSON.parse(auditOutput);
+    const audit = JSON.parse(auditOutput) as AuditResult;
     const { vulnerabilities, metadata } = audit;
     
     const counts = {
@@ -84,11 +110,12 @@ function runDependencyScan() {
     log('✅ No critical or high vulnerabilities found', 'green');
     return true;
     
-  } catch (error) {
+  } catch (error: unknown) {
     // npm audit exits with non-zero code if vulnerabilities found
-    if (error.status === 1) {
+    if (error && typeof error === 'object' && 'status' in error && error.status === 1) {
+      const execError = error as { stdout?: string };
       try {
-        const audit = JSON.parse(error.stdout);
+        const audit = JSON.parse(execError.stdout || '{}') as AuditResult;
         log(`\n⚠️  Vulnerabilities found:`, 'yellow');
         log(`  Critical: ${audit.metadata.vulnerabilities.critical}`, 'red');
         log(`  High: ${audit.metadata.vulnerabilities.high}`, 'red');
@@ -99,7 +126,7 @@ function runDependencyScan() {
       }
     }
     log('❌ Failed to run npm audit:', 'red');
-    log(error.message, 'red');
+    log(error instanceof Error ? error.message : String(error), 'red');
     return false;
   }
 }
@@ -108,10 +135,15 @@ function runDependencyScan() {
 // 2. Secret Detection
 // ============================================================================
 
-function runSecretDetection() {
+interface SecretPattern {
+  pattern: RegExp;
+  name: string;
+}
+
+function runSecretDetection(): boolean {
   log('\n🔍 Scanning for secrets in code...', 'blue');
   
-  const secretPatterns = [
+  const secretPatterns: SecretPattern[] = [
     { pattern: /['"]AKIA[0-9A-Z]{16}['"]/, name: 'AWS Access Key' },
     { pattern: /['"][0-9a-zA-Z/+]{40}['"].*secret/i, name: 'Potential Secret' },
     { pattern: /private[_-]?key['"]?\s*[:=]\s*['"][^'"]{20,}/i, name: 'Private Key' },
@@ -123,7 +155,7 @@ function runSecretDetection() {
   const sourceDirs = ['app', 'scripts'];
   let secretsFound = 0;
   
-  function scanFile(filePath) {
+  function scanFile(filePath: string): void {
     const content = fs.readFileSync(filePath, 'utf-8');
     const lines = content.split('\n');
     
@@ -143,11 +175,11 @@ function runSecretDetection() {
     });
   }
   
-  function scanDirectory(dir) {
+  function scanDirectory(dir: string): void {
     const fullPath = path.join(__dirname, '..', dir);
     if (!fs.existsSync(fullPath)) return;
     
-    const files = fs.readdirSync(fullPath, { recursive: true });
+    const files = fs.readdirSync(fullPath, { recursive: true }) as string[];
     
     files.forEach(file => {
       const filePath = path.join(fullPath, file);
@@ -174,10 +206,10 @@ function runSecretDetection() {
 // 3. Security Configuration Validation
 // ============================================================================
 
-function validateSecurityConfig() {
+function validateSecurityConfig(): boolean {
   log('\n🔍 Validating security configuration...', 'blue');
   
-  const issues = [];
+  const issues: string[] = [];
   
   // Check environment variables
   const requiredEnvVars = [
@@ -242,19 +274,30 @@ function validateSecurityConfig() {
 // 4. Check for known vulnerable dependencies
 // ============================================================================
 
-function checkKnownVulnerabilities() {
+interface VulnerablePackage {
+  name: string;
+  version: string;
+  reason: string;
+}
+
+function checkKnownVulnerabilities(): boolean {
   log('\n🔍 Checking for known vulnerable dependencies...', 'blue');
   
   // List of packages with known vulnerabilities to avoid
-  const vulnerablePackages = [
+  const vulnerablePackages: VulnerablePackage[] = [
     { name: 'lodash', version: '<4.17.21', reason: 'Prototype pollution vulnerability' },
     { name: 'express', version: '<4.17.3', reason: 'qs vulnerability' },
     { name: 'jsonwebtoken', version: '<9.0.0', reason: 'Algorithm confusion' },
   ];
   
+  interface PackageJson {
+    dependencies?: Record<string, string>;
+    devDependencies?: Record<string, string>;
+  }
+  
   const packageJson = JSON.parse(
     fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf-8')
-  );
+  ) as PackageJson;
   
   const allDeps = {
     ...packageJson.dependencies,
@@ -283,7 +326,7 @@ function checkKnownVulnerabilities() {
 // Main
 // ============================================================================
 
-function main() {
+function main(): void {
   log('\n' + '='.repeat(60), 'blue');
   log('🔒 GENETIC EXPLORER SECURITY SCAN', 'blue');
   log('='.repeat(60), 'blue');

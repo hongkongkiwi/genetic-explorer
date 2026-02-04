@@ -28,7 +28,7 @@ jobs:
       run: npm ci
       
     - name: Run security scan
-      run: node scripts/security-scan.js
+      run: npx tsx scripts/security-scan.ts
       continue-on-error: true
       
     - name: Run npm audit
