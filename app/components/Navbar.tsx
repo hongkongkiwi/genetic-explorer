@@ -127,6 +127,9 @@ export function Navbar() {
     { to: '/genomes', icon: Dna, label: 'Genomes' },
   ] : [
     { to: '/', icon: Home, label: 'Home' },
+    { to: '/features', icon: Sparkles, label: 'Features' },
+    { to: '/pricing', icon: Activity, label: 'Pricing' },
+    { to: '/about', icon: Users, label: 'About' },
     { to: '/faq', icon: Activity, label: 'FAQ' },
     { to: '/contact', icon: Bell, label: 'Contact' },
   ];

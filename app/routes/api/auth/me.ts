@@ -2,6 +2,7 @@ import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
 import { requireAuth } from '~/utils/auth';
 import { getUserProfile, getUserById } from '~/utils/database';
+import { getUserTermsStatus } from '~/utils/terms';
 
 export const APIRoute = createAPIFileRoute('/api/auth/me')({
   GET: async ({ request }) => {
@@ -19,6 +20,9 @@ export const APIRoute = createAPIFileRoute('/api/auth/me')({
         return json({ success: false, error: 'User not found' }, { status: 404 });
       }
 
+      // Get terms acceptance status
+      const termsStatus = getUserTermsStatus(auth.id);
+
       return json({
         success: true,
         user: {
@@ -35,6 +39,7 @@ export const APIRoute = createAPIFileRoute('/api/auth/me')({
             timezone: profile.timezone,
             privacySettings: profile.privacySettings,
           } : null,
+          termsStatus,
         },
       });
     } catch (error) {

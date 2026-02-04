@@ -9,6 +9,7 @@ import {
   generate2FAPendingToken,
   get2FAStatus 
 } from '~/utils/twoFactor';
+import { userRequiresTermsAcceptance, getUserTermsStatus } from '~/utils/terms';
 
 export const APIRoute = createAPIFileRoute('/api/auth/login')({
   POST: async ({ request }) => {
@@ -59,6 +60,33 @@ export const APIRoute = createAPIFileRoute('/api/auth/login')({
       const result = await loginUser({ email, password, rememberMe }, ipAddress, userAgent, false);
 
       if (result.success && result.user) {
+        // Check if user has accepted current terms
+        const requiresTermsAcceptance = userRequiresTermsAcceptance(result.user.id);
+        
+        if (requiresTermsAcceptance) {
+          const termsStatus = getUserTermsStatus(result.user.id);
+          
+          logSecurityEvent('terms_acceptance_required', {
+            ip: ipAddress,
+            email: email,
+            userId: result.user.id,
+          }, 'info');
+          
+          return json({
+            success: true,
+            requiresTermsAcceptance: true,
+            user: {
+              id: result.user.id,
+              email: result.user.email,
+              displayName: result.user.displayName,
+            },
+            termsStatus,
+          }, {
+            status: 200,
+            headers,
+          });
+        }
+
         // Check if 2FA is enabled
         const twoFAStatus = get2FAStatus(result.user.id);
         

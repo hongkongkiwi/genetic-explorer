@@ -28,6 +28,9 @@ import {
 } from './fileCompression';
 import { logActivity } from './database';
 import { encryptForUser } from './encryption';
+import { secureDeleteGenome } from './secureDeletion';
+import { calculateQualityMetrics, compareGenomeQuality, QualityComparison } from './genomeQuality';
+import { verifyIdentity, IdentityVerificationResult, getDangerZoneConfig } from './identityVerification';
 import crypto from 'crypto';
 
 // ============================================================================
@@ -45,6 +48,14 @@ interface GenomeReplacementOptions {
   reason?: string;
   /** Nickname for new genome (defaults to old nickname) */
   nickname?: string;
+  /** Skip identity verification (DANGEROUS - requires confirmation) */
+  skipIdentityVerification?: boolean;
+  /** Force replacement even if quality is lower (requires confirmation) */
+  forceLowerQuality?: boolean;
+  /** User confirmed identity warning */
+  confirmedIdentity?: boolean;
+  /** User confirmed quality downgrade */
+  confirmedQualityDowngrade?: boolean;
 }
 
 interface GenomeReplacementResult {
@@ -54,6 +65,15 @@ interface GenomeReplacementResult {
   snpCount: {
     old: number;
     new: number;
+  };
+  qualityComparison?: QualityComparison;
+  identityVerification?: IdentityVerificationResult;
+  dangerZone?: {
+    show: boolean;
+    title: string;
+    message: string;
+    confirmType: 'checkbox' | 'text' | 'none';
+    requiredConfirmation?: string;
   };
   error?: string;
   warnings: string[];
@@ -299,6 +319,96 @@ export async function replaceGenome(
     // Parse new genetic data
     const parseResult = parseGeneticData(content);
     
+    // Get old SNPs for comparison
+    const oldSnps = db.prepare(
+      'SELECT rsid, chromosome, position, genotype_encrypted FROM snps WHERE genome_id = ?'
+    ).all(oldGenomeId) as Array<{
+      rsid: string;
+      chromosome: string;
+      position: number;
+      genotype_encrypted: string;
+    }>;
+    
+    // Decrypt old SNPs for comparison
+    const { decryptForUser } = require('./encryption');
+    const oldSnpsDecrypted: SNP[] = oldSnps.map(snp => ({
+      rsid: snp.rsid,
+      chromosome: snp.chromosome,
+      position: snp.position,
+      genotype: decryptForUser(userId, JSON.parse(snp.genotype_encrypted)),
+    }));
+    
+    // Calculate quality metrics and compare
+    const oldQuality = calculateQualityMetrics(oldSnpsDecrypted);
+    const newQuality = calculateQualityMetrics(parseResult.snps);
+    const qualityComparison = compareGenomeQuality(oldQuality, newQuality);
+    
+    // Check if new data is better
+    if (!qualityComparison.isUpgrade && !options.forceLowerQuality) {
+      return {
+        success: false,
+        error: 'New data appears to be lower quality than current data',
+        warnings: [...warnings, ...qualityComparison.warnings],
+        snpCount: { old: oldGenome.snp_count, new: parseResult.snps.length },
+        qualityComparison,
+        dangerZone: {
+          show: true,
+          title: '⚠️ Lower Quality Data Detected',
+          message: `The new genetic data appears to be lower quality:\n\n${qualityComparison.regressions.join('\n')}`,
+          confirmType: 'checkbox',
+          requiredConfirmation: undefined,
+        },
+      };
+    }
+    
+    // Perform identity verification
+    const identityVerification = verifyIdentity(oldSnpsDecrypted, parseResult.snps);
+    
+    // Handle identity mismatch
+    if (identityVerification.riskAssessment.shouldBlock && !options.skipIdentityVerification) {
+      const dangerConfig = getDangerZoneConfig(identityVerification);
+      
+      return {
+        success: false,
+        error: 'Identity verification failed - possible different individual',
+        warnings: [...warnings, ...(identityVerification.warningMessage ? [identityVerification.warningMessage] : [])],
+        snpCount: { old: oldGenome.snp_count, new: parseResult.snps.length },
+        qualityComparison,
+        identityVerification,
+        dangerZone: {
+          show: dangerConfig.showDangerZone,
+          title: dangerConfig.title,
+          message: dangerConfig.message,
+          confirmType: dangerConfig.confirmType,
+          requiredConfirmation: dangerConfig.requiredConfirmation,
+        },
+      };
+    }
+    
+    // Show warning for partial matches
+    if (identityVerification.matchLevel === 'partial' && !options.confirmedIdentity) {
+      const dangerConfig = getDangerZoneConfig(identityVerification);
+      
+      return {
+        success: false,
+        error: 'Identity verification warning - confirmation required',
+        warnings: [...warnings, ...(identityVerification.warningMessage ? [identityVerification.warningMessage] : [])],
+        snpCount: { old: oldGenome.snp_count, new: parseResult.snps.length },
+        qualityComparison,
+        identityVerification,
+        dangerZone: {
+          show: dangerConfig.showDangerZone,
+          title: dangerConfig.title,
+          message: dangerConfig.message,
+          confirmType: dangerConfig.confirmType,
+          requiredConfirmation: dangerConfig.requiredConfirmation,
+        },
+      };
+    }
+    
+    warnings.push(...qualityComparison.improvements);
+    warnings.push(...qualityComparison.warnings);
+    
     // Start transaction
     const transaction = db.transaction(() => {
       // Create new genome
@@ -386,13 +496,23 @@ export async function replaceGenome(
         warnings.push(`Transferred ${sharingPerms.length} sharing permissions to new genome`);
       }
       
-      // Delete old genome (this cascades to SNPs)
-      db.prepare('DELETE FROM genomes WHERE id = ?').run(oldGenomeId);
+      // Note: Old genome will be securely deleted AFTER transaction commits
       
       return newGenomeId;
     });
     
     const newGenomeId = transaction();
+    
+    // Securely delete old genome data (AFTER transaction commits)
+    console.log(`Securely deleting old genome: ${oldGenomeId}`);
+    const deletionResult = secureDeleteGenome(oldGenomeId, userId);
+    
+    if (!deletionResult.success) {
+      console.error(`Secure deletion failed for ${oldGenomeId}:`, deletionResult.error);
+      warnings.push(`Warning: Old genome data may not have been completely erased: ${deletionResult.error}`);
+    } else {
+      console.log(`Secure deletion completed: ${deletionResult.dbRecordsPurged} records purged, verification: ${deletionResult.verificationPassed}`);
+    }
     
     // Log activity
     logActivity(userId, 'genome_replaced', 'genome', newGenomeId, {
@@ -400,6 +520,7 @@ export async function replaceGenome(
       oldSnpCount: oldGenome.snp_count,
       newSnpCount: parseResult.snps.length,
       backupCreated: !!backupId,
+      secureDeletionSuccess: deletionResult.success,
       reason: options.reason,
     });
     
@@ -413,6 +534,8 @@ export async function replaceGenome(
         old: oldGenome.snp_count,
         new: parseResult.snps.length,
       },
+      qualityComparison,
+      identityVerification,
       warnings,
     };
   } catch (error) {
@@ -547,6 +670,12 @@ export function initGenomeReplacementTables(): void {
     CREATE INDEX IF NOT EXISTS idx_genome_backups_user_id ON genome_backups(user_id)
   `);
 }
+
+export {
+  GenomeReplacementOptions,
+  GenomeReplacementResult,
+  GenomeBackup,
+};
 
 export default {
   replaceGenome,

@@ -167,8 +167,8 @@ export function cryptographicErasure(genomeId: string, userId: string): boolean 
 }
 
 // ============================================================================
-# Secure Genome Deletion
-# ============================================================================
+// Secure Genome Deletion
+// ============================================================================
 
 /**
  * Securely delete a genome and all associated data

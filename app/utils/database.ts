@@ -8,6 +8,9 @@ import { createIndexes, analyzeTables } from './databaseIndexes';
 import { writeFileSync, mkdirSync, existsSync, readFileSync, unlinkSync } from 'fs';
 import { join } from 'path';
 import { encrypt, decrypt, getUserEncryptionKey } from './encryption';
+import { initTermsTables } from './terms';
+import { initSessionManagementTables } from './sessionManagement';
+import { initTwoFactorDisableDelayTables } from './twoFactorDisableDelay';
 
 let db: Database.Database | null = null;
 
@@ -632,6 +635,15 @@ function initDatabase() {
   
   // Initialize new security tables (Lightway-inspired)
   initSecurityTables();
+  
+  // Initialize terms acceptance tables
+  initTermsTables();
+  
+  // Initialize session management tables
+  initSessionManagementTables();
+  
+  // Initialize 2FA disable delay tables
+  initTwoFactorDisableDelayTables();
 }
 
 /**
@@ -724,6 +736,21 @@ function initSecurityTables(): void {
   `);
   db.exec(`CREATE INDEX IF NOT EXISTS idx_genome_backups_genome_id ON genome_backups(genome_id)`);
   db.exec(`CREATE INDEX IF NOT EXISTS idx_genome_backups_user_id ON genome_backups(user_id)`);
+  
+  // Secure deletion audit log
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS secure_deletion_audit (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      genome_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      deleted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      method TEXT NOT NULL,
+      passes INTEGER DEFAULT 3,
+      verification_result INTEGER DEFAULT 0
+    )
+  `);
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_deletion_audit_genome ON secure_deletion_audit(genome_id)`);
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_deletion_audit_user ON secure_deletion_audit(user_id)`);
 }
 
 export interface SaveGenomeResult {
@@ -3320,4 +3347,52 @@ export function saveEncryptedDataKey(encryptedKey: Buffer): void {
  */
 export function loadEncryptedDataKey(): Buffer | null {
   return loadSystemSetting('kms_encrypted_data_key');
+}
+
+
+// ============================================================================
+// Genome Management - Delete All User Genomes
+// ============================================================================
+
+/**
+ * Delete all genomes for a user
+ * Used when user wants to delete genome data but keep their account
+ * Returns information about what was deleted
+ */
+export function deleteAllUserGenomes(userId: string): {
+  deletedCount: number;
+  deletedFiles: string[];
+  failedFiles: string[];
+} {
+  const db = getDb();
+  
+  // Get all genome files before deleting
+  const genomes = db.prepare(`
+    SELECT id, storage_path FROM genomes WHERE user_id = ?
+  `).all(userId) as Array<{ id: string; storage_path: string | null }>;
+  
+  const deletedFiles: string[] = [];
+  const failedFiles: string[] = [];
+  
+  // Delete files from disk
+  for (const genome of genomes) {
+    if (genome.storage_path && existsSync(genome.storage_path)) {
+      try {
+        unlinkSync(genome.storage_path);
+        deletedFiles.push(genome.storage_path);
+      } catch (error) {
+        console.warn(`Failed to delete genome file ${genome.storage_path}:`, error);
+        failedFiles.push(genome.storage_path);
+      }
+    }
+  }
+  
+  // Delete all genomes from database (cascades to SNPs, reports, etc.)
+  const result = db.prepare(`DELETE FROM genomes WHERE user_id = ?`).run(userId);
+  
+  return {
+    deletedCount: result.changes,
+    deletedFiles,
+    failedFiles,
+  };
 }

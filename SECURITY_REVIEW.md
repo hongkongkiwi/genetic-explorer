@@ -684,6 +684,94 @@ GCP_KMS_KEY_RING=genetic-explorer
 
 ---
 
+## 🆕 User Experience Features
+
+### DNA Testing Services Guide
+**Location:** `app/components/DNATestingServicesGuide.tsx`, `app/data/dnaTestingServices.ts`
+
+Comprehensive guide for users who haven't uploaded their genome yet.
+
+**Features:**
+- Detailed comparison of 8+ DNA testing services
+- Coverage tiers explained (Microarray vs Whole Genome)
+- Pricing, privacy ratings, and availability
+- Step-by-step download instructions for each service
+- Raw data format information
+
+**Supported Services:**
+| Service | Price | SNPs | Coverage |
+|---------|-------|------|----------|
+| 23andMe | $99-199 | 640K | 0.02% |
+| AncestryDNA | $99 | 700K | 0.022% |
+| MyHeritage | $79 | 630K | 0.02% |
+| Nebula WGS | $299-999 | 6B | 99.9% |
+| Dante Labs | $199-499 | 6B | 99.9% |
+
+---
+
+### Genome Coverage Visualization
+**Location:** `app/components/GenomeCoverageVisualization.tsx`, `app/utils/genomeCoverage.ts`
+
+Shows users exactly what percentage of their genome is covered and the quality of their data.
+
+**Metrics Displayed:**
+- **Overall Coverage %** with quality grade (Excellent/Good/Fair/Limited)
+- **Total SNPs** detected
+- **Chromosome-by-chromosome** coverage heatmap
+- **Clinical SNPs** - medically relevant variants
+- **Ancestry Markers** - ethnicity indicators
+- **Health Variants** - actionable insights
+
+**Visual Features:**
+```
+Chromosome Coverage Heatmap:
+🟢 Excellent (80%+)  🟡 Fair (40-60%)
+🔵 Good (60-80%)     🟠 Limited (20-40%)
+```
+
+**Coverage Grades:**
+| Grade | Percentage | Description |
+|-------|------------|-------------|
+| Excellent | >80% | Whole genome sequencing |
+| Good | 50-80% | High-density microarray |
+| Fair | 20-50% | Standard microarray |
+| Limited | <20% | Basic testing |
+
+**Clinical Coverage Section:**
+- Clinically relevant variants detected
+- Pharmacogenomic variants (drug response)
+- Carrier status variants
+- ACMG 59 actionable genes coverage
+
+**Recommendations Engine:**
+- Suggests upgrades if coverage is poor
+- Flags missing chromosomes
+- Recommends health-focused tests
+- Compares old vs new genome coverage
+
+**API Endpoint:**
+```
+GET /api/genome/coverage?id=<genomeId>
+```
+
+---
+
+### Empty Genome State UI
+**Location:** `app/components/EmptyGenomeState.tsx`
+
+Welcoming UI for new users without genetic data.
+
+**Features:**
+- Clear call-to-action buttons
+- DNA testing services comparison guide
+- Supported file formats display
+- Step-by-step "How It Works" guide
+- Privacy reassurance
+
+---
+
+---
+
 ## 🆕 Additional Security Features (Lightway-Inspired)
 
 ### Request Signing (HMAC-SHA256)
@@ -821,16 +909,76 @@ npm run key:rotate -- --user=<id>  # Rotate specific user
 Allows users to replace their genetic data (e.g., higher resolution test).
 
 **Security Features:**
-- Secure deletion of old data
-- Optional backup creation
-- Data integrity verification
-- Preservation of sharing permissions (optional)
-- Comprehensive audit trail
+- ✅ **Secure deletion** of old data (multi-pass overwrite)
+- ✅ **Quality comparison** - ensures new data is better
+- ✅ **Identity verification** - prevents replacing with wrong person's data
+- ✅ **Danger Zone warnings** for mismatched identity
+- ✅ Optional backup creation
+- ✅ Data integrity verification
+- ✅ Preservation of sharing permissions (optional)
+- ✅ Comprehensive audit trail
+
+**Quality Comparison:**
+Compares new vs old genetic data on:
+- Total SNP count
+- Chromosome coverage
+- Resolution (SNPs per Mbp)
+- Health-related variants
+- Completeness
+
+**Identity Verification:**
+Uses 24 identity-informative SNPs (iSNPs) to verify data is from the same person:
+- **Match (90%+):** Same person - proceed
+- **Partial (70-90%):** Warning - may be different chip or relative
+- **Mismatch (<70%):** BLOCKED - likely different person
+- **Insufficient:** Warning - not enough markers to verify
+
+**Danger Zone UI:**
+```
+🚨 CRITICAL: Different Person Detected
+
+The new genetic data appears to be from a DIFFERENT PERSON.
+
+Match confidence: 45.2% (12 markers compared)
+
+⚠️  REPLACEMENT BLOCKED FOR SECURITY ⚠️
+
+[ ] I understand this appears to be someone else's genetic data
+[Type: I UNDERSTAND THIS IS NOT MY DATA]
+```
+
+**Secure Deletion:**
+- 3-pass overwrite (zeros, ones, random)
+- Cryptographic erasure (destroy encryption keys)
+- Database record purging
+- Verification of deletion
 
 **API Endpoints:**
 - `POST /api/genomes/replace` - Replace genome
 - `GET /api/genomes/replace/history` - View replacement history
 - `GET /api/genomes/:id/replace-status` - Check if replacement is allowed
+
+**Usage:**
+```typescript
+const result = await replaceGenome(
+  oldGenomeId,
+  userId,
+  fileBuffer,
+  filename,
+  {
+    preserveSharing: true,
+    createBackup: true,
+    // For danger zone confirmations:
+    confirmedIdentity: true,
+    forceLowerQuality: false,
+  }
+);
+
+if (!result.success && result.dangerZone?.show) {
+  // Show danger zone confirmation UI
+  showDangerZoneModal(result.dangerZone);
+}
+```
 
 ---
 
@@ -856,8 +1004,16 @@ Allows users to replace their genetic data (e.g., higher resolution test).
 │  ┌───────────────▼───┐    ┌───────▼───────────────┐             │
 │  │  GENOME PARSER    │    │   GENOME REPLACEMENT  │             │
 │  │  (Fuzzing Tests)  │    │   (Secure Deletion)   │             │
-│  └───────────────────┘    └───────────────────────┘             │
-│                                                                 │
+│  └───────────────────┘    └───────┬───────────────┘             │
+│                                   │                             │
+│         ┌─────────────────────────┼─────────────────┐            │
+│         │                         │                 │            │
+│  ┌──────▼──────┐     ┌───────────▼────┐  ┌────────▼────────┐   │
+│  │   QUALITY   │     │    IDENTITY    │  │   SECURE DELETE │   │
+│  │  COMPARISON │     │ VERIFICATION   │  │  (Multi-Pass)   │   │
+│  │  (Better?)  │     │  (Same Person) │  │  • Overwrite    │   │
+│  └─────────────┘     └────────────────┘  │  • Crypto Keys  │   │
+│                                          └─────────────────┘   │
 │  ┌─────────────────────────────────────────────────────────┐   │
 │  │              DEPENDENCY SECURITY (deny.toml)            │   │
 │  │  • Banned packages: crypto-js, md5, sha1               │   │
@@ -887,7 +1043,11 @@ Allows users to replace their genetic data (e.g., higher resolution test).
 - [x] Dependency security policy (deny.toml)
 - [x] Fuzzing tests for parsers
 - [x] Automated key rotation
-- [x] Genetic data replacement with secure deletion
+- [x] Genetic data replacement with:
+  - [x] Secure deletion (3-pass overwrite + crypto erasure)
+  - [x] Quality comparison (ensures upgrade not downgrade)
+  - [x] Identity verification (24 iSNPs, blocks wrong person)
+  - [x] Danger zone warnings
 
 ### Monitoring & Compliance
 - [x] Security event monitoring

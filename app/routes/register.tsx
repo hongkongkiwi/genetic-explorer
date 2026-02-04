@@ -8,7 +8,7 @@ import { Button } from '~/components/ui/Button';
 import { Input } from '~/components/ui/Input';
 import { Card } from '~/components/ui/Card';
 import { Alert } from '~/components/ui/Alert';
-import { Mail, Lock, User, Eye, EyeOff, CheckCircle, XCircle } from 'lucide-react';
+import { Mail, Lock, User, Eye, EyeOff, CheckCircle, XCircle, FileText, Shield } from 'lucide-react';
 
 export const Route = createFileRoute('/register')({
   component: RegisterPage,
@@ -25,6 +25,8 @@ function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
 
   // Check signup restrictions
   const signupAllowed = canSignUp();
@@ -86,9 +88,14 @@ function RegisterPage() {
       return;
     }
 
+    if (!acceptedTerms || !acceptedPrivacy) {
+      setError('You must accept the Terms of Service and Privacy Policy');
+      return;
+    }
+
     setIsLoading(true);
 
-    const result = await register(email, password, displayName || undefined);
+    const result = await register(email, password, displayName || undefined, true);
 
     if (result.success) {
       setSuccess(true);
@@ -241,12 +248,59 @@ function RegisterPage() {
                 )}
               </div>
 
+              {/* Terms Acceptance */}
+              <div className="space-y-3 py-4 border-t border-slate-200 dark:border-slate-700">
+                <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                  To create an account, you must accept:
+                </p>
+                
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={acceptedTerms}
+                    onChange={(e) => setAcceptedTerms(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  <span className="text-sm text-slate-600 dark:text-slate-400">
+                    I agree to the{' '}
+                    <Link 
+                      to="/terms" 
+                      target="_blank"
+                      className="text-indigo-600 dark:text-indigo-400 hover:underline inline-flex items-center gap-1"
+                    >
+                      <FileText className="w-3 h-3" />
+                      Terms of Service
+                    </Link>
+                  </span>
+                </label>
+                
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={acceptedPrivacy}
+                    onChange={(e) => setAcceptedPrivacy(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                  />
+                  <span className="text-sm text-slate-600 dark:text-slate-400">
+                    I agree to the{' '}
+                    <Link 
+                      to="/privacy" 
+                      target="_blank"
+                      className="text-emerald-600 dark:text-emerald-400 hover:underline inline-flex items-center gap-1"
+                    >
+                      <Shield className="w-3 h-3" />
+                      Privacy Policy
+                    </Link>
+                  </span>
+                </label>
+              </div>
+
               <Button
                 type="submit"
                 className="w-full"
                 size="lg"
                 isLoading={isLoading}
-                disabled={!allRequirementsMet || !passwordsMatch}
+                disabled={!allRequirementsMet || !passwordsMatch || !acceptedTerms || !acceptedPrivacy}
               >
                 Create Account
               </Button>
@@ -275,9 +329,7 @@ function RegisterPage() {
           </div>
         </Card>
 
-        <p className="mt-8 text-center text-xs text-slate-600 dark:text-slate-500">
-          By creating an account, you agree to our privacy policy. Your genetic data stays on your device.
-        </p>
+
       </div>
     </div>
   );

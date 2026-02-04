@@ -51,6 +51,16 @@ export function Footer() {
             <h3 className="font-semibold text-slate-900 dark:text-white mb-4">Product</h3>
             <ul className="space-y-2">
               <li>
+                <Link to="/features" className="text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                  Features
+                </Link>
+              </li>
+              <li>
+                <Link to="/pricing" className="text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                  Pricing
+                </Link>
+              </li>
+              <li>
                 <Link to="/upload" className="text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                   Upload DNA
                 </Link>
@@ -73,13 +83,13 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Support */}
+          {/* Company */}
           <div>
-            <h3 className="font-semibold text-slate-900 dark:text-white mb-4">Support</h3>
+            <h3 className="font-semibold text-slate-900 dark:text-white mb-4">Company</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/faq" className="text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                  FAQ
+                <Link to="/about" className="text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                  About Us
                 </Link>
               </li>
               <li>
@@ -95,10 +105,15 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Legal */}
+          {/* Support & Legal */}
           <div>
-            <h3 className="font-semibold text-slate-900 dark:text-white mb-4">Legal</h3>
+            <h3 className="font-semibold text-slate-900 dark:text-white mb-4">Support & Legal</h3>
             <ul className="space-y-2">
+              <li>
+                <Link to="/faq" className="text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                  FAQ
+                </Link>
+              </li>
               <li>
                 <Link to="/terms" className="text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                   Terms of Service

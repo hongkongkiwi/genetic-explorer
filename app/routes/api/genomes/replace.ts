@@ -42,6 +42,12 @@ export const APIRoute = createAPIFileRoute('/api/genomes/replace')({
       const createBackup = formData.get('createBackup') !== 'false' // Default true
       const reason = formData.get('reason') as string | undefined
       const nickname = formData.get('nickname') as string | undefined
+      
+      // Danger zone confirmations
+      const skipIdentityVerification = formData.get('skipIdentityVerification') === 'true'
+      const forceLowerQuality = formData.get('forceLowerQuality') === 'true'
+      const confirmedIdentity = formData.get('confirmedIdentity') === 'true'
+      const confirmedQualityDowngrade = formData.get('confirmedQualityDowngrade') === 'true'
 
       // Validate required fields
       if (!file || !genomeId) {
@@ -146,17 +152,37 @@ export const APIRoute = createAPIFileRoute('/api/genomes/replace')({
           createBackup,
           reason,
           nickname,
+          skipIdentityVerification,
+          forceLowerQuality,
+          confirmedIdentity,
+          confirmedQualityDowngrade,
         }
       )
 
       if (!result.success) {
+        // Check if this is a danger zone response
+        if (result.dangerZone?.show) {
+          return json(
+            {
+              success: false,
+              error: result.error,
+              warnings: result.warnings,
+              dangerZone: result.dangerZone,
+              qualityComparison: result.qualityComparison,
+              identityVerification: result.identityVerification,
+              requiresConfirmation: true,
+            },
+            { status: 409 } // Conflict - requires confirmation
+          )
+        }
+        
         return json(
           {
             success: false,
             error: result.error,
             warnings: result.warnings,
           },
-          { status: 500 }
+          { status: 400 }
         )
       }
 
@@ -166,7 +192,9 @@ export const APIRoute = createAPIFileRoute('/api/genomes/replace')({
         newGenomeId: result.newGenomeId,
         oldGenomeId: result.oldGenomeId,
         snpCount: result.snpCount,
-        warnings: [...result.warnings, ...compatibility.warnings],
+        qualityComparison: result.qualityComparison,
+        identityVerification: result.identityVerification,
+        warnings: result.warnings,
       })
     } catch (error) {
       console.error('Genome replacement error:', error)

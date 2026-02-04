@@ -220,6 +220,47 @@ CREATE INDEX IF NOT EXISTS idx_activity_logs_created_at ON activity_logs(created
 CREATE INDEX IF NOT EXISTS idx_sharing_permissions_owner ON sharing_permissions(owner_id);
 CREATE INDEX IF NOT EXISTS idx_sharing_permissions_shared ON sharing_permissions(shared_with_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
+-- Terms versions table
+CREATE TABLE IF NOT EXISTS terms_versions (
+  id TEXT PRIMARY KEY,
+  type TEXT NOT NULL CHECK(type IN ('terms', 'privacy')),
+  version TEXT NOT NULL,
+  content TEXT NOT NULL,
+  effective_date TEXT NOT NULL,
+  created_at TEXT DEFAULT (datetime('now')),
+  UNIQUE(type, version)
+);
+
+-- User terms acceptances table
+CREATE TABLE IF NOT EXISTS user_terms_acceptances (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  terms_version TEXT NOT NULL,
+  privacy_version TEXT NOT NULL,
+  accepted_at TEXT DEFAULT (datetime('now')),
+  ip_address TEXT,
+  user_agent TEXT,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  UNIQUE(user_id)
+);
+
+-- Terms acceptance history (audit trail)
+CREATE TABLE IF NOT EXISTS terms_acceptance_history (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  terms_version TEXT NOT NULL,
+  privacy_version TEXT NOT NULL,
+  accepted_at TEXT DEFAULT (datetime('now')),
+  ip_address TEXT,
+  user_agent TEXT,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Terms indexes
+CREATE INDEX IF NOT EXISTS idx_user_terms_acceptances_user_id ON user_terms_acceptances(user_id);
+CREATE INDEX IF NOT EXISTS idx_terms_acceptance_history_user_id ON terms_acceptance_history(user_id);
+CREATE INDEX IF NOT EXISTS idx_terms_versions_type ON terms_versions(type);
+
 CREATE INDEX IF NOT EXISTS idx_research_updates_rsid ON research_updates(rsid);
 CREATE INDEX IF NOT EXISTS idx_research_updates_date ON research_updates(date);
 
