@@ -539,10 +539,10 @@ function ChromosomeDetailView({
   onBack: () => void;
 }) {
   const chrData = comparison.chromosomeComparisons.find(c => c.chromosome === chromosome);
-  const segments = chrData?.ibdSegments || [];
   
   // Mock SNP data for visualization (in real implementation, would come from actual comparison)
   const mockSharedSNPs = useMemo(() => {
+    const segments = chrData?.ibdSegments || [];
     const snps: Array<{ position: number; isShared: boolean }> = [];
     const totalLength = chrData?.lengthBP || 100000000;
     
@@ -553,7 +553,7 @@ function ChromosomeDetailView({
       snps.push({ position, isShared: inSegment && Math.random() > 0.3 });  
     }
     return snps;
-  }, [chrData, segments]);
+  }, [chrData]);
 
   return (
     <div>

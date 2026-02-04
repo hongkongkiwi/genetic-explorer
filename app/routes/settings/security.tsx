@@ -37,7 +37,6 @@ function SecurityPage() {
     }
   }, [isLoading, isAuthenticated, navigate]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (isAuthenticated) {
       loadAccounts();
@@ -45,7 +44,6 @@ function SecurityPage() {
   }, [isAuthenticated]);
 
   // Handle OAuth callback messages
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (search.oauth === 'linked') {
       setMessage({ type: 'success', text: `Successfully connected ${search.provider} account!` });
@@ -57,6 +55,7 @@ function SecurityPage() {
       setMessage({ type: 'error', text: search.error || 'Failed to connect account' });
       navigate({ to: '/settings/security', search: {} });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
 
   const loadAccounts = async () => {

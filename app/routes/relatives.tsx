@@ -155,7 +155,6 @@ function RelativesPage() {
   };
 
   // Handlers
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const handleOptInChange = useCallback(async (optIn: boolean) => {
     try {
       const response = await fetch('/api/relatives/privacy', {
@@ -177,6 +176,7 @@ function RelativesPage() {
     } catch (err) {
       setError('Failed to update privacy settings');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [privacy]);
 
   const handlePrivacyChange = useCallback(async (updates: Partial<RelativeMatchingPrivacy>) => {

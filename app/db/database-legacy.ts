@@ -166,8 +166,10 @@ function initDatabase() {
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       status TEXT DEFAULT 'active',
       message TEXT,
+      created_by TEXT,
       relationship_type TEXT,
       FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE,
       FOREIGN KEY (shared_with_id) REFERENCES users(id) ON DELETE CASCADE,
       FOREIGN KEY (genome_id) REFERENCES genomes(id) ON DELETE CASCADE,
       UNIQUE(owner_id, shared_with_id, genome_id)

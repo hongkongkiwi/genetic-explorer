@@ -459,6 +459,7 @@ export function ChromosomePaintingCompact({
         })),
       };
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [segments]);
 
   return (

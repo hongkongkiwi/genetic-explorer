@@ -405,6 +405,7 @@ export function WindowedList<T>({
     if (changed) {
       setMeasuredHeights(newHeights);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startIndex, endIndex, items]);
 
   const visibleItems = useMemo(() => {
