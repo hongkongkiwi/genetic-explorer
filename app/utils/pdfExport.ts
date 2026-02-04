@@ -112,7 +112,7 @@ export function generateReportHTML(report: HealthReport, genome: GenomeData): st
     const riskColor = {
       high: '#dc2626',
       moderate: '#ea580c',
-      low: #16a34a',
+      low: '#16a34a',
       protective: '#2563eb',
     }[risk.riskLevel] || '#475569';
 
