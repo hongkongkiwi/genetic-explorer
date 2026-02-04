@@ -1,20 +1,31 @@
-#!/usr/bin/env node
+#!/usr/bin/env tsx
 /**
  * Database Restore Script
  * 
- * Usage: node scripts/restore.js <backup-file.tar.gz>
+ * Usage: npx tsx scripts/restore.ts <backup-file.tar.gz>
  */
 
 import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+interface BackupInfo {
+  timestamp: string;
+  version: string;
+  database?: string;
+  uploads?: string;
+}
 
 const backupFile = process.argv[2];
 const DB_PATH = process.env.DATABASE_URL || './data/genetic_explorer.db';
 const UPLOADS_DIR = process.env.UPLOADS_DIR || './uploads';
 
 if (!backupFile) {
-  console.error('Usage: node scripts/restore.js <backup-file.tar.gz>');
+  console.error('Usage: npx tsx scripts/restore.ts <backup-file.tar.gz>');
   process.exit(1);
 }
 
@@ -46,7 +57,7 @@ try {
 
   // Read backup info
   if (fs.existsSync(backupInfoPath)) {
-    const backupInfo = JSON.parse(fs.readFileSync(backupInfoPath, 'utf-8'));
+    const backupInfo = JSON.parse(fs.readFileSync(backupInfoPath, 'utf-8')) as BackupInfo;
     console.log('\nBackup info:');
     console.log(`  Created: ${backupInfo.timestamp}`);
     console.log(`  Version: ${backupInfo.version}`);
@@ -88,7 +99,7 @@ try {
   console.log('\nPlease restart the application for changes to take effect.');
 
 } catch (error) {
-  console.error('❌ Restore failed:', error.message);
+  console.error('❌ Restore failed:', error instanceof Error ? error.message : String(error));
   
   // Cleanup on error
   if (fs.existsSync(tempDir)) {

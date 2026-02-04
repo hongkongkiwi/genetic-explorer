@@ -2,6 +2,9 @@ import { json } from '@tanstack/start'
 import { createAPIFileRoute } from '@tanstack/start/api'
 import { getDb } from '~/utils/database'
 import crypto from 'crypto'
+import { sendSecurityNotification } from '~/utils/securityNotifications';
+import { terminateAllUserSessions } from '~/utils/sessionManagement';
+import { getClientIp } from '~/utils/rateLimit';
 
 // Password hashing using PBKDF2
 function hashPassword(password: string): { hash: string; salt: string } {
@@ -70,12 +73,25 @@ export const APIRoute = createAPIFileRoute('/api/auth/reset-password')({
       `,
       ).run(resetRecord.id)
 
-      // Delete all user's sessions for security
-      db.prepare(`DELETE FROM sessions WHERE user_id = ?`).run(
-        resetRecord.user_id,
-      )
+      // Terminate all user's sessions for security
+      const ipAddress = getClientIp(request);
+      const userAgent = request.headers.get('user-agent');
+      const terminatedCount = terminateAllUserSessions(resetRecord.user_id, 'password_reset');
 
-      return json({ success: true, message: 'Password reset successfully' })
+      // Send security notification
+      sendSecurityNotification(
+        resetRecord.user_id,
+        'password_reset_completed',
+        {},
+        ipAddress || undefined,
+        userAgent || undefined
+      );
+
+      return json({ 
+        success: true, 
+        message: 'Password reset successfully',
+        terminatedSessions: terminatedCount,
+      })
     } catch (error) {
       console.error('Reset password error:', error)
       return json(

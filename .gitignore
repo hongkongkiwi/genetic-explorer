@@ -17,14 +17,32 @@ node_modules
 /build
 *.tsbuildinfo
 
-# OS files
+# OS files - macOS
 .DS_Store
 .DS_Store?
 ._*
 .Spotlight-V100
 .Trashes
 ehthumbs.db
+.volumeIcon.icns
+.ApDisk
+
+# OS files - Windows
 Thumbs.db
+Thumbs.db:encryptable
+desktop.ini
+$RECYCLE.BIN/
+System Volume Information
+
+# OS files - Linux
+.*
+.trash-*
+.fuse_hidden*
+.nfs*
+lost+found/
+
+# OS files - Common
+~
 
 # IDE - VS Code
 .vscode/*

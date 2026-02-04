@@ -1,0 +1,180 @@
+# =============================================================================
+# Security Policy for npm Dependencies
+# Inspired by cargo-deny used in Lightway (https://github.com/EmbarkStudios/cargo-deny)
+# 
+# This file configures security checks for npm dependencies.
+# Run checks with: npm run security:audit
+# =============================================================================
+
+[advisories]
+# Version of the advisory format
+version = 2
+
+# The path to the advisory database
+# This uses npm audit which queries the npm security database
+db-url = "https://registry.npmjs.org/-/npm/v1/security/audits"
+
+# Yanked package handling
+# Treat packages that have been unpublished from npm as vulnerabilities
+yanked = "deny"
+
+# Ignore specific advisories (use sparingly and document why)
+# Format: "GHSA-xxxx-xxxx-xxxx" or npm advisory ID
+ignore = [
+    # Example (DO NOT USE WITHOUT DOCUMENTATION):
+    # "GHSA-xxx-xxx-xxx",  # Reason: False positive, we don't use the vulnerable function
+]
+
+# Severity threshold - fail on moderate and above
+# Levels: critical, high, moderate, low, info
+severity-threshold = "moderate"
+
+[licenses]
+# Version of the license format
+version = 2
+
+# Allowed licenses
+# Packages with licenses not in this list will be rejected
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "0BSD",
+    "CC0-1.0",
+    "Unlicense",
+    "MPL-2.0",
+    "BlueOak-1.0.0",
+]
+
+# Licenses that require explicit review
+deny = [
+    "GPL-1.0",
+    "GPL-2.0",
+    "GPL-3.0",
+    "LGPL-2.0",
+    "LGPL-2.1",
+    "LGPL-3.0",
+    "AGPL-3.0",
+    "SSPL-1.0",
+    "Proprietary",
+    "UNLICENSED",
+]
+
+# Confidence threshold for license detection (0.0 - 1.0)
+# Lower values mean more strict matching
+confidence-threshold = 0.8
+
+# Clarify licenses for packages with complex/multi-licensing
+# [[licenses.clarify]]
+# name = "some-package"
+# expression = "MIT OR Apache-2.0"
+
+[bans]
+# Multiple versions of the same package
+# deny = error on multiple versions
+# warn = warning on multiple versions
+# allow = allow multiple versions
+multiple-versions = "warn"
+
+# Wildcard dependencies (e.g., "*" or ">=1.0.0")
+wildcards = "warn"
+
+# Highlight all versions when multiple-versions is triggered
+highlight = "all"
+
+# Specific packages to skip the multiple-versions check for
+# These are typically transitive dependencies you can't control
+skip = [
+    # Example:
+    # { name = "@types/node", version = "<18.0.0" },
+]
+
+# Specific packages to deny entirely
+# Use for packages with known security issues or bad practices
+deny = [
+    # Cryptography packages that are deprecated or insecure
+    { name = "crypto-js", reason = "Use native Node.js crypto instead" },
+    { name = "sha1", reason = "SHA1 is cryptographically broken" },
+    { name = "md5", reason = "MD5 is cryptographically broken" },
+    
+    # Deprecated/unsafe packages
+    { name = "request", reason = "Deprecated, use fetch or undici" },
+    { name = "uuid", reason = "Use Node.js native crypto.randomUUID()" },
+    
+    # Packages with known security issues
+    { name = "event-stream", reason = "Compromised package history" },
+    { name = "flatmap-stream", reason = "Malicious package" },
+]
+
+# Specific packages to allow (overrides deny)
+allow = [
+    # Example:
+    # { name = "specific-package", version = "^1.0.0" },
+]
+
+[sources]
+# Unknown registries
+unknown-registry = "deny"
+
+# Unknown git repositories
+unknown-git = "deny"
+
+# Allowed registries
+allow-registry = [
+    "https://registry.npmjs.org",
+    "https://npm.pkg.github.com",  # GitHub Packages
+]
+
+# Allowed git hosts (for git dependencies)
+allow-git = [
+    "https://github.com",
+    "https://gitlab.com",
+    "https://bitbucket.org",
+]
+
+# =============================================================================
+# Genetic Explorer Specific Policies
+# =============================================================================
+
+[genetic-explorer]
+# Packages required for genetic data security
+required-security-packages = [
+    "better-sqlite3",      # Database with encryption support
+    "bcrypt",              # Password hashing
+    "zod",                 # Input validation
+    "dompurify",           # XSS protection
+]
+
+# Packages that must be kept up-to-date (security critical)
+security-critical-packages = [
+    "better-sqlite3",
+    "jsonwebtoken",
+    "bcrypt",
+]
+
+# Maximum age for security-critical packages (in days)
+max-security-package-age = 90
+
+# =============================================================================
+# Audit Configuration
+# =============================================================================
+
+[audit]
+# Production dependencies only
+production = true
+
+dev = false
+
+# Include optional dependencies
+optional = false
+
+# Include peer dependencies
+peer = true
+
+# Report format: summary, json, or detailed
+format = "detailed"
+
+# Output file (optional)
+# output = "security-audit.json"

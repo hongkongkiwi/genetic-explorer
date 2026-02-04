@@ -1,6 +1,7 @@
 import { createRouter as createTanStackRouter } from '@tanstack/react-router'
 import { routeTree } from './routeTree.gen'
 import { QueryClient } from '@tanstack/react-query'
+import { SentryErrorBoundary } from './components/SentryErrorBoundary'
 
 export function createRouter() {
   const queryClient = new QueryClient({
@@ -19,12 +20,14 @@ export function createRouter() {
     },
     defaultPreload: 'intent',
     defaultErrorComponent: ({ error }) => (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-2">Error</h1>
-          <p className="text-slate-600">{error.message}</p>
+      <SentryErrorBoundary>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-red-600 mb-2">Error</h1>
+            <p className="text-slate-600">{error.message}</p>
+          </div>
         </div>
-      </div>
+      </SentryErrorBoundary>
     ),
     defaultNotFoundComponent: () => (
       <div className="min-h-screen flex items-center justify-center">

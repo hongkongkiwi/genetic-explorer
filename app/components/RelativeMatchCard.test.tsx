@@ -145,9 +145,10 @@ describe('RelativeMatchCard', () => {
   it('expands to show detailed stats', () => {
     render(<RelativeMatchCard match={mockMatch} />);
     
+    // Use aria-label to find expand button instead of innerHTML
     const expandButton = screen.getAllByRole('button').find(
-      button => button.innerHTML.includes('ChevronDown')
-    );
+      button => button.getAttribute('aria-label')?.includes('Expand') ?? false
+    ) ?? screen.getAllByRole('button')[1]; // Fallback to second button
     
     if (expandButton) {
       fireEvent.click(expandButton);
@@ -163,10 +164,10 @@ describe('RelativeMatchCard', () => {
   it('shows possible relationships when expanded', () => {
     render(<RelativeMatchCard match={mockMatch} />);
     
-    // Expand the card
+    // Expand the card using aria-label
     const expandButton = screen.getAllByRole('button').find(
-      button => button.innerHTML.includes('ChevronDown')
-    );
+      button => button.getAttribute('aria-label')?.includes('Expand') ?? false
+    ) ?? screen.getAllByRole('button')[1];
     
     if (expandButton) {
       fireEvent.click(expandButton);
@@ -179,10 +180,10 @@ describe('RelativeMatchCard', () => {
   it('shows shared segments when expanded', () => {
     render(<RelativeMatchCard match={mockMatch} />);
     
-    // Expand the card
+    // Expand the card using aria-label
     const expandButton = screen.getAllByRole('button').find(
-      button => button.innerHTML.includes('ChevronDown')
-    );
+      button => button.getAttribute('aria-label')?.includes('Expand') ?? false
+    ) ?? screen.getAllByRole('button')[1];
     
     if (expandButton) {
       fireEvent.click(expandButton);
@@ -195,10 +196,10 @@ describe('RelativeMatchCard', () => {
   it('shows privacy notice for non-opted-in matches', () => {
     render(<RelativeMatchCard match={mockOptOutMatch} />);
     
-    // Expand the card
+    // Expand the card using aria-label
     const expandButton = screen.getAllByRole('button').find(
-      button => button.innerHTML.includes('ChevronDown')
-    );
+      button => button.getAttribute('aria-label')?.includes('Expand') ?? false
+    ) ?? screen.getAllByRole('button')[1];
     
     if (expandButton) {
       fireEvent.click(expandButton);
@@ -216,9 +217,9 @@ describe('RelativeMatchCard', () => {
       />
     );
     
-    // Find hide button (EyeOff icon)
+    // Find hide button using aria-label
     const hideButton = screen.getAllByRole('button').find(
-      button => button.innerHTML.includes('EyeOff')
+      button => button.getAttribute('aria-label')?.includes('Hide') ?? false
     );
     
     if (hideButton) {

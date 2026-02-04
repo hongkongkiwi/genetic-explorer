@@ -397,3 +397,32 @@ export async function getDrugInteractions(variants: GeneticVariant[]): Promise<D
 
   return interactions;
 }
+
+
+/**
+ * Get SNPs for genome coverage calculation
+ */
+export function getGenomeCoverage(genomeId: string, userId: string): Array<{
+  rsid: string;
+  chromosome: string;
+  position: number;
+  genotype_encrypted: string;
+}> | null {
+  const { getDb } = require('./database');
+  const db = getDb();
+  
+  // Verify ownership first
+  const genome = db.prepare(
+    'SELECT id FROM genomes WHERE id = ? AND user_id = ?'
+  ).get(genomeId, userId);
+  
+  if (!genome) {
+    return null;
+  }
+  
+  const rows = db.prepare(
+    'SELECT rsid, chromosome, position, genotype_encrypted FROM snps WHERE genome_id = ?'
+  ).all(genomeId);
+  
+  return rows;
+}

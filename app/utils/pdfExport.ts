@@ -8,6 +8,7 @@
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import type { HealthReport, GenomeData } from '~/types/genetics';
+import { sanitizePlainText, escapeHtml } from './xss';
 
 /**
  * Generate HTML content for PDF report preview
@@ -19,7 +20,7 @@ export function generateReportHTML(report: HealthReport, genome: GenomeData): st
     day: 'numeric',
   });
 
-  // Build sections HTML
+  // Build sections HTML - all user content is escaped to prevent XSS
   const sectionsHTML = report.sections.map(section => {
     const priorityColor = {
       critical: '#dc2626',
@@ -43,25 +44,25 @@ export function generateReportHTML(report: HealthReport, genome: GenomeData): st
           ${section.protocol.supplements?.length ? `
             <h4 style="color: #047857; margin-bottom: 8px;">💊 Supplements</h4>
             <ul style="margin: 0; padding-left: 20px;">
-              ${section.protocol.supplements.map(item => `<li style="margin-bottom: 4px; color: #334155;">${item}</li>`).join('')}
+              ${section.protocol.supplements.map(item => `<li style="margin-bottom: 4px; color: #334155;">${escapeHtml(item)}</li>`).join('')}
             </ul>
           ` : ''}
           ${section.protocol.diet?.length ? `
             <h4 style="color: #9a3412; margin: 16px 0 8px;">🥗 Diet</h4>
             <ul style="margin: 0; padding-left: 20px;">
-              ${section.protocol.diet.map(item => `<li style="margin-bottom: 4px; color: #334155;">${item}</li>`).join('')}
+              ${section.protocol.diet.map(item => `<li style="margin-bottom: 4px; color: #334155;">${escapeHtml(item)}</li>`).join('')}
             </ul>
           ` : ''}
           ${section.protocol.lifestyle?.length ? `
             <h4 style="color: #1d4ed8; margin: 16px 0 8px;">🏃 Lifestyle</h4>
             <ul style="margin: 0; padding-left: 20px;">
-              ${section.protocol.lifestyle.map(item => `<li style="margin-bottom: 4px; color: #334155;">${item}</li>`).join('')}
+              ${section.protocol.lifestyle.map(item => `<li style="margin-bottom: 4px; color: #334155;">${escapeHtml(item)}</li>`).join('')}
             </ul>
           ` : ''}
           ${section.protocol.monitoring?.length ? `
             <h4 style="color: #6d28d9; margin: 16px 0 8px;">📊 Monitoring</h4>
             <ul style="margin: 0; padding-left: 20px;">
-              ${section.protocol.monitoring.map(item => `<li style="margin-bottom: 4px; color: #334155;">${item}</li>`).join('')}
+              ${section.protocol.monitoring.map(item => `<li style="margin-bottom: 4px; color: #334155;">${escapeHtml(item)}</li>`).join('')}
             </ul>
           ` : ''}
         </div>
@@ -73,9 +74,9 @@ export function generateReportHTML(report: HealthReport, genome: GenomeData): st
         <div style="margin-top: 16px;">
           ${section.details.map((detail: any) => `
             <div style="margin-bottom: 12px; padding: 12px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
-              <strong style="color: #0f172a;">${detail.category}</strong>
-              <p style="margin: 4px 0; color: #475569;">${detail.drugs.join(', ')}</p>
-              <p style="margin: 4px 0; color: ${priorityColor}; font-weight: 500;">${detail.guidance}</p>
+              <strong style="color: #0f172a;">${escapeHtml(detail.category)}</strong>
+              <p style="margin: 4px 0; color: #475569;">${escapeHtml(detail.drugs.join(', '))}</p>
+              <p style="margin: 4px 0; color: ${priorityColor}; font-weight: 500;">${escapeHtml(detail.guidance)}</p>
             </div>
           `).join('')}
         </div>
@@ -87,7 +88,7 @@ export function generateReportHTML(report: HealthReport, genome: GenomeData): st
         <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #e2e8f0;">
           <h4 style="color: #0f172a; margin-bottom: 8px;">Recommended Actions</h4>
           <ul style="margin: 0; padding-left: 20px;">
-            ${section.actionItems.map(item => `<li style="margin-bottom: 4px; color: #475569;">${item}</li>`).join('')}
+            ${section.actionItems.map(item => `<li style="margin-bottom: 4px; color: #475569;">${escapeHtml(item)}</li>`).join('')}
           </ul>
         </div>
       `;
@@ -96,23 +97,23 @@ export function generateReportHTML(report: HealthReport, genome: GenomeData): st
     return `
       <div style="margin-bottom: 24px; padding: 20px; background: ${priorityBg}; border-radius: 12px; border: 2px solid ${priorityColor}30;">
         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-          <h3 style="margin: 0; color: #0f172a; font-size: 18px; font-weight: 600;">${section.title}</h3>
+          <h3 style="margin: 0; color: #0f172a; font-size: 18px; font-weight: 600;">${escapeHtml(section.title)}</h3>
           <span style="background: ${priorityColor}20; color: ${priorityColor}; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase;">
             ${section.priority}
           </span>
         </div>
-        <p style="color: #475569; line-height: 1.6; margin: 0;">${section.content}</p>
+        <p style="color: #475569; line-height: 1.6; margin: 0;">${escapeHtml(section.content)}</p>
         ${detailsHTML}
       </div>
     `;
   }).join('');
 
-  // Build disease risks HTML
+  // Build disease risks HTML - all user content escaped
   const risksHTML = report.diseaseRisks?.slice(0, 5).map(risk => {
     const riskColor = {
       high: '#dc2626',
       moderate: '#ea580c',
-      low: #16a34a',
+      low: '#16a34a',
       protective: '#2563eb',
     }[risk.riskLevel] || '#475569';
 
@@ -129,9 +130,9 @@ export function generateReportHTML(report: HealthReport, genome: GenomeData): st
           <span style="background: ${riskColor}20; color: ${riskColor}; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;">
             ${risk.riskLevel.toUpperCase()}
           </span>
-          <strong style="color: #0f172a;">${risk.condition}</strong>
+          <strong style="color: #0f172a;">${escapeHtml(risk.condition)}</strong>
         </div>
-        <p style="margin: 0; color: #475569; font-size: 14px;">${risk.description || ''}</p>
+        <p style="margin: 0; color: #475569; font-size: 14px;">${escapeHtml(risk.description || '')}</p>
       </div>
     `;
   }).join('') || '<p style="color: #475569;">No significant disease risks identified.</p>';
@@ -260,7 +261,7 @@ export function generateReportHTML(report: HealthReport, genome: GenomeData): st
         <div class="logo">🧬 Genetic Explorer</div>
         <h1 class="title">Genetic Health Report</h1>
         <p class="subtitle">
-          ${genome.filename} • Generated ${generatedDate}
+          ${escapeHtml(genome.filename)} • Generated ${generatedDate}
         </p>
       </div>
 
@@ -285,7 +286,7 @@ export function generateReportHTML(report: HealthReport, genome: GenomeData): st
 
       <div class="executive-summary">
         <h2>Executive Summary</h2>
-        <p>${report.executiveSummary}</p>
+        <p>${escapeHtml(report.executiveSummary)}</p>
       </div>
 
       <h2 class="section-title">Disease Risk Assessment</h2>

@@ -1,0 +1,121 @@
+{
+  "family": "genetic-explorer",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "1024",
+  "memory": "2048",
+  "executionRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskRole",
+  "containerDefinitions": [
+    {
+      "name": "genetic-explorer",
+      "image": "ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com/genetic-explorer:latest",
+      "portMappings": [
+        {
+          "containerPort": 3000,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        {
+          "name": "NODE_ENV",
+          "value": "production"
+        },
+        {
+          "name": "PORT",
+          "value": "3000"
+        },
+        {
+          "name": "DATABASE_URL",
+          "value": "/data/genetic_explorer.db"
+        },
+        {
+          "name": "UPLOADS_DIR",
+          "value": "/uploads"
+        },
+        {
+          "name": "DISTRIBUTED_RATE_LIMIT",
+          "value": "true"
+        },
+        {
+          "name": "SHUTDOWN_TIMEOUT_MS",
+          "value": "30000"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "ENCRYPTION_MASTER_KEY",
+          "valueFrom": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:genetic-explorer/encryption-master-key"
+        },
+        {
+          "name": "SESSION_SECRET",
+          "valueFrom": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:genetic-explorer/session-secret"
+        },
+        {
+          "name": "AWS_KMS_KEY_ID",
+          "valueFrom": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:genetic-explorer/kms-key-id"
+        }
+      ],
+      "mountPoints": [
+        {
+          "sourceVolume": "data-volume",
+          "containerPath": "/data"
+        },
+        {
+          "sourceVolume": "uploads-volume",
+          "containerPath": "/uploads"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/genetic-explorer",
+          "awslogs-region": "REGION",
+          "awslogs-stream-prefix": "ecs",
+          "awslogs-create-group": "true"
+        }
+      },
+      "healthCheck": {
+        "command": ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 60
+      },
+      "ulimits": [
+        {
+          "name": "nofile",
+          "softLimit": 65536,
+          "hardLimit": 65536
+        }
+      ],
+      "stopTimeout": 30
+    }
+  ],
+  "volumes": [
+    {
+      "name": "data-volume",
+      "efsVolumeConfiguration": {
+        "fileSystemId": "fs-XXXXXXXX",
+        "rootDirectory": "/data",
+        "transitEncryption": "ENABLED",
+        "authorizationConfig": {
+          "accessPointId": "fsap-XXXXXXXX",
+          "iam": "ENABLED"
+        }
+      }
+    },
+    {
+      "name": "uploads-volume",
+      "efsVolumeConfiguration": {
+        "fileSystemId": "fs-XXXXXXXX",
+        "rootDirectory": "/uploads",
+        "transitEncryption": "ENABLED",
+        "authorizationConfig": {
+          "accessPointId": "fsap-XXXXXXXX",
+          "iam": "ENABLED"
+        }
+      }
+    }
+  ]
+}

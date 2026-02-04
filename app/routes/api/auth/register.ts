@@ -9,13 +9,23 @@ import {
 } from '~/utils/signupRestrictions';
 import { logActivity } from '~/utils/database';
 import { getClientIp, createRateLimitHeaders } from '~/utils/rateLimit';
+import { acceptTerms } from '~/utils/terms';
 
 export const APIRoute = createAPIFileRoute('/api/auth/register')({
   POST: async ({ request }) => {
     try {
       const body = await request.json();
-      const { email, password, displayName } = body;
+      const { email, password, displayName, acceptTerms: userAcceptedTerms } = body;
       const ipAddress = getClientIp(request);
+      const userAgent = request.headers.get('user-agent') || undefined;
+
+      // Validate terms acceptance
+      if (!userAcceptedTerms) {
+        return json({ 
+          success: false, 
+          error: 'You must accept the Terms of Service and Privacy Policy to create an account' 
+        }, { status: 400 });
+      }
 
       if (!email || !password) {
         return json({ success: false, error: 'Email and password are required' }, { status: 400 });
@@ -47,6 +57,12 @@ export const APIRoute = createAPIFileRoute('/api/auth/register')({
       const result = await registerUser({ email, password, displayName });
 
       if (result.success && result.user) {
+        // Record terms acceptance
+        const termsResult = acceptTerms(result.user.id, ipAddress, userAgent);
+        if (!termsResult.success) {
+          console.error('Failed to record terms acceptance:', termsResult.error);
+        }
+
         // Log the registration
         logActivity(result.user.id, 'user_registered', 'user', result.user.id, { email }, ipAddress);
 

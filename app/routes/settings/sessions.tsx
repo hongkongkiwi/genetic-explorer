@@ -10,12 +10,32 @@ import { Monitor, ChevronLeft, Smartphone, Globe, Clock, LogOut, AlertTriangle, 
 
 interface Session {
   id: string;
+  token: string;
   createdAt: string;
   expiresAt: string;
   lastActiveAt: string | null;
   ipAddress: string | null;
   userAgent: string | null;
-  isCurrent: boolean;
+  isCurrentSession: boolean;
+  deviceInfo: {
+    browser: string | null;
+    os: string | null;
+    device: string | null;
+  };
+}
+
+interface SessionHistoryEntry {
+  id: string;
+  ipAddress: string | null;
+  userAgent: string | null;
+  createdAt: string;
+  endedAt: string | null;
+  endedReason: string | null;
+  deviceInfo: {
+    browser: string | null;
+    os: string | null;
+    device: string | null;
+  };
 }
 
 export const Route = createFileRoute('/settings/sessions')({
@@ -27,11 +47,13 @@ function SessionsPage() {
   const { isAuthenticated, isLoading, logout } = useAuth();
   
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [sessionHistory, setSessionHistory] = useState<SessionHistoryEntry[]>([]);
   const [isLoadingSessions, setIsLoadingSessions] = useState(true);
   const [revokingSession, setRevokingSession] = useState<string | null>(null);
   const [isRevokingAll, setIsRevokingAll] = useState(false);
   const [showRevokeAllModal, setShowRevokeAllModal] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -51,7 +73,8 @@ function SessionsPage() {
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
-          setSessions(data.sessions);
+          setSessions(data.data.activeSessions);
+          setSessionHistory(data.data.sessionHistory);
         }
       }
     } catch (error) {
@@ -65,15 +88,24 @@ function SessionsPage() {
     setMessage(null);
 
     try {
-      const response = await fetch(`/api/auth/sessions?id=${sessionId}`, {
+      const response = await fetch('/api/auth/sessions', {
         method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId }),
       });
 
       const data = await response.json();
 
       if (data.success) {
-        setMessage({ type: 'success', text: 'Session terminated successfully' });
-        await loadSessions();
+        if (data.terminatedCurrentSession) {
+          setMessage({ type: 'success', text: 'Session terminated. You have been logged out.' });
+          setTimeout(() => {
+            logout();
+          }, 2000);
+        } else {
+          setMessage({ type: 'success', text: 'Session terminated successfully' });
+          await loadSessions();
+        }
       } else {
         setMessage({ type: 'error', text: data.error || 'Failed to terminate session' });
       }
@@ -92,13 +124,12 @@ function SessionsPage() {
       const response = await fetch('/api/auth/sessions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'logout_all' }),
       });
 
       const data = await response.json();
 
       if (data.success) {
-        setMessage({ type: 'success', text: `Logged out from ${data.deletedCount} other device(s)` });
+        setMessage({ type: 'success', text: `Logged out from ${data.terminatedCount} other device(s)` });
         await loadSessions();
         setShowRevokeAllModal(false);
       } else {
@@ -111,31 +142,17 @@ function SessionsPage() {
     setIsRevokingAll(false);
   };
 
-  const parseUserAgent = (userAgent: string | null) => {
-    if (!userAgent) return { device: 'Unknown Device', browser: 'Unknown Browser', os: 'Unknown OS' };
-
-    const isMobile = /Mobile|Android|iPhone|iPad|iPod/i.test(userAgent);
-    const isTablet = /iPad|Tablet/i.test(userAgent);
-    
-    let browser = 'Unknown Browser';
-    if (/Chrome/i.test(userAgent)) browser = 'Chrome';
-    else if (/Safari/i.test(userAgent)) browser = 'Safari';
-    else if (/Firefox/i.test(userAgent)) browser = 'Firefox';
-    else if (/Edge/i.test(userAgent)) browser = 'Edge';
-    else if (/Opera|OPR/i.test(userAgent)) browser = 'Opera';
-
-    let os = 'Unknown OS';
-    if (/Windows/i.test(userAgent)) os = 'Windows';
-    else if (/Mac/i.test(userAgent)) os = 'macOS';
-    else if (/Linux/i.test(userAgent)) os = 'Linux';
-    else if (/Android/i.test(userAgent)) os = 'Android';
-    else if (/iOS|iPhone|iPad/i.test(userAgent)) os = 'iOS';
-
-    let device = 'Computer';
-    if (isTablet) device = 'Tablet';
-    else if (isMobile) device = 'Mobile';
-
-    return { device, browser, os };
+  const getReasonText = (reason: string | null) => {
+    switch (reason) {
+      case 'user_terminated': return 'Manually terminated';
+      case 'user_terminated_all': return 'Logged out everywhere';
+      case 'user_terminated_others': return 'Other sessions cleared';
+      case 'password_change': return 'Password changed';
+      case 'password_reset': return 'Password reset';
+      case 'security_action': return 'Security action';
+      case 'expired': return 'Session expired';
+      default: return reason || 'Unknown';
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -147,7 +164,7 @@ function SessionsPage() {
     });
   };
 
-  const otherSessionsCount = sessions.filter(s => !s.isCurrent).length;
+  const otherSessionsCount = sessions.filter(s => !s.isCurrentSession).length;
 
   if (isLoading) {
     return (
@@ -201,8 +218,8 @@ function SessionsPage() {
       ) : (
         <div className="space-y-6">
           {/* Current Session */}
-          {sessions.filter(s => s.isCurrent).map(session => {
-            const { device, browser, os } = parseUserAgent(session.userAgent);
+          {sessions.filter(s => s.isCurrentSession).map(session => {
+            const { device, browser, os } = session.deviceInfo;
             return (
               <Card key={session.id} className="p-4 sm:p-6 border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-900/10">
                 <div className="flex items-start gap-4">
@@ -221,7 +238,7 @@ function SessionsPage() {
                     <div className="mt-2 space-y-1 text-sm text-slate-600 dark:text-slate-400">
                       <div className="flex items-center gap-2">
                         <Smartphone className="w-4 h-4" />
-                        <span>{device} • {browser} on {os}</span>
+                        <span>{device || 'Unknown'} • {browser || 'Unknown'} on {os || 'Unknown'}</span>
                       </div>
                       {session.ipAddress && (
                         <div className="flex items-center gap-2">
@@ -259,8 +276,8 @@ function SessionsPage() {
               </div>
 
               <div className="space-y-3">
-                {sessions.filter(s => !s.isCurrent).map(session => {
-                  const { device, browser, os } = parseUserAgent(session.userAgent);
+                {sessions.filter(s => !s.isCurrentSession).map(session => {
+                  const { device, browser, os } = session.deviceInfo;
                   return (
                     <div
                       key={session.id}
@@ -272,10 +289,10 @@ function SessionsPage() {
                         </div>
                         <div>
                           <p className="font-medium text-slate-900 dark:text-white">
-                            {device} • {browser}
+                            {device || 'Unknown'} • {browser || 'Unknown'}
                           </p>
                           <p className="text-sm text-slate-500 dark:text-slate-400">
-                            {os}
+                            {os || 'Unknown OS'}
                           </p>
                           <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-xs text-slate-400 dark:text-slate-500">
                             {session.ipAddress && (
@@ -310,6 +327,49 @@ function SessionsPage() {
             </Card>
           )}
 
+          {/* Session History */}
+          {sessionHistory.length > 0 && (
+            <Card className="p-4 sm:p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+                  Recent Session History
+                </h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowHistory(!showHistory)}
+                >
+                  {showHistory ? 'Hide' : 'Show'}
+                </Button>
+              </div>
+              
+              {showHistory && (
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {sessionHistory.map(entry => (
+                    <div
+                      key={entry.id}
+                      className="flex items-center justify-between p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 text-sm"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
+                          <Clock className="w-4 h-4 text-slate-500" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-slate-700 dark:text-slate-300">
+                            {entry.deviceInfo.device || 'Unknown'} • {entry.deviceInfo.browser || 'Unknown'}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {formatDate(entry.createdAt)} - {getReasonText(entry.endedReason)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+          )}
+
           {/* Security Tips */}
           <Card className="p-4 sm:p-6">
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
@@ -341,6 +401,7 @@ function SessionsPage() {
         onConfirm={revokeAllOtherSessions}
         title="Log Out From All Other Devices?"
         message={`This will terminate ${otherSessionsCount} active session(s) on other devices. You'll remain logged in on this device.`}
+        confirmLabel="Log Out All Others"
         confirmLabel="Log Out All Others"
         cancelLabel="Cancel"
         variant="danger"

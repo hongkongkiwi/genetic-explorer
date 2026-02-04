@@ -398,6 +398,7 @@ export const APIRouteDisable = createAPIFileRoute('/api/auth/2fa')({
     try {
       const auth = requireAuth(request)
       const ipAddress = getClientIp(request)
+      const userAgent = request.headers.get('user-agent')
       const body = await request.json()
       const { password, twoFactor } = body
 
@@ -439,6 +440,9 @@ export const APIRouteDisable = createAPIFileRoute('/api/auth/2fa')({
           }
         } else if (twoFactor.method === 'email') {
           is2faValid = verifyEmailCode(auth.email, twoFactor.code)
+        } else if (twoFactor.method === 'passkey') {
+          // Passkey verification for disable would be handled separately
+          is2faValid = false
         }
 
         if (!is2faValid) {
@@ -455,19 +459,98 @@ export const APIRouteDisable = createAPIFileRoute('/api/auth/2fa')({
             { status: 401 },
           )
         }
+
+        // Check if delay is required (email-based verification)
+        if (isDelayRequiredForMethod(twoFactor.method)) {
+          // Check if there's already a pending request
+          const existingRequest = getPendingDisableRequest(auth.id)
+          if (existingRequest) {
+            // Return the existing request details
+            return json({
+              success: true,
+              requiresDelay: true,
+              message: 'A 2FA disable request is already pending.',
+              request: {
+                requestedAt: existingRequest.requestedAt,
+                effectiveAt: existingRequest.effectiveAt,
+                remainingMs: new Date(existingRequest.effectiveAt).getTime() - Date.now(),
+              },
+            })
+          }
+
+          // Create a disable request with delay
+          const requestResult = createDisable2FARequest(
+            auth.id,
+            twoFactor.method,
+            ipAddress,
+            userAgent
+          )
+
+          if (!requestResult.success) {
+            return json(
+              { success: false, error: requestResult.error },
+              { status: 500 }
+            )
+          }
+
+          // Log the pending disable
+          logActivity(
+            auth.id,
+            '2fa_disable_requested',
+            'user',
+            auth.id,
+            { method: twoFactor.method, effectiveAt: requestResult.request?.effectiveAt },
+            ipAddress,
+          )
+
+          // Terminate all sessions except current
+          const currentToken = request.headers.get('cookie')?.match(/session_token=([^;]+)/)?.[1]
+          if (currentToken) {
+            terminateAllUserSessions(auth.id, '2fa_disable_delay_initiated')
+          }
+
+          return json({
+            success: true,
+            requiresDelay: true,
+            message: `Two-factor authentication disable request received. For your security, you will not be able to log in for 24 hours.`,
+            request: {
+              requestedAt: requestResult.request?.requestedAt,
+              effectiveAt: requestResult.request?.effectiveAt,
+              remainingMs: 24 * 60 * 60 * 1000,
+            },
+          })
+        }
+
+        // For non-email methods (TOTP/Passkey), disable immediately
+        // Disable 2FA
+        deleteTotpSecret(auth.id)
+        deleteAllPasskeys(auth.id)
+        setTwoFactorEnabled(auth.id, false)
+
+        // Cancel any pending disable requests
+        cancelDisableRequest(auth.id)
+
+        logActivity(auth.id, '2fa_disabled', 'user', auth.id, { method: twoFactor.method }, ipAddress)
+
+        // Send security notification
+        sendSecurityNotification(
+          auth.id,
+          '2fa_disabled',
+          { method: twoFactor.method },
+          ipAddress || undefined,
+          userAgent || undefined
+        )
+
+        return json({
+          success: true,
+          message: '2FA has been disabled.',
+        })
       }
 
-      // Disable 2FA
-      deleteTotpSecret(auth.id)
-      deleteAllPasskeys(auth.id)
-      setTwoFactorEnabled(auth.id, false)
-
-      logActivity(auth.id, '2fa_disabled', 'user', auth.id, {}, ipAddress)
-
-      return json({
-        success: true,
-        message: '2FA has been disabled.',
-      })
+      return json(
+        { success: false, error: '2FA verification required to disable 2FA' },
+        { status: 400 }
+      )
     } catch (error) {
       if (error instanceof Error && error.message === 'Unauthorized') {
         return json({ success: false, error: 'Unauthorized' }, { status: 401 })

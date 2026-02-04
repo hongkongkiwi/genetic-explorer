@@ -17,6 +17,16 @@ export interface User {
       allowFamilySharing: boolean;
     };
   };
+  termsStatus?: {
+    hasAcceptedCurrentTerms: boolean;
+    hasAcceptedCurrentPrivacy: boolean;
+    currentTermsVersion: string;
+    currentPrivacyVersion: string;
+    userTermsVersion?: string;
+    userPrivacyVersion?: string;
+    acceptedAt?: string;
+    requiresReacceptance: boolean;
+  };
 }
 
 interface AuthContextType {
@@ -29,9 +39,20 @@ interface AuthContextType {
     requires2FA?: boolean;
     pendingToken?: string;
     methods?: string[];
+    requiresTermsAcceptance?: boolean;
+    termsStatus?: {
+      hasAcceptedCurrentTerms: boolean;
+      hasAcceptedCurrentPrivacy: boolean;
+      currentTermsVersion: string;
+      currentPrivacyVersion: string;
+      userTermsVersion?: string;
+      userPrivacyVersion?: string;
+      acceptedAt?: string;
+      requiresReacceptance: boolean;
+    };
     user?: User;
   }>;
-  register: (email: string, password: string, displayName?: string) => Promise<{ success: boolean; error?: string }>;
+  register: (email: string, password: string, displayName?: string, acceptTerms?: boolean) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   disconnectOAuth: (provider: 'google' | 'github') => Promise<{ success: boolean; error?: string }>;
@@ -50,6 +71,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const data = await response.json();
         if (data.success) {
           setUser(data.user);
+          
+          // Check if user needs to accept new terms
+          if (data.user.termsStatus?.requiresReacceptance) {
+            // Redirect to terms acceptance page
+            if (typeof window !== 'undefined') {
+              window.location.href = '/accept-terms';
+            }
+          }
         } else {
           setUser(null);
         }
@@ -60,7 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('Failed to fetch current user:', error);
       setUser(null);
     }
-  }, []);
+  }, [])
 
   useEffect(() => {
     fetchCurrentUser().finally(() => setIsLoading(false));
@@ -77,6 +106,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = await response.json();
 
       if (data.success) {
+        // Check if terms acceptance is required
+        if (data.requiresTermsAcceptance) {
+          return {
+            success: true,
+            requiresTermsAcceptance: true,
+            termsStatus: data.termsStatus,
+            user: data.user,
+          };
+        }
+        
         // Check if 2FA is required
         if (data.requires2FA) {
           return { 
@@ -99,12 +138,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const register = useCallback(async (email: string, password: string, displayName?: string) => {
+  const register = useCallback(async (email: string, password: string, displayName?: string, acceptTerms?: boolean) => {
     try {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, displayName }),
+        body: JSON.stringify({ email, password, displayName, acceptTerms }),
       });
 
       const data = await response.json();

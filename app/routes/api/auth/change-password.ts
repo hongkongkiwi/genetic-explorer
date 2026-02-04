@@ -2,7 +2,11 @@ import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
 import { requireAuth } from '~/utils/auth';
 import { getDb, logActivity } from '~/utils/database';
+import { csrfProtection } from '~/utils/csrf';
 import crypto from 'crypto';
+import { sendSecurityNotification } from '~/utils/securityNotifications';
+import { terminateAllUserSessions } from '~/utils/sessionManagement';
+import { getClientIp } from '~/utils/rateLimit';
 
 // Password hashing using PBKDF2
 function hashPassword(password: string): { hash: string; salt: string } {
@@ -27,6 +31,13 @@ export const APIRoute = createAPIFileRoute('/api/auth/change-password')({
       const auth = requireAuth(request);
       if (!auth) {
         return json({ success: false, error: 'Unauthorized' }, { status: 401 });
+      }
+
+      // CSRF protection
+      const cookieHeader = request.headers.get('cookie');
+      const csrfCheck = csrfProtection(request, cookieHeader);
+      if (!csrfCheck.valid) {
+        return json({ success: false, error: csrfCheck.error }, { status: csrfCheck.status });
       }
 
       const body = await request.json();
@@ -74,9 +85,27 @@ export const APIRoute = createAPIFileRoute('/api/auth/change-password')({
       `).run(newPasswordHash, new Date().toISOString(), auth.id);
 
       // Log activity
-      logActivity(auth.id, 'password_changed', 'user', auth.id);
+      const ipAddress = getClientIp(request);
+      const userAgent = request.headers.get('user-agent');
+      logActivity(auth.id, 'password_changed', 'user', auth.id, {}, ipAddress);
 
-      return json({ success: true, message: 'Password changed successfully' });
+      // Terminate all other sessions for security
+      const terminatedCount = terminateAllUserSessions(auth.id, 'password_change');
+
+      // Send security notification
+      sendSecurityNotification(
+        auth.id,
+        'password_changed',
+        {},
+        ipAddress || undefined,
+        userAgent || undefined
+      );
+
+      return json({ 
+        success: true, 
+        message: 'Password changed successfully. All other sessions have been terminated for security.',
+        terminatedSessions: terminatedCount,
+      });
     } catch (error) {
       console.error('Change password error:', error);
       return json({ success: false, error: 'An unexpected error occurred' }, { status: 500 });

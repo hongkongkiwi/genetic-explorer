@@ -1,8 +1,10 @@
 import crypto from 'crypto';
 import { getUserByEmail, createUser, updateUserLastLogin, getUserById, createSession, getSessionByToken, deleteSession, deleteUserSessions, type User } from './database';
+import { initializeDefaultPreferences } from './notificationPreferences';
 
 const SESSION_DURATION_DAYS = 7;
 const TOKEN_BYTES = 32;
+const ABSOLUTE_SESSION_TIMEOUT_DAYS = 30; // Maximum session lifetime regardless of activity
 
 export interface AuthResult {
   success: boolean;
@@ -79,6 +81,9 @@ export async function registerUser(data: RegisterData): Promise<AuthResult> {
 
     // Create user
     const user = createUser(data.email, passwordHash, data.displayName);
+
+    // Initialize default notification preferences
+    initializeDefaultPreferences(user.id);
 
     return { success: true, user };
   } catch (error) {

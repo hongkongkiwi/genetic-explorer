@@ -1,7 +1,18 @@
 /**
  * Rate limiting utility for API endpoints
- * Uses an in-memory store with automatic cleanup
+ * 
+ * Supports both in-memory (single instance) and distributed (multi-instance) modes.
+ * Automatically selects the appropriate implementation based on environment.
  */
+
+import {
+  checkDistributedRateLimit,
+  rateLimitByIpDistributed,
+  rateLimitByUserDistributed,
+  rateLimitAuthDistributed,
+  resetDistributedRateLimit,
+  getDistributedRateLimitStats,
+} from './distributedRateLimit';
 
 interface RateLimitEntry {
   count: number;
@@ -9,13 +20,13 @@ interface RateLimitEntry {
   windowStart: number;
 }
 
-interface RateLimitOptions {
+export interface RateLimitOptions {
   windowMs: number;      // Time window in milliseconds
   maxRequests: number;   // Max requests per window
   keyPrefix?: string;    // Prefix for rate limit keys
 }
 
-interface RateLimitResult {
+export interface RateLimitResult {
   allowed: boolean;
   limit: number;
   remaining: number;
@@ -23,17 +34,23 @@ interface RateLimitResult {
   retryAfter?: number;
 }
 
-// In-memory store for rate limits
-// In production, consider using Redis
+// Determine if we should use distributed rate limiting
+// Use distributed mode if explicitly enabled or in production
+const USE_DISTRIBUTED = process.env.DISTRIBUTED_RATE_LIMIT === 'true' || 
+                        process.env.NODE_ENV === 'production';
+
+// In-memory store for rate limits (single instance mode)
 const rateLimitStore = new Map<string, RateLimitEntry>();
 
 // Cleanup interval (runs every 5 minutes)
 const CLEANUP_INTERVAL = 5 * 60 * 1000;
 
-// Start cleanup interval
-setInterval(() => {
-  cleanupExpiredEntries();
-}, CLEANUP_INTERVAL);
+// Start cleanup interval (only for in-memory mode)
+if (!USE_DISTRIBUTED) {
+  setInterval(() => {
+    cleanupExpiredEntries();
+  }, CLEANUP_INTERVAL);
+}
 
 /**
  * Clean up expired rate limit entries
@@ -56,11 +73,18 @@ function generateKey(identifier: string, prefix?: string): string {
 
 /**
  * Check rate limit for an identifier
+ * Automatically uses distributed rate limiting in production
  */
 export function checkRateLimit(
   identifier: string,
   options: RateLimitOptions
 ): RateLimitResult {
+  // Use distributed rate limiting in production
+  if (USE_DISTRIBUTED) {
+    return checkDistributedRateLimit(identifier, options);
+  }
+  
+  // In-memory rate limiting (single instance)
   const now = Date.now();
   const key = generateKey(identifier, options.keyPrefix);
   
@@ -202,8 +226,12 @@ export function getClientIp(request: Request): string {
  * Reset rate limit for an identifier (useful for testing or admin actions)
  */
 export function resetRateLimit(identifier: string, prefix?: string): void {
-  const key = generateKey(identifier, prefix);
-  rateLimitStore.delete(key);
+  if (USE_DISTRIBUTED) {
+    resetDistributedRateLimit(identifier, prefix);
+  } else {
+    const key = generateKey(identifier, prefix);
+    rateLimitStore.delete(key);
+  }
 }
 
 /**
@@ -212,12 +240,30 @@ export function resetRateLimit(identifier: string, prefix?: string): void {
 export function getRateLimitStats(): {
   totalEntries: number;
   memoryUsage: string;
+  mode: 'memory' | 'distributed';
 } {
+  if (USE_DISTRIBUTED) {
+    const stats = getDistributedRateLimitStats();
+    return {
+      totalEntries: stats.totalEntries,
+      memoryUsage: 'N/A (distributed)',
+      mode: 'distributed',
+    };
+  }
+  
   const entries = rateLimitStore.size;
   const memoryUsage = process.memoryUsage();
   
   return {
     totalEntries: entries,
     memoryUsage: `${Math.round(memoryUsage.heapUsed / 1024 / 1024)}MB`,
+    mode: 'memory',
   };
+}
+
+/**
+ * Check if distributed rate limiting is enabled
+ */
+export function isDistributedRateLimitEnabled(): boolean {
+  return USE_DISTRIBUTED;
 }

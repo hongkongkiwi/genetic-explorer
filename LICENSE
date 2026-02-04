@@ -1,0 +1,77 @@
+Genetic Explorer License
+
+Copyright (c) 2026 Genetic Explorer Contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to use,
+modify, and distribute the Software subject to the following conditions:
+
+1. PERSONAL AND NON-COMMERCIAL USE
+   You may use, copy, modify, merge, publish, and distribute the Software 
+   for personal, educational, research, or other non-commercial purposes.
+
+2. PROHIBITED USES - YOU MAY NOT:
+   a) Offer the Software or any derivative work as a managed service, 
+      software-as-a-service (SaaS), platform-as-a-service (PaaS), or any 
+      other commercial hosting service that competes with Genetic Explorer 
+      or provides genetic data analysis, DNA testing results interpretation, 
+      or health report generation services.
+   
+   b) Use the Software to create a product or service that directly competes 
+      with Genetic Explorer's core functionality (genetic data analysis, 
+      health risk assessment, ancestry analysis, or relative matching).
+   
+   c) Remove or alter this license or any copyright notices.
+
+3. COMMERCIAL USE
+   Commercial use, including but not limited to:
+   - Offering the Software as a hosted service to third parties
+   - Bundling the Software with commercial products
+   - Using the Software to provide genetic analysis services for profit
+   
+   Requires a separate commercial license agreement. Contact the copyright 
+   holders for commercial licensing terms.
+
+4. CONTRIBUTIONS
+   By contributing to this Software, you agree that your contributions 
+   will be licensed under these same terms. You retain copyright to your 
+   contributions but grant the project maintainers a perpetual, worldwide, 
+   non-exclusive, royalty-free license to use, reproduce, modify, and 
+   distribute your contributions.
+
+5. PATENT RIGHTS
+   Each contributor grants you a non-exclusive, worldwide, royalty-free 
+   patent license to make, have made, use, sell, offer for sale, import, 
+   and otherwise run, modify and propagate the contents of their 
+   contributions. This patent license does not apply to any code added to 
+   the Software by anyone other than the contributor themselves.
+
+6. TERMINATION
+   Any attempt to distribute the Software or derivative works in violation 
+   of this license will automatically terminate your rights under this 
+   license. However, parties who have received copies or rights from you 
+   under this license will not have their licenses terminated as long as 
+   they remain in full compliance.
+
+7. DISCLAIMER OF WARRANTY
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF 
+   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+   IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY 
+   CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, 
+   TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
+   SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+8. MEDICAL DISCLAIMER
+   This Software is for educational and informational purposes only and 
+   does not constitute medical advice. Users should consult qualified 
+   healthcare providers before making any medical decisions. The authors 
+   and copyright holders are not responsible for any health-related 
+   decisions made based on the Software's output.
+
+---
+
+For commercial licensing inquiries, please contact: [your-email@example.com]
+
+This license is inspired by the Elastic License 2.0 and Commons Clause, 
+customized specifically for the Genetic Explorer project.

@@ -41,6 +41,15 @@ function LoginPage() {
     const result = await login(email, password, rememberMe);
 
     if (result.success) {
+      // Check if terms acceptance is required
+      if (result.requiresTermsAcceptance && result.user) {
+        navigate({ 
+          to: '/accept-terms',
+          search: { userId: result.user.id }
+        });
+        return;
+      }
+      
       // Check if 2FA is required
       if (result.requires2FA && result.pendingToken) {
         navigate({ 

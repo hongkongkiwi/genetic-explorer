@@ -1,14 +1,26 @@
-#!/usr/bin/env node
+#!/usr/bin/env tsx
 /**
  * Database Backup Script
  * 
- * Usage: node scripts/backup.js [output-directory]
+ * Usage: npx tsx scripts/backup.ts [output-directory]
  * Default output: ./backups/
  */
 
 import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+interface BackupInfo {
+  timestamp: string;
+  version: string;
+  database: string;
+  uploads: string;
+  nodeVersion: string;
+}
 
 const BACKUP_DIR = process.argv[2] || './backups';
 const DB_PATH = process.env.DATABASE_URL || './data/genetic_explorer.db';
@@ -45,7 +57,7 @@ try {
   }
 
   // Create backup info
-  const backupInfo = {
+  const backupInfo: BackupInfo = {
     timestamp: new Date().toISOString(),
     version: '1.0.0',
     database: DB_PATH,
@@ -81,6 +93,6 @@ try {
   });
 
 } catch (error) {
-  console.error('❌ Backup failed:', error.message);
+  console.error('❌ Backup failed:', error instanceof Error ? error.message : String(error));
   process.exit(1);
 }
