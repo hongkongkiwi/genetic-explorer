@@ -14,7 +14,7 @@
  */
 
 import { setApplicationNotReady } from './health';
-import { getDb } from './database';
+import { getDb } from '~/db';
 
 interface ShutdownConfig {
   timeoutMs: number;           // Maximum time to wait for shutdown

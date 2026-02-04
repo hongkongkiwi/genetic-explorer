@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect } from 'react';
-import { cn } from '~/utils/cn';
+import { cn } from '~/utils/shared/cn';
 
 interface ActionItem {
   id: string;

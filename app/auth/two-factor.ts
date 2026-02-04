@@ -11,7 +11,7 @@
 
 import crypto from 'crypto';
 import { authenticator } from 'otplib';
-import { getDb } from './database';
+import { getDb } from '~/db';
 
 const BACKUP_CODE_COUNT = 10;
 const BACKUP_CODE_LENGTH = 10;
@@ -132,7 +132,7 @@ export function generate2FAPendingToken(): string {
 }
 
 // In-memory store for pending 2FA sessions
-interface Pending2FASession {
+export interface Pending2FASession {
   userId: string;
   email: string;
   expiresAt: number;

@@ -5,7 +5,7 @@
  * Integrates with the activity logging system for audit trails.
  */
 
-import { logActivity } from './database';
+import { logActivity } from '~/db';
 
 // Security event types
 export type SecurityEventType =

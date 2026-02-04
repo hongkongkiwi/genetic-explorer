@@ -1,6 +1,6 @@
 import crypto from 'crypto';
-import type { OAuthProfile } from './database';
-import { getDb } from './database';
+import type { OAuthProfile } from '~/db';
+import { getDb } from '~/db';
 
 // OAuth provider types
 export type OAuthProvider = 'google' | 'github';
@@ -55,7 +55,7 @@ export function getConfiguredProviders(): OAuthProvider[] {
   return configured;
 }
 
-interface OAuthStateData {
+export interface OAuthStateData {
   provider: OAuthProvider;
   redirectTo: string;
   link: boolean;
@@ -267,13 +267,6 @@ export async function getOAuthUserInfo(
       avatarUrl: data.avatar_url,
     };
   }
-}
-
-/**
- * Generate a random state string for OAuth
- */
-export function generateOAuthState(): string {
-  return crypto.randomBytes(32).toString('hex');
 }
 
 /**

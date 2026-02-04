@@ -11,7 +11,7 @@
  * - Anonymized research sharing
  */
 
-import { getDb } from './database';
+import { getDb } from '~/db';
 import { v4 as uuidv4 } from 'uuid';
 import crypto from 'crypto';
 

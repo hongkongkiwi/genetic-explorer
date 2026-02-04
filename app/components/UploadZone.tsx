@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, FileText, CheckCircle, AlertCircle, X, FileArchive, Shield } from 'lucide-react';
-import { cn } from '~/utils/cn';
+import { cn } from '~/utils/shared/cn';
 import { 
   validateDnaFile, 
   detectCompression, 

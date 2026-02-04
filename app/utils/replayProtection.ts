@@ -13,7 +13,7 @@
  * - Multi-instance safe with Redis/database backend
  */
 
-import { getDb } from './database';
+import { getDb } from '~/db';
 
 // Configuration - matches Lightway's 64-packet window
 const WINDOW_SIZE = 64;

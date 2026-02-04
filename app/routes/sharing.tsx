@@ -6,7 +6,7 @@ import { Button } from '~/components/ui/Button';
 import { Input } from '~/components/ui/Input';
 import { Alert } from '~/components/ui/Alert';
 import { Users, Plus, Trash2, UserCheck, Mail, Clock, Shield, Eye, Download } from 'lucide-react';
-import { cn } from '~/utils/cn';
+import { cn } from '~/utils/shared/cn';
 
 export const Route = createFileRoute('/sharing')({
   component: SharingPage,

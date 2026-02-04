@@ -12,7 +12,7 @@ import {
   Command,
   Loader2
 } from 'lucide-react';
-import { cn } from '~/utils/cn';
+import { cn } from '~/utils/shared/cn';
 
 interface SearchResult {
   id: string;

@@ -12,15 +12,15 @@
  */
 
 import crypto from 'crypto';
-import { getDb } from './database';
+import { getDb } from '~/db';
 import { 
   encrypt, 
   decrypt, 
   getUserEncryptionKey, 
   EncryptedData,
   generateSecureToken 
-} from './encryption';
-import { logActivity } from './database';
+} from '~/security';
+import { logActivity } from '~/db';
 
 // ============================================================================
 // Configuration

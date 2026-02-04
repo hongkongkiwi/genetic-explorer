@@ -4,7 +4,7 @@ import { useAuth } from '~/hooks/useAuth';
 import { Card } from '~/components/ui/Card';
 import { Alert } from '~/components/ui/Alert';
 import { Clock, Upload, FileText, User, Users, Shield, LogIn, LogOut, Trash2, AlertCircle, ChevronLeft } from 'lucide-react';
-import { cn } from '~/utils/cn';
+import { cn } from '~/utils/shared/cn';
 
 export const Route = createFileRoute('/activity')({
   component: ActivityPage,

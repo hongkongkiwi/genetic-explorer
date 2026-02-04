@@ -11,7 +11,7 @@
  * For production with many instances, consider Redis Redlock or Consul.
  */
 
-import { getDb } from './database';
+import { getDb } from '~/db';
 
 interface LockOptions {
   ttlSeconds: number;  // Time-to-live for the lock

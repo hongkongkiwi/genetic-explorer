@@ -28,7 +28,7 @@ const loadPDFExport = () => import('~/utils/pdfExport').then(m => ({
   printToPDF: m.printToPDF,
 }));
 import type { GenomeData, HealthReport } from '~/types/genetics';
-import { cn } from '~/utils/cn';
+import { cn } from '~/utils/shared/cn';
 
 export const Route = createFileRoute('/report/$id')({
   component: ReportPage,

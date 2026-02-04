@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { Card } from '~/components/ui/Card';
 import { HelpCircle, ChevronDown, ChevronUp, Upload, Shield, Users, FileText, Search } from 'lucide-react';
-import { cn } from '~/utils/cn';
+import { cn } from '~/utils/shared/cn';
 
 export const Route = createFileRoute('/faq')({
   component: FAQPage,

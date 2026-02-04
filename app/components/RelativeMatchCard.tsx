@@ -22,7 +22,7 @@ import {
   Mail,
   Ban
 } from 'lucide-react';
-import { cn } from '~/utils/cn';
+import { cn } from '~/utils/shared/cn';
 import type { RelativeMatch, ConfidenceLevel, RelationshipType } from '~/types/relatives';
 import { Badge } from './ui/Badge';
 import { Button } from './ui/Button';

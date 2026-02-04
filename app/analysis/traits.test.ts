@@ -15,7 +15,7 @@ import {
   getUserGenotype,
   findGenotypeMapping,
   analyzeCategoryTraits,
-} from './traitsAnalysis';
+} from './traits';
 import {
   getAllTraits,
   getTraitById,

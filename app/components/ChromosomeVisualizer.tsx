@@ -20,7 +20,7 @@ import {
   Target,
   X,
 } from 'lucide-react';
-import { cn } from '~/utils/cn';
+import { cn } from '~/utils/shared/cn';
 import { Button } from './ui/Button';
 import { Badge } from './ui/Badge';
 import type { SNPInfo } from '~/types/genetics';

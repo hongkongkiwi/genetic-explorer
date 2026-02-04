@@ -5,7 +5,7 @@ import { Card } from '~/components/ui/Card';
 import { Button } from '~/components/ui/Button';
 import { Alert } from '~/components/ui/Alert';
 import { Bell, Mail, FileText, Users, FlaskConical, ChevronLeft, Save } from 'lucide-react';
-import { cn } from '~/utils/cn';
+import { cn } from '~/utils/shared/cn';
 
 export const Route = createFileRoute('/notifications')({
   component: NotificationsPage,

@@ -27,7 +27,7 @@ import {
   Menu,
   X
 } from 'lucide-react';
-import { cn } from '~/utils/cn';
+import { cn } from '~/utils/shared/cn';
 import type { SNPStatus } from './SNPBadge';
 
 interface NotificationItem {

@@ -12,7 +12,7 @@
  */
 
 import { unlinkSync, writeFileSync, existsSync } from 'fs';
-import { getDb } from './database';
+import { getDb } from '~/db';
 import crypto from 'crypto';
 
 // ============================================================================

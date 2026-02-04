@@ -5,9 +5,18 @@
  * Generates detailed health reports with AI insights
  */
 
-import type { SNP, GenomeData, HealthReport, ReportSection, RiskAssessment } from '~/types/genetics';
+import type { SNP, GenomeData, HealthReport, ReportSection } from '~/types/genetics';
+
+// Local type for RiskAssessment
+interface RiskAssessment {
+  condition: string;
+  riskLevel: 'High' | 'Moderate' | 'Low' | 'Protective';
+  description: string;
+  associatedVariants: string[];
+  preventionStrategies: string[];
+}
 import { getSNPInfo, MASTER_SNP_DATABASE, getDatabaseSummary } from '~/data/allSNPs';
-import { generateAIHealthReport, generateDrugGuidance } from './aiAnalysis';
+import { generateAIHealthReport, generateDrugGuidance } from './ai';
 
 export interface AnalyzedVariant {
   rsid: string;

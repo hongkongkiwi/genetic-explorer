@@ -15,7 +15,7 @@
  * - SNP search
  */
 
-import { getDb } from './database';
+import { getDb } from '~/db';
 
 export interface GenomeStatus {
   hasGenome: boolean;

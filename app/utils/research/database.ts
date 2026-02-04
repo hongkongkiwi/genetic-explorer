@@ -10,7 +10,7 @@
  */
 
 import Database from 'better-sqlite3';
-import { getDatabase } from './database';
+import { getDatabase } from '~/db';
 
 // Types for research data
 export interface ResearchSNP {

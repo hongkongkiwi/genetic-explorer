@@ -1,4 +1,4 @@
-import { cn } from '~/utils/cn';
+import { cn } from '~/utils/shared/cn';
 import { forwardRef } from 'react';
 
 interface TouchButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {

@@ -10,8 +10,8 @@
  * Ensures proper order of operations and handles failures gracefully.
  */
 
-import { getDb } from './database';
-import { initializeEncryption } from './encryption';
+import { getDb } from '~/db';
+import { initializeEncryption } from '~/security';
 import { setupGracefulShutdown } from './gracefulShutdown';
 import { isApplicationReady } from './health';
 import { cleanupExpiredRateLimits } from './distributedRateLimit';

@@ -12,7 +12,7 @@
  */
 
 import crypto from 'crypto';
-import { getMasterKeySync, encrypt, decrypt, EncryptedData } from './encryption';
+import { getMasterKeySync, encrypt, decrypt, EncryptedData } from '~/security';
 
 // PII fields configuration
 interface PIIFieldConfig {

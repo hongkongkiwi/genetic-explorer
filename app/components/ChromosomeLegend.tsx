@@ -17,7 +17,7 @@ import {
   Dna,
   Layers
 } from 'lucide-react';
-import { cn } from '~/utils/cn';
+import { cn } from '~/utils/shared/cn';
 import { 
   SNP_CATEGORIES, 
   STAIN_COLORS, 

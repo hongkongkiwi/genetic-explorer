@@ -7,7 +7,7 @@
  * - Sharing controls for different data sensitivity levels
  */
 
-import { getDb } from './database';
+import { getDb } from '~/db';
 import { v4 as uuidv4 } from 'uuid';
 
 // ============================================================================

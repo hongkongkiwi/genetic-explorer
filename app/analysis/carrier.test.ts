@@ -15,7 +15,7 @@ import {
   exportResultsToJSON,
   isRelevantForCarrierScreening,
   getAllCarrierSNPs,
-} from './carrierAnalysis';
+} from './carrier';
 import {
   getConditionById,
   CARRIER_CONDITIONS,

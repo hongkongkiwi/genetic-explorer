@@ -7,8 +7,8 @@
  * - Deep health check: Are all dependencies working?
  */
 
-import { getDb } from './database';
-import { getEncryptionStatus } from './encryption';
+import { getDb } from '~/db';
+import { getEncryptionStatus } from '~/security';
 import { isCloudKMSEnabled, getKMSProvider } from './kms';
 
 export type HealthStatus = 'healthy' | 'unhealthy' | 'degraded';

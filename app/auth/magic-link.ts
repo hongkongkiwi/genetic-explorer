@@ -11,7 +11,7 @@
  */
 
 import crypto from 'crypto';
-import { getDb } from './database';
+import { getDb } from '~/db';
 
 const MAGIC_LINK_EXPIRY_MS = 15 * 60 * 1000; // 15 minutes
 const TOKEN_BYTES = 32;

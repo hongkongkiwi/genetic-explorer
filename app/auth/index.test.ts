@@ -12,10 +12,10 @@ import {
   getAuthUserSafe,
   type RegisterData,
   type LoginData,
-} from './auth';
+} from './index';
 
 // Mock the database module
-vi.mock('./database', () => ({
+vi.mock('~/db', () => ({
   getUserByEmail: vi.fn(),
   getUserById: vi.fn(),
   createUser: vi.fn(),
@@ -33,7 +33,7 @@ import {
   getSessionByToken,
   deleteSession,
   updateUserLastLogin,
-} from './database';
+} from '~/db';
 
 describe('Auth Utilities', () => {
   beforeEach(() => {

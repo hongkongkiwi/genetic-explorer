@@ -1,7 +1,7 @@
 import { useSearch } from '@tanstack/react-router';
 import { useState } from 'react';
 import { Button } from './ui/Button';
-import { cn } from '~/utils/cn';
+import { cn } from '~/utils/shared/cn';
 
 type OAuthProvider = 'google' | 'github';
 

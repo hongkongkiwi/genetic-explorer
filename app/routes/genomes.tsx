@@ -24,7 +24,7 @@ import {
   Activity
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { cn } from '~/utils/cn';
+import { cn } from '~/utils/shared/cn';
 
 type SortField = 'filename' | 'date' | 'snps' | 'size';
 type SortDirection = 'asc' | 'desc';

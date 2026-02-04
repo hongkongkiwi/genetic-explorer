@@ -11,7 +11,7 @@ import {
   Info,
   Lightbulb,
 } from 'lucide-react';
-import { cn } from '~/utils/cn';
+import { cn } from '~/utils/shared/cn';
 import type { ReportSection } from '~/types/genetics';
 
 interface ReportCardProps {

@@ -13,7 +13,7 @@
  */
 
 import crypto from 'crypto';
-import { getDb } from './database';
+import { getDb } from '~/db';
 
 // Configuration
 const SIGNATURE_VERSION = 'v1';

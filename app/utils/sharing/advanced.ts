@@ -10,7 +10,7 @@
  * Privacy: Shared users only see what you explicitly share
  */
 
-import { getDb } from './database';
+import { getDb } from '~/db';
 import { v4 as uuidv4 } from 'uuid';
 import { SENSITIVITY_CATEGORIES, SHARE_LEVELS, SensitivityLevel } from './sensitiveData';
 

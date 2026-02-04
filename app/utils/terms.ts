@@ -7,7 +7,7 @@
  * - Requiring re-acceptance when terms change
  */
 
-import { getDb } from './database';
+import { getDb } from '~/db';
 
 // Current version numbers - increment these when terms change
 export const CURRENT_TERMS_VERSION = '1.0.0';

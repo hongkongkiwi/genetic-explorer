@@ -5,7 +5,7 @@
  * Provides user notifications about relevant updates
  */
 
-import { getDb } from './database';
+import { getDb } from '~/db';
 
 export interface SNPChangelogEntry {
   id: number;

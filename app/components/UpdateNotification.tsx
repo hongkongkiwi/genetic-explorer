@@ -11,7 +11,7 @@ import {
   Trash2
 } from 'lucide-react';
 import { useNotifications, type Notification } from '~/hooks/useNotifications';
-import { cn } from '~/utils/cn';
+import { cn } from '~/utils/shared/cn';
 import { formatDistanceToNow } from 'date-fns';
 
 interface UpdateNotificationCenterProps {

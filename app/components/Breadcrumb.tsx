@@ -15,7 +15,7 @@
 
 import { Link } from '@tanstack/react-router';
 import { ChevronRight, Home } from 'lucide-react';
-import { cn } from '~/utils/cn';
+import { cn } from '~/utils/shared/cn';
 
 interface BreadcrumbItem {
   label: string;

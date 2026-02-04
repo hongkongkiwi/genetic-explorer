@@ -4,7 +4,7 @@
  * Provides enhanced session tracking and management capabilities
  */
 
-import { getDb } from './database';
+import { getDb } from '~/db';
 import crypto from 'crypto';
 
 export interface SessionInfo {

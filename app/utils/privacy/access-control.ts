@@ -8,9 +8,9 @@
  * MUST include a WHERE clause filtering by the authenticated user's ID.
  */
 
-import { getDb, logActivity } from './database';
-import { getAuthUser, requireAuth } from './auth';
-import type { User } from './database';
+import { getDb, logActivity } from '~/db';
+import { getAuthUser, requireAuth } from '~/auth';
+import type { User } from '~/db';
 
 // ============================================================================
 // Access Control Errors

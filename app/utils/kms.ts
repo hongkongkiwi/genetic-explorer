@@ -357,7 +357,7 @@ export function getKMSProvider(): string {
 
 // Import database functions for persistent storage of encrypted data key
 // This allows the key to survive restarts without requiring KMS API calls
-import { loadEncryptedDataKey, saveEncryptedDataKey } from './database';
+import { loadEncryptedDataKey, saveEncryptedDataKey } from '~/db';
 
 async function loadEncryptedDataKeyFromDatabase(): Promise<Buffer | null> {
   try {

@@ -7,7 +7,7 @@
  * - Users can control non-critical notifications
  */
 
-import { getDb } from './database';
+import { getDb } from '~/db';
 
 // Notification categories
 export type NotificationCategory = 

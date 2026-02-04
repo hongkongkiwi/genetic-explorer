@@ -5,7 +5,7 @@
  */
 
 import { sendEmail } from './email';
-import { getUserById } from './database';
+import { getUserById } from '~/db';
 import { 
   shouldSendNotification,
   type NotificationCategory,

@@ -1,6 +1,6 @@
 import crypto from 'crypto';
-import { getUserByEmail, createUser, updateUserLastLogin, getUserById, createSession, getSessionByToken, deleteSession, deleteUserSessions, type User } from './database';
-import { initializeDefaultPreferences } from './notificationPreferences';
+import { getUserByEmail, createUser, updateUserLastLogin, getUserById, createSession, getSessionByToken, deleteSession, deleteUserSessions, type User } from '~/db';
+import { initializeDefaultPreferences } from './notification-preferences';
 
 const SESSION_DURATION_DAYS = 7;
 const TOKEN_BYTES = 32;

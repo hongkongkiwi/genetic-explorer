@@ -5,7 +5,7 @@
  * This protects accounts from being immediately compromised if email is breached.
  */
 
-import { getDb } from './database';
+import { getDb } from '~/db';
 import crypto from 'crypto';
 import { sendSecurityNotification } from './securityNotifications';
 

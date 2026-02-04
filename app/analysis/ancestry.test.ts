@@ -11,7 +11,7 @@ import {
   detectSubPopulation,
   calculateGeneticDistance,
   getSimilarPopulations,
-} from './ancestryAnalysis';
+} from './ancestry';
 import { determineYHaplogroup, determineMtHaplogroup } from '~/data/haplogroups';
 import { ANCESTRY_INFORMATIVE_MARKERS } from '~/data/referencePopulations';
 import type { SNP, GenomeData } from '~/types/genetics';

@@ -1,5 +1,5 @@
 import { Link, useRouterState } from '@tanstack/react-router';
-import { cn } from '~/utils/cn';
+import { cn } from '~/utils/shared/cn';
 import { Home, Upload, Dna, Search, Users, FileText, Database, LayoutDashboard } from 'lucide-react';
 import { useAuth } from '~/hooks/useAuth';
 

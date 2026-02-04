@@ -18,7 +18,7 @@
  * - User wants to switch testing company
  */
 
-import { getDb } from './database';
+import { getDb } from '~/db';
 import { parseGeneticData, validateGenomeData, SNP } from './genomeParser';
 import { 
   decompressBuffer, 
@@ -26,8 +26,8 @@ import {
   calculateChecksum,
   validateFileMagic 
 } from './fileCompression';
-import { logActivity } from './database';
-import { encryptForUser } from './encryption';
+import { logActivity } from '~/db';
+import { encryptForUser } from '~/security';
 import { secureDeleteGenome } from './secureDeletion';
 import { calculateQualityMetrics, compareGenomeQuality, QualityComparison } from './genomeQuality';
 import { verifyIdentity, IdentityVerificationResult, getDangerZoneConfig } from './identityVerification';

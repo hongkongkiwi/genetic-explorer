@@ -3,7 +3,7 @@
  * Provides complete user data export and deletion functionality
  */
 
-import { getDb } from './database';
+import { getDb } from '~/db';
 import JSZip from 'jszip';
 
 interface UserDataExport {

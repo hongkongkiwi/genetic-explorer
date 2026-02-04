@@ -7,7 +7,7 @@ import { runMigrations } from './databaseMigrations';
 import { createIndexes, analyzeTables } from './databaseIndexes';
 import { writeFileSync, mkdirSync, existsSync, readFileSync, unlinkSync } from 'fs';
 import { join } from 'path';
-import { encrypt, decrypt, getUserEncryptionKey } from './encryption';
+import { encrypt, decrypt, getUserEncryptionKey } from '~/security';
 import { initTermsTables } from './terms';
 import { initSessionManagementTables } from './sessionManagement';
 import { initTwoFactorDisableDelayTables } from './twoFactorDisableDelay';

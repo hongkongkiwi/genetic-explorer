@@ -17,7 +17,7 @@ import {
   GitCompare,
   X
 } from 'lucide-react';
-import { cn } from '~/utils/cn';
+import { cn } from '~/utils/shared/cn';
 import type { 
   GenomeComparison, 
   ChromosomeComparison, 

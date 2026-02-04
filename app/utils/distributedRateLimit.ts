@@ -7,7 +7,7 @@
  * For high-traffic deployments, consider Redis instead.
  */
 
-import { getDb } from './database';
+import { getDb } from '~/db';
 
 interface RateLimitOptions {
   windowMs: number;      // Time window in milliseconds
