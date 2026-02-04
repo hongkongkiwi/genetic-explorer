@@ -103,7 +103,8 @@ export function CookieConsentBanner() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    // Initial mount flag to prevent hydration mismatch
+    setMounted(true);  
     
     // Check if we need to show the banner
     const existingConsent = getCookieConsent();
@@ -209,7 +210,7 @@ export function CookieSettings() {
   useEffect(() => {
     const stored = getCookieConsent();
     if (stored) {
-      setPreferences(stored);
+      setPreferences(stored);  
     }
   }, []);
 

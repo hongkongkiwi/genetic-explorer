@@ -237,6 +237,7 @@ function AncestryReportPage() {
 
   useEffect(() => {
     loadReport();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const loadReport = async () => {

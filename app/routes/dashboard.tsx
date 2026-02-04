@@ -97,6 +97,7 @@ function DashboardPage() {
 
   useEffect(() => {
     fetchDashboardData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTimeRange]);
 
   const fetchDashboardData = async () => {

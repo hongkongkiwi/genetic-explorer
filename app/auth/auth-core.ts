@@ -201,7 +201,6 @@ export function changePassword(userId: string, currentPassword: string, newPassw
     const passwordHash = `${salt}:${hash}`;
 
     // Update password in database
-    const { getDb } = require('./database');
     const db = getDb();
     db.prepare('UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?')
       .run(passwordHash, new Date().toISOString(), userId);

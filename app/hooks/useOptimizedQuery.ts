@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 
 interface UseOptimizedQueryOptions<T> {

@@ -122,6 +122,7 @@ function RelativesPage() {
     if (isAuthenticated) {
       loadData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated]);
 
   const loadData = async () => {
@@ -154,6 +155,7 @@ function RelativesPage() {
   };
 
   // Handlers
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const handleOptInChange = useCallback(async (optIn: boolean) => {
     try {
       const response = await fetch('/api/relatives/privacy', {

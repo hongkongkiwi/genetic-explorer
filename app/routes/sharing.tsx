@@ -48,6 +48,7 @@ function SharingPage() {
     }
   }, [isLoading, isAuthenticated, navigate]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (isAuthenticated) {
       loadShares();

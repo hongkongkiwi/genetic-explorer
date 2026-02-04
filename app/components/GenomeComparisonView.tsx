@@ -550,7 +550,7 @@ function ChromosomeDetailView({
     for (let i = 0; i < 1000; i++) {
       const position = Math.floor((i / 1000) * totalLength);
       const inSegment = segments.some(s => position >= s.start && position <= s.end);
-      snps.push({ position, isShared: inSegment && Math.random() > 0.3 });
+      snps.push({ position, isShared: inSegment && Math.random() > 0.3 });  
     }
     return snps;
   }, [chrData, segments]);
@@ -629,7 +629,7 @@ function ChromosomeDetailView({
             {mockSharedSNPs.map((snp, i) => {
               const totalLength = chrData?.lengthBP || 1;
               const x = (snp.position / totalLength) * 100;
-              const height = snp.isShared ? Math.random() * 80 + 20 : Math.random() * 20;
+              const height = snp.isShared ? Math.random() * 80 + 20 : Math.random() * 20;  
               
               return (
                 <rect
