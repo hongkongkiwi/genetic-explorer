@@ -22,7 +22,11 @@ import {
 } from 'lucide-react';
 import { analyzeGenomeComprehensive, generateQuickSummary } from '~/utils/comprehensiveAnalysis';
 import { getGenome } from '~/utils/database';
-import { downloadPDF, printToPDF } from '~/utils/pdfExport';
+// Lazy load PDF export to reduce initial bundle size
+const loadPDFExport = () => import('~/utils/pdfExport').then(m => ({
+  downloadPDF: m.downloadPDF,
+  printToPDF: m.printToPDF,
+}));
 import type { GenomeData, HealthReport } from '~/types/genetics';
 import { cn } from '~/utils/cn';
 
@@ -74,7 +78,8 @@ function ReportPage() {
     }
   };
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
+    const { printToPDF } = await loadPDFExport();
     printToPDF();
   };
 
@@ -83,6 +88,7 @@ function ReportPage() {
     
     try {
       setIsLoading(true);
+      const { downloadPDF } = await loadPDFExport();
       await downloadPDF(report, genome);
     } catch (error) {
       console.error('PDF generation failed:', error);

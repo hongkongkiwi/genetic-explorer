@@ -8,7 +8,7 @@ import { Button } from '~/components/ui/Button';
 import { Input } from '~/components/ui/Input';
 import { Card } from '~/components/ui/Card';
 import { Alert } from '~/components/ui/Alert';
-import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Sparkles } from 'lucide-react';
 
 export const Route = createFileRoute('/login')({
   component: LoginPage,
@@ -64,7 +64,7 @@ function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg mb-4">
             <DNALogo className="w-10 h-10 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
@@ -132,7 +132,7 @@ function LoginPage() {
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                    className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                   />
                   <span className="ml-2 text-sm text-slate-600 dark:text-slate-400">
                     Remember me
@@ -140,7 +140,7 @@ function LoginPage() {
                 </label>
                 <Link
                   to="/forgot-password"
-                  className="text-sm font-medium text-blue-700 hover:text-blue-800"
+                  className="text-sm font-medium text-indigo-700 hover:text-indigo-800"
                 >
                   Forgot password?
                 </Link>
@@ -163,6 +163,17 @@ function LoginPage() {
             </div>
           )}
 
+          {/* Magic link option */}
+          <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+            <Link
+              to="/login/magic"
+              className="flex items-center justify-center gap-2 text-sm text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium transition-colors"
+            >
+              <Sparkles className="w-4 h-4" />
+              Sign in with magic link (no password)
+            </Link>
+          </div>
+
           {/* Social login buttons */}
           <SocialLoginButtons className="mt-6" />
 
@@ -172,7 +183,7 @@ function LoginPage() {
               Don&apos;t have an account?{' '}
               <Link
                 to="/register"
-                className="font-medium text-blue-600 hover:text-blue-500"
+                className="font-medium text-indigo-600 hover:text-indigo-500"
               >
                 Create one
               </Link>
