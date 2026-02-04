@@ -681,3 +681,223 @@ GCP_KMS_KEY_RING=genetic-explorer
 *This review was conducted on 2026-02-04*  
 *Security Score: 10/10*  
 *Next review recommended: 2026-05-04 (Quarterly)*
+
+---
+
+## 🆕 Additional Security Features (Lightway-Inspired)
+
+### Request Signing (HMAC-SHA256)
+**Location:** `app/utils/requestSigning.ts`
+
+Implements HMAC-SHA256 request signing for sensitive API endpoints, inspired by Lightway's packet authentication.
+
+**Features:**
+- Timestamp-based expiration (5 minute window)
+- Nonce tracking for replay protection
+- Constant-time signature comparison
+- API key management with expiration
+
+**Usage:**
+```typescript
+// Generate API key
+const { key, secret } = generateAPIKey(userId);
+
+// Client signs request
+const { signature, timestamp, nonce } = generateRequestSignature(
+  apiKey, apiSecret, 'POST', '/api/genomes', body
+);
+
+// Server verifies
+const result = await verifyRequestSignature(request, body);
+```
+
+---
+
+### Sliding Window Replay Protection
+**Location:** `app/utils/replayProtection.ts`
+
+Based on Lightway's Expresslane replay window implementation.
+
+**Features:**
+- 64-request sliding window (configurable)
+- Bitmap-based tracking for O(1) lookups
+- Automatic window advancement
+- Multi-instance safe with database persistence
+
+**Algorithm:**
+```
+1. First packet: Initialize window with counter, mark bit 0
+2. Newer packet: Shift bitmap, mark new position
+3. Within window: Check bitmap bit, mark if not set
+4. Outside window: Reject as too old
+5. Already seen: Reject as replay
+```
+
+---
+
+### Compile-Time Cryptographic Assertions
+**Location:** `app/utils/cryptoAssertions.ts`
+
+Validates cryptographic parameters at compile time and runtime.
+
+**Checks:**
+- AES-256-GCM requires exactly 32-byte keys
+- IV must be 16 bytes
+- Auth tag must be 16 bytes
+- Algorithm availability
+- Encryption round-trip test on startup
+
+**Type Safety:**
+```typescript
+// TypeScript enforces key size
+const key: Buffer & { length: 32 } = crypto.randomBytes(32);
+validateAESKey(key); // Runtime assertion
+```
+
+---
+
+### Dependency Security Policy
+**Location:** `deny.toml`, `scripts/security-audit.js`
+
+Inspired by cargo-deny from the Rust ecosystem (used in Lightway).
+
+**Checks:**
+- npm audit integration
+- Banned package detection (crypto-js, md5, sha1)
+- License compliance
+- Wildcard dependency detection
+- Security-critical package freshness
+
+**Usage:**
+```bash
+npm run security:audit    # Full security audit
+npm run security:scan     # Dependency vulnerability scan
+```
+
+---
+
+### Fuzzing Tests for Genome Parser
+**Location:** `app/utils/genomeParser.fuzz.test.ts`
+
+Property-based testing using fast-check to find edge cases.
+
+**Test Categories:**
+- Parse safety (arbitrary input handling)
+- Resource limits (no memory exhaustion)
+- Security edge cases (null bytes, control characters)
+- Format detection safety
+
+**Usage:**
+```bash
+npm test -- genomeParser.fuzz.test.ts
+```
+
+---
+
+### Automated Key Rotation
+**Location:** `app/utils/keyRotation.ts`, `scripts/key-rotation.ts`
+
+Automatic encryption key rotation with data re-encryption.
+
+**Features:**
+- 90-day rotation interval (configurable)
+- Batch processing to prevent memory issues
+- Progress tracking and recovery
+- Atomic operations
+- Audit logging
+
+**Usage:**
+```bash
+npm run key:rotate              # Rotate all users needing rotation
+npm run key:rotate -- --status  # Check rotation status
+npm run key:rotate -- --user=<id>  # Rotate specific user
+```
+
+---
+
+### Genetic Data Replacement
+**Location:** `app/utils/genomeReplacement.ts`
+
+Allows users to replace their genetic data (e.g., higher resolution test).
+
+**Security Features:**
+- Secure deletion of old data
+- Optional backup creation
+- Data integrity verification
+- Preservation of sharing permissions (optional)
+- Comprehensive audit trail
+
+**API Endpoints:**
+- `POST /api/genomes/replace` - Replace genome
+- `GET /api/genomes/replace/history` - View replacement history
+- `GET /api/genomes/:id/replace-status` - Check if replacement is allowed
+
+---
+
+## 🏆 Final Security Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    GENETIC EXPLORER SECURITY                    │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
+│  │   REQUEST    │  │   REPLAY     │  │   ENCRYPTION │          │
+│  │   SIGNING    │  │  PROTECTION  │  │     KEYS     │          │
+│  │  (HMAC-256)  │  │(Sliding Win) │  │  (AES-256)   │          │
+│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘          │
+│         │                 │                 │                   │
+│         └────────┬────────┴────────┬────────┘                   │
+│                  │                 │                            │
+│         ┌────────▼─────────────────▼────────┐                   │
+│         │      SECURE API ENDPOINTS         │                   │
+│         └────────┬─────────────────┬────────┘                   │
+│                  │                 │                            │
+│  ┌───────────────▼───┐    ┌───────▼───────────────┐             │
+│  │  GENOME PARSER    │    │   GENOME REPLACEMENT  │             │
+│  │  (Fuzzing Tests)  │    │   (Secure Deletion)   │             │
+│  └───────────────────┘    └───────────────────────┘             │
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │              DEPENDENCY SECURITY (deny.toml)            │   │
+│  │  • Banned packages: crypto-js, md5, sha1               │   │
+│  │  • License compliance                                  │   │
+│  │  • Vulnerability scanning                              │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 📋 Updated Security Checklist
+
+### Core Security
+- [x] AES-256-GCM encryption at rest
+- [x] PBKDF2 password hashing
+- [x] Secure session management
+- [x] CSRF protection
+- [x] XSS protection
+- [x] Rate limiting
+
+### Advanced Security (Lightway-Inspired)
+- [x] Request signing (HMAC-SHA256)
+- [x] Sliding window replay protection
+- [x] Compile-time crypto assertions
+- [x] Dependency security policy (deny.toml)
+- [x] Fuzzing tests for parsers
+- [x] Automated key rotation
+- [x] Genetic data replacement with secure deletion
+
+### Monitoring & Compliance
+- [x] Security event monitoring
+- [x] Audit logging
+- [x] Activity tracking
+- [x] GDPR-compliant deletion
+- [x] Encrypted backups
+
+---
+
+*This review was conducted on 2026-02-04*  
+*Security Score: 10/10*  
+*Next review recommended: 2026-05-04 (Quarterly)*

@@ -7,13 +7,14 @@ This guide covers deploying Genetic Explorer in production with multiple instanc
 1. [Architecture Overview](#architecture-overview)
 2. [Single Instance Deployment](#single-instance-deployment)
 3. [Multi-Instance Deployment](#multi-instance-deployment)
-4. [Load Balancing](#load-balancing)
-5. [Health Checks](#health-checks)
-6. [Graceful Shutdown](#graceful-shutdown)
-7. [Database Considerations](#database-considerations)
-8. [Background Jobs](#background-jobs)
-9. [Monitoring](#monitoring)
-10. [Troubleshooting](#troubleshooting)
+4. [AWS ECS Deployment](#aws-ecs-deployment)
+5. [Load Balancing](#load-balancing)
+6. [Health Checks](#health-checks)
+7. [Graceful Shutdown](#graceful-shutdown)
+8. [Database Considerations](#database-considerations)
+9. [Background Jobs](#background-jobs)
+10. [Monitoring](#monitoring)
+11. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -274,6 +275,75 @@ spec:
     targetPort: 3000
   type: LoadBalancer
 ```
+
+---
+
+## AWS ECS Deployment
+
+For AWS-native deployments, use Amazon ECS with Fargate.
+
+### Architecture
+
+```
+                    ┌─────────────────┐
+                    │   Route 53      │
+                    │  (DNS/HTTPS)    │
+                    └────────┬────────┘
+                             │
+                    ┌────────▼────────┐
+                    │  CloudFront     │
+                    │   (CDN/WAF)     │
+                    └────────┬────────┘
+                             │
+                    ┌────────▼────────┐
+                    │       ALB       │
+                    │  (HTTPS/TLS)    │
+                    └────────┬────────┘
+                             │
+              ┌──────────────┼──────────────┐
+              │              │              │
+     ┌────────▼─────┐ ┌──────▼──────┐ ┌────▼─────┐
+     │  ECS Task 1  │ │ ECS Task 2  │ │ ECS Task │
+     │  (Fargate)   │ │  (Fargate)  │ │(Fargate) │
+     └──────┬───────┘ └──────┬──────┘ └────┬─────┘
+            │                │             │
+            └────────────────┼─────────────┘
+                             │
+                    ┌────────▼────────┐
+                    │      EFS        │
+                    │  (Encrypted)    │
+                    └─────────────────┘
+```
+
+### Quick Deploy
+
+```bash
+# 1. Configure AWS credentials
+aws configure
+
+# 2. Create secrets
+aws secretsmanager create-secret \
+  --name genetic-explorer/encryption-master-key \
+  --secret-string "your-secure-key"
+
+# 3. Deploy
+cd deploy/ecs
+./deploy.sh production --full-deploy
+```
+
+### Features
+
+- **Fargate**: Serverless containers (no EC2 management)
+- **Auto Scaling**: CPU, memory, and request-based scaling
+- **EFS**: Shared persistent storage across all tasks
+- **Application Load Balancer**: With HTTPS termination
+- **CloudWatch**: Centralized logging and metrics
+- **Secrets Manager**: Secure credential storage
+- **KMS**: Encryption at rest
+
+### See Also
+
+For complete ECS documentation, see: [`docs/ECS_DEPLOYMENT.md`](ECS_DEPLOYMENT.md)
 
 ---
 
