@@ -13,6 +13,7 @@ import {
   logActivity,
 } from '~/utils/database'
 import { requireAuth } from '~/utils/auth'
+import { csrfProtection } from '~/utils/csrf'
 import {
   decompressBuffer,
   detectCompressionType,
@@ -78,6 +79,12 @@ export const APIRoute = createAPIFileRoute('/api/genomes')({
     const auth = requireAuth(request)
     if (!auth) {
       return json({ success: false, error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // CSRF protection for state-changing operation
+    const csrfCheck = csrfProtection(request, request.headers.get('cookie'))
+    if (!csrfCheck.valid) {
+      return json({ success: false, error: csrfCheck.error }, { status: csrfCheck.status })
     }
 
     const processingStart = Date.now()
@@ -229,6 +236,12 @@ export const APIRoute = createAPIFileRoute('/api/genomes')({
       const auth = requireAuth(request)
       if (!auth) {
         return json({ success: false, error: 'Unauthorized' }, { status: 401 })
+      }
+
+      // CSRF protection for state-changing operation
+      const csrfCheck = csrfProtection(request, request.headers.get('cookie'))
+      if (!csrfCheck.valid) {
+        return json({ success: false, error: csrfCheck.error }, { status: csrfCheck.status })
       }
 
       const { searchParams } = new URL(request.url)

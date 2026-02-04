@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { getUserByEmail, createUser, updateUserLastLogin, getUserById, createSession, getSessionByToken, deleteSession, type User } from './database';
+import { getUserByEmail, createUser, updateUserLastLogin, getUserById, createSession, getSessionByToken, deleteSession, deleteUserSessions, type User } from './database';
 
 const SESSION_DURATION_DAYS = 7;
 const TOKEN_BYTES = 32;
@@ -117,6 +117,10 @@ export async function loginUser(
     // Update last login
     updateUserLastLogin(userWithPassword.id);
 
+    // SECURITY: Delete all existing sessions for this user to prevent session fixation
+    // This ensures a fresh session is created after authentication
+    deleteUserSessions(userWithPassword.id);
+
     // Remove password hash from user object
     const { passwordHash, ...user } = userWithPassword;
 
@@ -125,7 +129,7 @@ export async function loginUser(
       return { success: true, user };
     }
 
-    // Create session
+    // Create new session with fresh token (prevents session fixation attacks)
     const sessionToken = generateSessionToken();
     const durationDays = data.rememberMe ? 30 : SESSION_DURATION_DAYS;
     const expiresAt = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000);

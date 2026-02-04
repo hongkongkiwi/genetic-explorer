@@ -23,27 +23,36 @@ const SALT_LENGTH = 32;
 
 /**
  * Get the master encryption key from environment
- * Falls back to a derived key if not set (for development)
+ * CRITICAL: In production, ENCRYPTION_MASTER_KEY MUST be set
+ * The application will refuse to start without a secure encryption key in production
  */
 function getMasterKey(): Buffer {
   const masterKey = process.env.ENCRYPTION_MASTER_KEY;
 
   if (!masterKey) {
-    // In production, this should NEVER happen
-    console.warn('WARNING: ENCRYPTION_MASTER_KEY not set! Using derived key (NOT SECURE for production)');
+    // In production, we MUST have a proper encryption key
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+        'FATAL SECURITY ERROR: ENCRYPTION_MASTER_KEY environment variable is required in production.\n' +
+        'The application cannot start without a secure encryption key.\n' +
+        'Please set ENCRYPTION_MASTER_KEY to a cryptographically secure random string (at least 32 characters).\n' +
+        'Generate one with: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))"'
+      );
+    }
+
+    // In development only, we can use a derived key (with clear warning)
+    console.warn('⚠️  SECURITY WARNING: ENCRYPTION_MASTER_KEY not set! Using derived key for development only.');
+    console.warn('   This is NOT SECURE for production use.');
+    console.warn('   Set ENCRYPTION_MASTER_KEY to a secure 32+ character random string.');
 
     // Derive a key from available secrets for development
     const sessionSecret = process.env.SESSION_SECRET || 'dev-secret-change-in-production';
     return crypto.scryptSync(sessionSecret, 'genetic-explorer-salt', KEY_LENGTH);
   }
 
-  // Ensure the key is exactly 32 bytes
-  if (masterKey.length < KEY_LENGTH) {
-    // Derive a proper key from the provided master key
-    return crypto.scryptSync(masterKey, 'genetic-explorer-key-derivation', KEY_LENGTH);
-  }
-
-  return Buffer.from(masterKey.substring(0, KEY_LENGTH), 'utf8');
+  // Ensure the key is exactly 32 bytes by deriving a proper key
+  // This ensures consistent key length regardless of input length
+  return crypto.scryptSync(masterKey, 'genetic-explorer-key-derivation-v1', KEY_LENGTH);
 }
 
 /**

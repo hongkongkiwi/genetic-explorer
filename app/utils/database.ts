@@ -7,6 +7,7 @@ import { runMigrations } from './databaseMigrations';
 import { createIndexes, analyzeTables } from './databaseIndexes';
 import { writeFileSync, mkdirSync, existsSync, readFileSync, unlinkSync } from 'fs';
 import { join } from 'path';
+import { encrypt, decrypt, getUserEncryptionKey } from './encryption';
 
 let db: Database.Database | null = null;
 
@@ -1360,24 +1361,49 @@ export function getUserActivity(userId: string, limit: number = 50): Array<{
 
 /**
  * Save TOTP secret for a user
+ * CRITICAL: Secret is encrypted at rest using AES-256-GCM
  */
 export function saveTotpSecret(userId: string, secret: string): void {
   const db = getDb();
+  
+  // Encrypt the TOTP secret before storage
+  const userKey = getUserEncryptionKey(userId);
+  const encrypted = encrypt(secret, userKey);
+  
+  // Store as JSON string to preserve all encryption metadata
+  const encryptedPayload = JSON.stringify(encrypted);
+  
   db.prepare(`
     INSERT OR REPLACE INTO totp_secrets (user_id, secret, created_at)
     VALUES (?, ?, datetime('now'))
-  `).run(userId, secret);
+  `).run(userId, encryptedPayload);
 }
 
 /**
  * Get TOTP secret for a user
+ * CRITICAL: Secret is decrypted after retrieval from database
  */
 export function getTotpSecret(userId: string): string | null {
   const db = getDb();
   const result = db.prepare(`
     SELECT secret FROM totp_secrets WHERE user_id = ?
   `).get(userId) as { secret: string } | undefined;
-  return result?.secret || null;
+  
+  if (!result?.secret) return null;
+  
+  try {
+    // Parse the encrypted payload
+    const encrypted = JSON.parse(result.secret);
+    
+    // Decrypt the TOTP secret
+    const userKey = getUserEncryptionKey(userId);
+    const decrypted = decrypt(encrypted, userKey);
+    
+    return decrypted;
+  } catch (error) {
+    console.error('Failed to decrypt TOTP secret:', error);
+    return null;
+  }
 }
 
 /**

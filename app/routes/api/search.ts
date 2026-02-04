@@ -3,6 +3,18 @@ import { createAPIFileRoute } from '@tanstack/start/api';
 import { getDb } from '~/utils/database';
 import { requireAuth } from '~/utils/auth';
 
+/**
+ * Sanitize search term to prevent LIKE wildcard injection
+ * Escapes special LIKE characters: % _ [ ]
+ */
+function sanitizeSearchTerm(term: string): string {
+  return term
+    .replace(/%/g, '\\%')
+    .replace(/_/g, '\\_')
+    .replace(/\[/g, '\\[')
+    .replace(/\]/g, '\\]');
+}
+
 export const APIRoute = createAPIFileRoute('/api/search')({
   GET: async ({ request }) => {
     try {
@@ -17,7 +29,10 @@ export const APIRoute = createAPIFileRoute('/api/search')({
         return json({ success: true, results: [] });
       }
 
-      const searchTerm = `%${query}%`;
+      // Sanitize search term to prevent LIKE wildcard injection
+      // This prevents users from using % or _ to match all records
+      const sanitizedQuery = sanitizeSearchTerm(query);
+      const searchTerm = `%${sanitizedQuery}%`;
       const results: any[] = [];
 
       // Search genomes
