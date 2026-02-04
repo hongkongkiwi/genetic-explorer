@@ -2,14 +2,17 @@
  * Data Encryption Utilities for At-Rest Encryption
  *
  * Uses AES-256-GCM for authenticated encryption of sensitive user data.
- * All encryption keys are derived from the master encryption key stored in
- * environment variables.
+ * Supports cloud KMS (AWS/Azure/GCP) with envelope encryption for cost efficiency.
+ * 
+ * COST OPTIMIZATION: Uses local data key caching to minimize cloud KMS API calls.
+ * Only calls cloud KMS on startup or key rotation (every 24 hours).
  *
  * IMPORTANT: This is for encrypting data at rest (in database, files, etc.)
  * NOT for transport security (use HTTPS for that).
  */
 
 import crypto from 'crypto';
+import { getMasterKey as getKMSMasterKey, isCloudKMSEnabled, getKMSProvider } from './kms';
 
 // ============================================================================
 // Configuration
@@ -21,17 +24,67 @@ const AUTH_TAG_LENGTH = 16; // 16 bytes authentication tag
 const KEY_LENGTH = 32; // 256 bits
 const SALT_LENGTH = 32;
 
+// Cached master key (avoid async calls for every encryption)
+let cachedMasterKey: Buffer | null = null;
+let masterKeyPromise: Promise<Buffer> | null = null;
+
 /**
- * Get the master encryption key from environment
- * CRITICAL: In production, ENCRYPTION_MASTER_KEY MUST be set
- * The application will refuse to start without a secure encryption key in production
+ * Get the master encryption key
+ * First checks for cloud KMS configuration, then falls back to environment variable
+ * 
+ * COST OPTIMIZATION: With cloud KMS, this returns a locally cached data key.
+ * Cloud KMS is only called when the data key expires (every 24 hours) or on startup.
  */
-function getMasterKey(): Buffer {
+export async function getMasterKey(): Promise<Buffer> {
+  // Return cached key if available
+  if (cachedMasterKey) {
+    return cachedMasterKey;
+  }
+
+  // If a fetch is already in progress, return that promise
+  if (masterKeyPromise) {
+    return masterKeyPromise;
+  }
+
+  // Start fetching the master key
+  masterKeyPromise = (async () => {
+    try {
+      // Try cloud KMS first (includes local fallback)
+      const key = await getKMSMasterKey();
+      cachedMasterKey = key;
+      return key;
+    } catch (error) {
+      console.error('Failed to get master key:', error);
+      throw error;
+    } finally {
+      masterKeyPromise = null;
+    }
+  })();
+
+  return masterKeyPromise;
+}
+
+/**
+ * Synchronous master key getter (for backward compatibility)
+ * WARNING: This only works if the master key has been previously cached
+ */
+export function getMasterKeySync(): Buffer {
+  if (cachedMasterKey) {
+    return cachedMasterKey;
+  }
+
+  // Fallback to environment variable (synchronous)
   const masterKey = process.env.ENCRYPTION_MASTER_KEY;
 
   if (!masterKey) {
     // In production, we MUST have a proper encryption key
     if (process.env.NODE_ENV === 'production') {
+      if (isCloudKMSEnabled()) {
+        throw new Error(
+          'FATAL: Cloud KMS is enabled but master key has not been initialized. ' +
+          'Call await getMasterKey() during application startup.'
+        );
+      }
       throw new Error(
         'FATAL SECURITY ERROR: ENCRYPTION_MASTER_KEY environment variable is required in production.\n' +
         'The application cannot start without a secure encryption key.\n' +
@@ -51,8 +104,22 @@ function getMasterKey(): Buffer {
   }
 
   // Ensure the key is exactly 32 bytes by deriving a proper key
-  // This ensures consistent key length regardless of input length
   return crypto.scryptSync(masterKey, 'genetic-explorer-key-derivation-v1', KEY_LENGTH);
+}
+
+/**
+ * Initialize encryption system
+ * Call this during application startup to ensure master key is loaded
+ */
+export async function initializeEncryption(): Promise<void> {
+  const key = await getMasterKey();
+  const provider = getKMSProvider();
+  
+  if (isCloudKMSEnabled()) {
+    console.log(`✅ Encryption initialized with ${provider} KMS (envelope encryption)`);
+  } else {
+    console.log('✅ Encryption initialized with environment key');
+  }
 }
 
 /**
@@ -60,7 +127,7 @@ function getMasterKey(): Buffer {
  * Each user has their own encryption key derived from the master key
  */
 export function getUserEncryptionKey(userId: string): Buffer {
-  const masterKey = getMasterKey();
+  const masterKey = getMasterKeySync();
 
   // Derive a user-specific key using HMAC
   const hmac = crypto.createHmac('sha256', masterKey);
@@ -294,6 +361,8 @@ export function rotateKey(
 export interface EncryptionStatus {
   enabled: boolean;
   masterKeySet: boolean;
+  cloudKMS: boolean;
+  kmsProvider: string;
   algorithm: string;
   keyBits: number;
 }
@@ -304,6 +373,8 @@ export function getEncryptionStatus(): EncryptionStatus {
   return {
     enabled: true,
     masterKeySet: !!masterKey && masterKey.length >= 32,
+    cloudKMS: isCloudKMSEnabled(),
+    kmsProvider: getKMSProvider(),
     algorithm: ALGORITHM,
     keyBits: KEY_LENGTH * 8,
   };
@@ -315,16 +386,25 @@ export function getEncryptionStatus(): EncryptionStatus {
 
 export const ENCRYPTION_ENV_VARS = {
   ENCRYPTION_MASTER_KEY: 'ENCRYPTION_MASTER_KEY',
+  AWS_KMS_KEY_ID: 'AWS_KMS_KEY_ID',
+  AZURE_KEY_VAULT_URL: 'AZURE_KEY_VAULT_URL',
+  AZURE_KEY_NAME: 'AZURE_KEY_NAME',
+  GCP_KMS_KEY_NAME: 'GCP_KMS_KEY_NAME',
 } as const;
 
 export function validateEncryptionConfig(): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
-  const masterKey = process.env.ENCRYPTION_MASTER_KEY;
-
-  if (!masterKey) {
-    errors.push('ENCRYPTION_MASTER_KEY is not set');
-  } else if (masterKey.length < 32) {
-    errors.push('ENCRYPTION_MASTER_KEY should be at least 32 characters');
+  
+  // Check if cloud KMS is configured
+  const cloudKMSEnabled = isCloudKMSEnabled();
+  
+  if (!cloudKMSEnabled) {
+    const masterKey = process.env.ENCRYPTION_MASTER_KEY;
+    if (!masterKey) {
+      errors.push('ENCRYPTION_MASTER_KEY is not set (and no cloud KMS configured)');
+    } else if (masterKey.length < 32) {
+      errors.push('ENCRYPTION_MASTER_KEY should be at least 32 characters');
+    }
   }
 
   return {
@@ -346,4 +426,7 @@ export default {
   verifyHash,
   getEncryptionStatus,
   validateEncryptionConfig,
+  initializeEncryption,
+  getMasterKey,
+  getMasterKeySync,
 };
