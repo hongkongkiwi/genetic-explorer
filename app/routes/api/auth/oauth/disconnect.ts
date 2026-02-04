@@ -5,12 +5,20 @@ import { unlinkOAuthAccount, getUserOAuthAccounts } from '~/utils/database';
 import { logActivity } from '~/utils/database';
 import { getClientIp } from '~/utils/rateLimit';
 import { OAuthProvider } from '~/utils/oauth';
+import { csrfProtection } from '~/utils/csrf';
 
 export const APIRoute = createAPIFileRoute('/api/auth/oauth/disconnect')({
   POST: async ({ request }) => {
     try {
       // Require authentication
       const auth = requireAuth(request);
+
+      // CSRF protection
+      const cookieHeader = request.headers.get('cookie');
+      const csrfCheck = csrfProtection(request, cookieHeader);
+      if (!csrfCheck.valid) {
+        return json({ success: false, error: csrfCheck.error }, { status: csrfCheck.status });
+      }
 
       const body = await request.json();
       const { provider } = body as { provider: OAuthProvider };

@@ -135,9 +135,9 @@ function getMasterKey(): Buffer {
 
 ---
 
-### C4: Session Fixation Vulnerability
+### C4: Session Fixation Vulnerability ✅ FIXED
 **Location:** `app/utils/auth.ts` - login flow  
-**Severity:** 🔴 **CRITICAL**  
+**Severity:** 🔴 **CRITICAL** → ✅ **RESOLVED**  
 **CWE:** CWE-384: Session Fixation
 
 **Issue:** Session token is not regenerated after successful authentication, allowing session fixation attacks.
@@ -166,9 +166,9 @@ export async function loginUser(data: LoginData, ...): Promise<AuthResult> {
 
 ---
 
-### C5: SQL Injection in Search Function
+### C5: SQL Injection in Search Function ✅ FIXED
 **Location:** `app/routes/api/search.ts:20-88`  
-**Severity:** 🔴 **CRITICAL**  
+**Severity:** 🔴 **CRITICAL** → ✅ **RESOLVED**  
 **CWE:** CWE-89: SQL Injection
 
 **Issue:** Search terms are passed directly to SQL LIKE clauses without proper escaping of LIKE wildcards (`%`, `_`).
@@ -196,12 +196,16 @@ const searchTerm = `%${sanitizeSearchTerm(query)}%`;
 
 ## 🟠 High Severity Issues (Fix Within 2 Weeks)
 
-### H1: CSRF Protection Missing on State-Changing Operations
+### H1: CSRF Protection Missing on State-Changing Operations ✅ FIXED
 **Location:** Multiple API routes  
 **Affected Routes:**
-- `/api/genomes` (POST, DELETE)
-- `/api/sharing` (POST, DELETE)
-- `/api/snp-favorites` (POST, DELETE)
+- `/api/genomes` (POST, DELETE) ✅
+- `/api/sharing` (POST, DELETE) ✅
+- `/api/snp-favorites` (POST, DELETE) ✅
+- `/api/auth/delete-account` (POST) ✅
+- `/api/auth/change-password` (POST) ✅
+- `/api/auth/change-email` (POST) ✅
+- `/api/auth/oauth/disconnect` (POST) ✅
 
 **Fix:** Apply CSRF middleware to all state-changing routes:
 ```typescript
@@ -220,13 +224,13 @@ export const APIRoute = createAPIFileRoute('/api/genomes')({
 
 ---
 
-### H2: In-Memory Storage for Critical Security Data
+### H2: In-Memory Storage for Critical Security Data ✅ FIXED
 **Location:** Multiple files  
 **Affected:**
-- `app/utils/magicLink.ts` - Magic link tokens
-- `app/utils/oauth.ts` - OAuth state
-- `app/utils/rateLimit.ts` - Rate limit counters
-- `app/utils/twoFactor.ts` - Email verification codes
+- `app/utils/magicLink.ts` - Magic link tokens ✅ (migrated to SQLite)
+- `app/utils/oauth.ts` - OAuth state ✅ (migrated to SQLite)
+- `app/utils/rateLimit.ts` - Rate limit counters ✅ (migrated to SQLite)
+- `app/utils/twoFactor.ts` - Email verification codes ✅ (migrated to SQLite)
 
 **Issue:** Security-critical data stored in JavaScript Maps is lost on server restart and doesn't work across multiple server instances.
 
@@ -244,9 +248,11 @@ async function storeMagicLinkToken(token: string, userId: string) {
 
 ---
 
-### H3: Decompression Bomb (Zip Bomb) Vulnerability
+### H3: Decompression Bomb (Zip Bomb) Vulnerability ✅ FIXED
 **Location:** `app/utils/fileCompression.ts:57-67`  
 **CWE:** CWE-409: Improper Handling of Highly Compressed Data
+
+**Fix:** Implemented `safeGunzip()` with 500MB decompression limit using streaming decompression with size tracking.
 
 **Issue:** Gzip decompression has no maximum output size limit.
 
@@ -279,10 +285,12 @@ function safeGunzip(buffer: Buffer, maxSize: number = 100 * 1024 * 1024): Promis
 
 ---
 
-### H4: Open Redirect in OAuth Callback
+### H4: Open Redirect in OAuth Callback ✅ FIXED
 **Location:** `app/routes/api/auth/oauth/callback.ts:187-204`
 
-**Issue:** The `redirectTo` parameter from OAuth state is used directly in redirects without validation.
+**Issue:** The `redirectTo` parameter from OAuth state was used directly in redirects without validation.
+
+**Fix:** Implemented `validateRedirectPath()` with allowlist of allowed paths (`/dashboard`, `/settings`, `/profile`, `/`).
 
 **Fix:**
 ```typescript
@@ -297,10 +305,15 @@ function validateRedirect(url: string): string {
 
 ---
 
-### H5: Missing File Type Validation (Magic Numbers)
+### H5: Missing File Type Validation (Magic Numbers) ✅ FIXED
 **Location:** `app/routes/api/genomes.ts`
 
-**Issue:** File type validation relies only on extensions, not file signatures (magic numbers).
+**Issue:** File type validation relied only on extensions, not file signatures (magic numbers).
+
+**Fix:** Added `validateFileMagic()` function that checks:
+- GZIP files: Magic bytes `0x1f 0x8b`
+- ZIP files: Magic bytes `0x50 0x4b 0x03 0x04`
+- Text files: Validates no null bytes in first 1KB
 
 **Fix:**
 ```typescript
@@ -320,41 +333,49 @@ function validateFileMagic(buffer: Buffer, claimedType: string): boolean {
 
 ---
 
-### H6: Account Deletion Incomplete (GDPR Violation)
+### H6: Account Deletion Incomplete (GDPR Violation) ✅ FIXED
 **Location:** `app/routes/api/auth/delete-account.ts`
 
-**Issue:** Account deletion doesn't remove all user data from all tables.
+**Issue:** Account deletion didn't remove all user data from all tables.
 
-**Missing Deletions:**
-- `totp_secrets`
-- `backup_codes`
-- `passkeys`
-- `oauth_accounts`
-- `user_privacy_settings`
-- `relative_matching_preferences`
+**Fix:** Added comprehensive deletion for:
+- `totp_secrets` ✅
+- `backup_codes` ✅
+- `passkeys` ✅
+- `oauth_accounts` ✅
+- `user_privacy_settings` ✅
+- `relative_matching_preferences` ✅
+- `snp_favorites` ✅
+- `sharing_permissions` (both owner and recipient) ✅
 
 **Fix:** Add comprehensive cascading deletion for all user-related data.
 
 ---
 
-### H7: PII Stored Without Encryption
+### H7: PII Stored Without Encryption 🟡 PARTIALLY ADDRESSED
 **Location:** Database tables
 
-**Issue:** Personal identifiable information stored in plaintext:
-- Email addresses
-- Display names
-- Birth dates
-- Sex
-- Bio/information
+**Status:** Most critical PII now encrypted
+- ✅ TOTP secrets - Encrypted
+- ✅ Genetic data (SNPs) - Encrypted
+- ✅ Genome files - Stored as files (access controlled)
+- ⚠️ Email addresses, display names - Plaintext (acceptable for functionality)
+
+**Note:** Email and display names remain plaintext for search and display functionality.
 
 **Fix:** Implement field-level encryption for all PII fields.
 
 ---
 
-### H8: No Absolute Session Timeout
-**Location:** `app/utils/auth.ts`
+### H8: No Absolute Session Timeout ✅ FIXED
+**Location:** `app/utils/auth.ts` and `app/utils/database.ts`
 
-**Issue:** Sessions can remain active indefinitely with periodic activity (sliding expiration only).
+**Issue:** Sessions could remain active indefinitely with periodic activity (sliding expiration only).
+
+**Fix:** Implemented absolute session timeout of 30 days:
+- Modified `getSessionByToken()` to check `created_at` 
+- Sessions exceeding 30 days are automatically deleted
+- Applies regardless of activity level
 
 **Fix:** Implement maximum session lifetime regardless of activity:
 ```typescript
@@ -369,10 +390,17 @@ function isSessionExpired(session: Session): boolean {
 
 ---
 
-### H9: XSS via Unsanitized User Input
+### H9: XSS via Unsanitized User Input 🟡 MITIGATED
 **Location:** Various rendering locations
 
 **Issue:** User inputs (display names, messages) may be rendered without proper output encoding.
+
+**Status:** 
+- React's built-in XSS protection automatically escapes content
+- No `dangerouslySetInnerHTML` usage found in user-generated content
+- Form inputs use controlled components
+
+**Note:** For enhanced security, consider adding DOMPurify for rich text areas if implemented in future.
 
 **Fix:** Use React's built-in XSS protection and sanitize where needed:
 ```typescript
@@ -385,10 +413,16 @@ function sanitizeInput(input: string): string {
 
 ---
 
-### H10: Missing CORS Configuration
-**Location:** Application configuration
+### H10: Missing CORS Configuration ✅ FIXED
+**Location:** `app/utils/cors.ts`
 
 **Issue:** No explicit CORS configuration found.
+
+**Fix:** Implemented comprehensive CORS configuration:
+- Allowlist of approved origins
+- Proper preflight handling
+- Credentials support for authenticated requests
+- Environment-based origin validation
 
 **Fix:**
 ```typescript
@@ -423,19 +457,22 @@ export function corsMiddleware(request: Request) {
 
 ## 🎯 Priority Remediation Plan
 
-### Phase 1: Critical (Week 1)
-1. [ ] Remove encryption key fallback
-2. [ ] Encrypt TOTP secrets at rest
-3. [ ] Implement genetic data encryption
-4. [ ] Fix session fixation vulnerability
-5. [ ] Fix SQL injection in search
+### Phase 1: Critical (Week 1) ✅ COMPLETE
+1. [x] Remove encryption key fallback
+2. [x] Encrypt TOTP secrets at rest
+3. [x] Implement genetic data encryption
+4. [x] Fix session fixation vulnerability
+5. [x] Fix SQL injection in search
 
-### Phase 2: High Priority (Week 2-3)
-6. [ ] Add CSRF protection to all state-changing routes
-7. [ ] Migrate in-memory storage to Redis/database
-8. [ ] Fix zip bomb vulnerability
-9. [ ] Fix OAuth open redirect
-10. [ ] Add file magic number validation
+### Phase 2: High Priority (Week 2-3) ✅ COMPLETE
+6. [x] Add CSRF protection to all state-changing routes
+7. [x] Migrate in-memory storage to Redis/database
+8. [x] Fix zip bomb vulnerability
+9. [x] Fix OAuth open redirect
+10. [x] Add file magic number validation
+11. [x] Complete account deletion (GDPR)
+12. [x] Add absolute session timeout
+13. [x] Configure CORS properly
 
 ### Phase 3: Medium Priority (Week 4-6)
 11. [ ] Complete account deletion (GDPR)

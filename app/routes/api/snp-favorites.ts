@@ -2,6 +2,7 @@ import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
 import { getDb } from '~/utils/database';
 import { requireAuth } from '~/utils/auth';
+import { csrfProtection } from '~/utils/csrf';
 
 export const APIRoute = createAPIFileRoute('/api/snp-favorites')({
   GET: async ({ request }) => {
@@ -35,6 +36,14 @@ export const APIRoute = createAPIFileRoute('/api/snp-favorites')({
   POST: async ({ request }) => {
     try {
       const user = requireAuth(request);
+      
+      // CSRF protection
+      const cookieHeader = request.headers.get('cookie');
+      const csrfCheck = csrfProtection(request, cookieHeader);
+      if (csrfCheck.valid === false) {
+        return json({ success: false, error: csrfCheck.error }, { status: csrfCheck.status });
+      }
+      
       const db = getDb();
       const { rsid, notes } = await request.json();
       
@@ -75,6 +84,14 @@ export const APIRoute = createAPIFileRoute('/api/snp-favorites')({
   DELETE: async ({ request }) => {
     try {
       const user = requireAuth(request);
+      
+      // CSRF protection
+      const cookieHeader = request.headers.get('cookie');
+      const csrfCheck = csrfProtection(request, cookieHeader);
+      if (csrfCheck.valid === false) {
+        return json({ success: false, error: csrfCheck.error }, { status: csrfCheck.status });
+      }
+      
       const db = getDb();
       const { rsid } = await request.json();
       

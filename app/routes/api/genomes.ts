@@ -20,6 +20,7 @@ import {
   calculateChecksum,
   formatFileSize,
   validateGeneticContent,
+  validateFileMagic,
 } from '~/utils/fileCompression'
 
 // Maximum file size: 100MB compressed, ~500MB decompressed
@@ -114,11 +115,21 @@ export const APIRoute = createAPIFileRoute('/api/genomes')({
       // Read file into buffer
       const fileBuffer = Buffer.from(await file.arrayBuffer())
 
+      // SECURITY: Validate file magic numbers to prevent spoofed uploads
+      const compressionType = detectCompressionType(file.name)
+      const magicValid = validateFileMagic(fileBuffer, compressionType);
+      if (!magicValid) {
+        return json(
+          {
+            success: false,
+            error: `File type validation failed. The file does not appear to be a valid ${compressionType === 'none' ? 'text' : compressionType} file.`,
+          },
+          { status: 400 },
+        );
+      }
+
       // Calculate checksum before any processing
       const checksum = calculateChecksum(fileBuffer)
-
-      // Detect compression type
-      const compressionType = detectCompressionType(file.name)
 
       // Decompress if needed
       let content: string

@@ -11,6 +11,43 @@ import crypto from 'crypto';
 
 const MAX_DECOMPRESSED_SIZE = 500 * 1024 * 1024; // 500MB max
 
+/**
+ * File magic numbers for validation
+ * Prevents spoofed file uploads by checking actual file content
+ */
+const FILE_SIGNATURES: Record<string, number[]> = {
+  'gzip': [0x1f, 0x8b],           // GZIP magic number
+  'zip': [0x50, 0x4b, 0x03, 0x04], // ZIP local file header
+  'text': [],                      // Text files don't have signatures
+};
+
+/**
+ * Validate file type using magic numbers
+ * SECURITY: Prevents file type spoofing attacks
+ */
+export function validateFileMagic(buffer: Buffer, claimedType: 'gzip' | 'zip' | 'none'): boolean {
+  // Text files - check if it's valid UTF-8 and contains printable characters
+  if (claimedType === 'none') {
+    // Check first 1KB for null bytes (binary indicator)
+    const sample = buffer.slice(0, 1024);
+    const hasNullBytes = sample.includes(0);
+    
+    // If it has null bytes in first 1KB, it's probably not a text file
+    if (hasNullBytes) {
+      return false;
+    }
+    return true;
+  }
+  
+  const signature = FILE_SIGNATURES[claimedType];
+  if (!signature || signature.length === 0) {
+    return true;
+  }
+  
+  // Check if buffer starts with the expected magic bytes
+  return signature.every((byte, i) => buffer[i] === byte);
+}
+
 export interface DecompressionResult {
   content: string;
   originalFilename: string;

@@ -1,6 +1,7 @@
 import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
 import { requireAuth } from '~/utils/auth';
+import { csrfProtection } from '~/utils/csrf';
 import { getDb } from '~/utils/database';
 import { existsSync, unlinkSync } from 'fs';
 import crypto from 'crypto';
@@ -20,6 +21,13 @@ export const APIRoute = createAPIFileRoute('/api/auth/delete-account')({
       const auth = requireAuth(request);
       if (!auth) {
         return json({ success: false, error: 'Unauthorized' }, { status: 401 });
+      }
+
+      // CSRF protection
+      const cookieHeader = request.headers.get('cookie');
+      const csrfCheck = csrfProtection(request, cookieHeader);
+      if (csrfCheck.valid === false) {
+        return json({ success: false, error: csrfCheck.error }, { status: csrfCheck.status });
       }
 
       const body = await request.json();
@@ -56,11 +64,25 @@ export const APIRoute = createAPIFileRoute('/api/auth/delete-account')({
         }
       }
 
-      // Delete user's sharing permissions (where they are owner)
-      db.prepare(`DELETE FROM sharing_permissions WHERE owner_id = ?`).run(auth.id);
+      // Delete user's 2FA data
+      db.prepare(`DELETE FROM totp_secrets WHERE user_id = ?`).run(auth.id);
+      db.prepare(`DELETE FROM backup_codes WHERE user_id = ?`).run(auth.id);
+      db.prepare(`DELETE FROM passkeys WHERE user_id = ?`).run(auth.id);
+
+      // Delete user's OAuth connections
+      db.prepare(`DELETE FROM oauth_accounts WHERE user_id = ?`).run(auth.id);
+
+      // Delete user's privacy settings
+      db.prepare(`DELETE FROM user_privacy_settings WHERE user_id = ?`).run(auth.id);
+
+      // Delete user's relative matching preferences
+      db.prepare(`DELETE FROM relative_matching_preferences WHERE user_id = ?`).run(auth.id);
+
+      // Delete user's sharing permissions (where they are owner or recipient)
+      db.prepare(`DELETE FROM sharing_permissions WHERE owner_id = ? OR recipient_id = ?`).run(auth.id, auth.id);
 
       // Delete user's sharing invites
-      db.prepare(`DELETE FROM sharing_invites WHERE owner_id = ?`).run(auth.id);
+      db.prepare(`DELETE FROM sharing_invites WHERE owner_id = ? OR recipient_email = (SELECT email FROM users WHERE id = ?)`).run(auth.id, auth.id);
 
       // Delete user's sessions
       db.prepare(`DELETE FROM sessions WHERE user_id = ?`).run(auth.id);
@@ -79,6 +101,9 @@ export const APIRoute = createAPIFileRoute('/api/auth/delete-account')({
 
       // Delete user's genomes (cascades to snps and reports)
       db.prepare(`DELETE FROM genomes WHERE user_id = ?`).run(auth.id);
+      
+      // Delete user's SNP favorites
+      db.prepare(`DELETE FROM snp_favorites WHERE user_id = ?`).run(auth.id);
 
       // Finally, delete the user
       db.prepare(`DELETE FROM users WHERE id = ?`).run(auth.id);

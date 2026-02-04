@@ -1369,11 +1369,21 @@ export function createSession(userId: string, token: string, expiresAt: Date, ip
 export function getSessionByToken(token: string): { userId: string; expiresAt: Date } | null {
   const db = getDb();
   const session = db.prepare(`
-    SELECT user_id, expires_at FROM sessions 
+    SELECT user_id, expires_at, created_at FROM sessions 
     WHERE token = ? AND expires_at > datetime('now')
   `).get(token) as any;
 
   if (!session) return null;
+
+  // SECURITY: Check absolute session timeout (30 days max)
+  const ABSOLUTE_TIMEOUT_MS = 30 * 24 * 60 * 60 * 1000;
+  const sessionAge = Date.now() - new Date(session.created_at).getTime();
+  
+  if (sessionAge > ABSOLUTE_TIMEOUT_MS) {
+    // Session exceeded absolute timeout - delete it
+    db.prepare(`DELETE FROM sessions WHERE token = ?`).run(token);
+    return null;
+  }
 
   return {
     userId: session.user_id,

@@ -5,6 +5,7 @@ import { requireAuth } from '~/utils/auth';
 import { getUserByEmail, getUserById, updateUser } from '~/utils/database';
 import { logActivity } from '~/utils/database';
 import { getClientIp } from '~/utils/rateLimit';
+import { csrfProtection } from '~/utils/csrf';
 
 interface ChangeEmailRequest {
   newEmail: string;
@@ -16,6 +17,14 @@ export const APIRoutePost = createAPIFileRoute('/api/auth/change-email')({
   POST: async ({ request }) => {
     try {
       const auth = requireAuth(request);
+
+      // CSRF protection
+      const cookieHeader = request.headers.get('cookie');
+      const csrfCheck = csrfProtection(request, cookieHeader);
+      if (!csrfCheck.valid) {
+        return json({ success: false, error: csrfCheck.error }, { status: csrfCheck.status });
+      }
+
       const body = await request.json() as ChangeEmailRequest;
       const { newEmail, password } = body;
 

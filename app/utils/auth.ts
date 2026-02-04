@@ -3,6 +3,7 @@ import { getUserByEmail, createUser, updateUserLastLogin, getUserById, createSes
 
 const SESSION_DURATION_DAYS = 7;
 const TOKEN_BYTES = 32;
+const ABSOLUTE_SESSION_TIMEOUT_DAYS = 30; // Maximum session lifetime regardless of activity
 
 export interface AuthResult {
   success: boolean;

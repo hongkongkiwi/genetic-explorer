@@ -2,6 +2,7 @@ import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
 import { requireAuth } from '~/utils/auth';
 import { getDb, logActivity } from '~/utils/database';
+import { csrfProtection } from '~/utils/csrf';
 import crypto from 'crypto';
 
 // Password hashing using PBKDF2
@@ -27,6 +28,13 @@ export const APIRoute = createAPIFileRoute('/api/auth/change-password')({
       const auth = requireAuth(request);
       if (!auth) {
         return json({ success: false, error: 'Unauthorized' }, { status: 401 });
+      }
+
+      // CSRF protection
+      const cookieHeader = request.headers.get('cookie');
+      const csrfCheck = csrfProtection(request, cookieHeader);
+      if (!csrfCheck.valid) {
+        return json({ success: false, error: csrfCheck.error }, { status: csrfCheck.status });
       }
 
       const body = await request.json();

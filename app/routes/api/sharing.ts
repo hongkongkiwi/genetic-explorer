@@ -1,6 +1,7 @@
 import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
 import { requireAuth } from '~/utils/auth';
+import { csrfProtection } from '~/utils/csrf';
 import { 
   getSharedWithMe, 
   getMyShares, 
@@ -43,6 +44,13 @@ export const APIRoute = createAPIFileRoute('/api/sharing')({
       const auth = requireAuth(request);
       if (!auth) {
         return json({ success: false, error: 'Unauthorized' }, { status: 401 });
+      }
+
+      // CSRF protection
+      const cookieHeader = request.headers.get('cookie');
+      const csrfCheck = csrfProtection(request, cookieHeader);
+      if (csrfCheck.valid === false) {
+        return json({ success: false, error: csrfCheck.error }, { status: csrfCheck.status });
       }
 
       const body = await request.json();
@@ -114,6 +122,13 @@ export const APIRoute = createAPIFileRoute('/api/sharing')({
       const auth = requireAuth(request);
       if (!auth) {
         return json({ success: false, error: 'Unauthorized' }, { status: 401 });
+      }
+
+      // CSRF protection
+      const cookieHeader = request.headers.get('cookie');
+      const csrfCheck = csrfProtection(request, cookieHeader);
+      if (csrfCheck.valid === false) {
+        return json({ success: false, error: csrfCheck.error }, { status: csrfCheck.status });
       }
 
       const url = new URL(request.url);
