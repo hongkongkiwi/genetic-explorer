@@ -280,7 +280,7 @@ async function sendSecurityAlert(alert: {
   ipAddress?: string;
   details: Record<string, any>;
 }): Promise<void> {
-  // Log alert
+  // Log alert to console
   console.error(`🚨 SECURITY ALERT [${alert.severity.toUpperCase()}]: ${alert.message}`, {
     type: alert.type,
     userId: alert.userId,
@@ -289,18 +289,22 @@ async function sendSecurityAlert(alert: {
     timestamp: new Date().toISOString(),
   });
 
-  // TODO: Implement actual alerting mechanisms
-  // - Send email to security team
-  // - Post to Slack channel
-  // - Create PagerDuty incident for critical alerts
-  // - Store in security events table
-
-  // Example integration points:
-  if (alert.severity === 'critical') {
-    // await sendEmailToSecurityTeam(alert);
-    // await createPagerDutyIncident(alert);
-    // await sendSlackNotification('#security-alerts', alert);
-  }
+  // Send to alerting service asynchronously
+  import('~/security/alerting').then(({ alertManager }) => {
+    alertManager.sendAlert(
+      alert.severity === 'critical' ? 'critical' : alert.severity === 'high' ? 'high' : 'medium',
+      'security_monitoring',
+      alert.message,
+      {
+        type: alert.type,
+        userId: alert.userId,
+        ipAddress: alert.ipAddress,
+        ...alert.details,
+      }
+    ).catch(err => console.error('Failed to send alert:', err));
+  }).catch(() => {
+    // Alerting module not available
+  });
 }
 
 // ============================================================================

@@ -129,14 +129,7 @@ export {
   getDb as getDatabase,
 } from './database-legacy';
 
-// New domain-specific exports (for forward compatibility) - TODO: create these modules
-// export * from './genomes';
-// export * from './ancestry';
-// export * from './carrier';
-// export * from './traits';
-// export * from './relatives';
-// export * from './users';
-// export * from './oauth';
-// export * from './sharing';
-// export * from './auth';
-// export * from './health-profiles';
+// Domain-specific module exports (implemented: genomes, users, sharing)
+export * from './genomes';
+export * from './users';
+export * from './sharing';

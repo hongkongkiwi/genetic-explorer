@@ -203,14 +203,26 @@ export function logSecurityEvent(
     ...details,
   };
   
-  // In production, send to security monitoring service
+  // Log to console for development/debugging
   if (severity === 'critical') {
     console.error('[SECURITY]', JSON.stringify(logEntry));
-    // TODO: Send to alerting service (not monitoring setup per requirements)
   } else if (severity === 'warning') {
     console.warn('[SECURITY]', JSON.stringify(logEntry));
   } else {
     console.log('[SECURITY]', JSON.stringify(logEntry));
+  }
+  
+  // Send to alerting service for critical and high severity events
+  if (severity === 'critical' || severity === 'high') {
+    import('./alerting').then(({ alertSecurityEvent }) => {
+      alertSecurityEvent(
+        `Security ${severity}: ${event}`,
+        { severity, ...details },
+        severity === 'critical' ? 'critical' : 'high'
+      ).catch(err => console.error('Failed to send security alert:', err));
+    }).catch(() => {
+      // Alerting module not available, console log already done above
+    });
   }
 }
 
