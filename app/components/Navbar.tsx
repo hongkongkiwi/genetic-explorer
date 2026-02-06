@@ -118,11 +118,12 @@ export function Navbar() {
         className="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 safe-area-pt"
         role="navigation"
         aria-label="Main navigation"
+        data-testid="navbar"
       >
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-2 sm:gap-3 group touch-target">
+            <Link to="/" className="flex items-center gap-2 sm:gap-3 group touch-target" data-testid="nav-logo">
               <div className="w-7 h-7 sm:w-8 sm:h-8">
                 <DNALogo size={28} />
               </div>
@@ -139,6 +140,7 @@ export function Navbar() {
                 onClick={() => setIsSearchOpen(true)}
                 className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-all mr-2"
                 aria-label="Search"
+                data-testid="nav-search-button"
               >
                 <Search className="w-4 h-4" />
                 <span className="hidden xl:inline">Search</span>

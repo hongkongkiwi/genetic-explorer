@@ -38,16 +38,18 @@ export interface ButtonProps
   asChild?: boolean
   isLoading?: boolean
   fullWidth?: boolean
+  'data-testid'?: string
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, isLoading, fullWidth, children, disabled, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, isLoading, fullWidth, 'data-testid': testId, children, disabled, ...props }, ref) => {
     const Comp = asChild ? Slot : "button"
     return (
       <Comp
         className={cn(buttonVariants({ variant, size, className }), fullWidth && "w-full")}
         ref={ref}
         disabled={disabled || isLoading}
+        data-testid={testId || (isLoading ? 'button-loading' : 'button')}
         {...props}
       >
         {isLoading ? (
