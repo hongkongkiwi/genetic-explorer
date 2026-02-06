@@ -15,18 +15,13 @@ import type {
 import type { 
   AncestryResult, 
   PopulationEstimate, 
-  YHaplogroupResult, 
-  MtHaplogroupResult,
-  AIM,
   PopulationGroup,
   ConfidenceLevel 
 } from '~/types/ancestry';
 import { 
   ANCESTRY_INFORMATIVE_MARKERS, 
   getTopAIMs, 
-  genotypeToAlleleFrequency,
-  REFERENCE_POPULATIONS,
-  POPULATION_SPECIFIC_MARKERS
+  genotypeToAlleleFrequency
 } from '~/data/referencePopulations';
 import { 
   determineYHaplogroup, 
@@ -37,9 +32,10 @@ import {
 // CONSTANTS
 // ============================================================================
 
-const MIN_AIMS_REQUIRED = 20;
-const CONFIDENCE_THRESHOLD_HIGH = 0.75;
-const CONFIDENCE_THRESHOLD_MEDIUM = 0.50;
+// Constants for ancestry analysis
+// MIN_AIMS_REQUIRED = 20 (reserved for future use)
+// CONFIDENCE_THRESHOLD_HIGH = 0.75 (reserved for future use)  
+// CONFIDENCE_THRESHOLD_MEDIUM = 0.50 (reserved for future use)
 const POPULATION_GROUPS: PopulationGroup[] = [
   'European', 'African', 'East Asian', 'South Asian', 
   'Native American', 'Middle Eastern', 'Oceanian', 'Central Asian', 'Southeast Asian'
@@ -367,24 +363,6 @@ function getRegionForPopulation(population: PopulationGroup): string {
     'Southeast Asian': 'Southeast Asia',
   };
   return regions[population];
-}
-
-/**
- * Get description for a population
- */
-function getDescriptionForPopulation(population: PopulationGroup): string {
-  const descriptions: Record<PopulationGroup, string> = {
-    'European': 'Ancestry from European populations, including Western, Eastern, Southern, and Northern European subgroups.',
-    'African': 'Ancestry from African populations, representing the deepest human genetic diversity.',
-    'East Asian': 'Ancestry from East Asian populations, including Chinese, Japanese, and Korean peoples.',
-    'South Asian': 'Ancestry from the Indian subcontinent, including Indian, Pakistani, and Bangladeshi populations.',
-    'Native American': 'Indigenous ancestry from the Americas, representing the first human inhabitants of these continents.',
-    'Middle Eastern': 'Ancestry from Middle Eastern populations, connecting Africa, Europe, and Asia.',
-    'Oceanian': 'Indigenous ancestry from Australia, New Guinea, and Pacific Islands.',
-    'Central Asian': 'Ancestry from Central Asian steppe populations, often showing mixed East Asian and European heritage.',
-    'Southeast Asian': 'Ancestry from Southeast Asian populations, including Thai, Vietnamese, and Indonesian peoples.',
-  };
-  return descriptions[population];
 }
 
 // ============================================================================

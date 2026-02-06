@@ -4,7 +4,7 @@ import { initializeDefaultPreferences } from './notification-preferences';
 
 const SESSION_DURATION_DAYS = 7;
 const TOKEN_BYTES = 32;
-const ABSOLUTE_SESSION_TIMEOUT_DAYS = 30; // Maximum session lifetime regardless of activity
+// ABSOLUTE_SESSION_TIMEOUT_DAYS = 30 (reserved for future session hard limit feature)
 
 export interface AuthResult {
   success: boolean;

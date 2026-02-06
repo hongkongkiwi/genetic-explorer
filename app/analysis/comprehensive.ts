@@ -16,7 +16,7 @@ interface RiskAssessment {
   associatedVariants: string[];
   preventionStrategies: string[];
 }
-import { getSNPInfo, MASTER_SNP_DATABASE, getDatabaseSummary } from '~/data/allSNPs';
+import { getSNPInfo, MASTER_SNP_DATABASE } from '~/data/allSNPs';
 import { generateAIHealthReport, generateDrugGuidance } from './ai';
 
 export interface AnalyzedVariant {

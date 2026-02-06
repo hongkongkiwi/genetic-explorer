@@ -16,13 +16,11 @@ import type {
   TraitComparison,
 } from '~/types/traits';
 import {
-  TRAITS_DATABASE,
   getAllTraits,
   getTraitsByCategory,
   getRandomFunFact,
   CATEGORY_DISPLAY_NAMES,
   CATEGORY_ICONS,
-  CATEGORY_DESCRIPTIONS,
 } from '~/data/traitsDatabase';
 
 /**
@@ -298,7 +296,7 @@ function generateShareableSummary(
   categories: CategorySummary[]
 ): string {
   const analyzedCount = results.filter(r => r.userGenotype !== null).length;
-  const totalTraits = results.length;
+  // totalTraits = results.length (reserved for future use)
   
   const interesting = findMostInteresting(results);
   const topTrait = interesting[0];

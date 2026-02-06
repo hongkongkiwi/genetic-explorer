@@ -4,8 +4,7 @@
  * Uses LLMs to generate personalized insights from genetic data
  */
 
-import { getSNPInfo, COMPREHENSIVE_SNP_DATABASE } from '~/data/comprehensiveSNPs';
-import type { SNP, GenomeData, HealthReport } from '~/types/genetics';
+import type { SNP } from '~/types/genetics';
 
 // OpenAI API integration (requires OPENAI_API_KEY env var)
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';

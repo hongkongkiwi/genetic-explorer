@@ -390,7 +390,7 @@ export async function generateActionableProtocol(
 function generateDietaryFramework(variants: GeneticVariant[]): ActionableProtocol['dietaryFramework'] {
   const hasApoe4 = variants.some(v => v.gene === 'APOE' && v.snp.rsid === 'rs429358');
   const hasFto = variants.some(v => v.gene === 'FTO');
-  const hasMthfr = variants.some(v => v.gene === 'MTHFR');
+  // MTHFR check reserved for future dietary recommendations
 
   if (hasApoe4) {
     return {
