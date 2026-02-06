@@ -7,6 +7,7 @@
 
 import type { SNP, GeneticVariant, ImpactLevel } from '~/types/genetics';
 import { getVariantInfo } from '~/db/queries';
+import { logger } from '~/utils/logger';
 
 export interface EnhancedVariant extends GeneticVariant {
   clinvarRecords: unknown[];
@@ -53,13 +54,13 @@ export async function performEnhancedAnalysis(
   const variants: EnhancedVariant[] = [];
   const minImpact = options.minImpact || 1;
   
-  console.log(`Starting enhanced analysis of ${userSNPs.length} SNPs...`);
+  logger.analysis(`Starting enhanced analysis of ${userSNPs.length} SNPs`);
   
   for (let i = 0; i < userSNPs.length; i++) {
     const snp = userSNPs[i];
     
     if (i % 100 === 0) {
-      console.log(`Analyzed ${i}/${userSNPs.length} SNPs...`);
+      logger.debug(`Analyzed ${i}/${userSNPs.length} SNPs`, { current: i, total: userSNPs.length });
     }
     
     try {

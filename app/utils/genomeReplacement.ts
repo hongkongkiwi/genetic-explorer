@@ -19,6 +19,7 @@
  */
 
 import { getDb } from '~/db';
+import { logger } from '~/utils/logger';
 import { parseGeneticData, validateGenomeData, SNP } from './genome/parser';
 import { 
   decompressBuffer, 
@@ -278,7 +279,7 @@ export async function replaceGenome(
   const db = getDb();
   const warnings: string[] = [];
   
-  console.log(`Starting genome replacement for user ${userId}: ${oldGenomeId}`);
+  logger.genome(`Starting genome replacement for user ${userId}: ${oldGenomeId}`);
   
   try {
     // Verify ownership
@@ -338,7 +339,7 @@ export async function replaceGenome(
     let backupId: string | undefined;
     if (options.createBackup) {
       backupId = createGenomeBackup(oldGenomeId, userId, options.reason);
-      console.log(`Created backup: ${backupId}`);
+      logger.genome(`Created backup: ${backupId}`);
     }
     
     // Parse new genetic data
@@ -529,14 +530,14 @@ export async function replaceGenome(
     const newGenomeId = transaction();
     
     // Securely delete old genome data (AFTER transaction commits)
-    console.log(`Securely deleting old genome: ${oldGenomeId}`);
+    logger.genome(`Securely deleting old genome: ${oldGenomeId}`);
     const deletionResult = secureDeleteGenome(oldGenomeId, userId);
     
     if (!deletionResult.success) {
       console.error(`Secure deletion failed for ${oldGenomeId}:`, deletionResult.error);
       warnings.push(`Warning: Old genome data may not have been completely erased: ${deletionResult.error}`);
     } else {
-      console.log(`Secure deletion completed: ${deletionResult.dbRecordsPurged} records purged, verification: ${deletionResult.verificationPassed}`);
+      logger.genome(`Secure deletion completed: ${deletionResult.dbRecordsPurged} records purged, verification: ${deletionResult.verificationPassed}`);
     }
     
     // Log activity
@@ -549,7 +550,7 @@ export async function replaceGenome(
       reason: options.reason,
     });
     
-    console.log(`Genome replacement completed: ${oldGenomeId} → ${newGenomeId}`);
+    logger.genome(`Genome replacement completed: ${oldGenomeId} → ${newGenomeId}`);
     
     return {
       success: true,

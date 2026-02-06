@@ -551,4 +551,4 @@ export function hasSufficientCoverage(snps: SNP[]): {
   };
 }
 
-console.log('Ancestry analysis engine loaded');
+// Ancestry analysis engine loaded (no console output in production)

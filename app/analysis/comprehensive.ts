@@ -6,6 +6,7 @@
  */
 
 import type { SNP, GenomeData, HealthReport, ReportSection } from '~/types/genetics';
+import { logger } from '~/utils/logger';
 
 // Local type for RiskAssessment
 interface RiskAssessment {
@@ -60,7 +61,7 @@ export async function analyzeGenomeComprehensive(
   summary: AnalysisSummary;
   report: HealthReport;
 }> {
-  console.log(`Analyzing genome ${genome.id} with ${genome.snps.length} SNPs...`);
+  logger.analysis(`Analyzing genome ${genome.id} with ${genome.snps.length} SNPs`);
 
   const analyzedVariants: AnalyzedVariant[] = [];
   const drugMetabolismGenes: Map<string, { phenotype: string; affectedDrugs: string[] }> = new Map();

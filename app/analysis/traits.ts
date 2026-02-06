@@ -515,4 +515,4 @@ export function filterTraitResults(
 }
 
 // Export for debugging
-console.log('Traits Analysis Engine loaded');
+// Traits Analysis Engine loaded (no console output in production)
