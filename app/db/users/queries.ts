@@ -8,6 +8,21 @@
 import { getDb } from '../database-legacy';
 import type { User, UserProfile } from './index';
 
+// Valid column names for UPDATE operations (prevents SQL injection)
+const VALID_USER_COLUMNS = ['email', 'display_name', 'is_active'] as const;
+const VALID_PROFILE_COLUMNS = ['bio', 'birth_date', 'sex', 'ancestry', 'timezone', 'notification_preferences', 'privacy_settings'] as const;
+
+/**
+ * Validate column names to prevent SQL injection in dynamic UPDATE queries
+ */
+function validateColumns(columns: string[], validColumns: readonly string[]): void {
+  for (const col of columns) {
+    if (!validColumns.includes(col)) {
+      throw new Error(`Invalid column name: ${col}`);
+    }
+  }
+}
+
 /**
  * Find user by ID
  */
@@ -72,6 +87,10 @@ export function updateUser(
   
   sets.push('updated_at = datetime("now")');
   values.push(id);
+  
+  // Validate column names before constructing query (defense-in-depth)
+  const columnNames = sets.map(s => s.split(' ')[0]);
+  validateColumns(columnNames, VALID_USER_COLUMNS);
   
   db.prepare(`UPDATE users SET ${sets.join(', ')} WHERE id = ?`).run(...values);
   return findUserById(id);
