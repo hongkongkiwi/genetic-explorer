@@ -212,8 +212,8 @@ export function logSecurityEvent(
     console.log('[SECURITY]', JSON.stringify(logEntry));
   }
   
-  // Send to alerting service for critical and high severity events
-  if (severity === 'critical' || severity === 'high') {
+  // Send to alerting service for critical events
+  if (severity === 'critical') {
     import('./alerting').then(({ alertSecurityEvent }) => {
       alertSecurityEvent(
         `Security ${severity}: ${event}`,
