@@ -252,7 +252,7 @@ export function encryptField<T extends Record<string, any>>(
     ...obj,
     [fieldName]: JSON.stringify(encrypted),
     _encryptedFields: [fieldName],
-  } as any;
+  } as T & { _encryptedFields: string[] };
 }
 
 /**
@@ -269,7 +269,7 @@ export function decryptField<T extends Record<string, any>>(
   return {
     ...obj,
     [fieldName]: decrypted,
-  } as any;
+  } as T;
 }
 
 // ============================================================================
