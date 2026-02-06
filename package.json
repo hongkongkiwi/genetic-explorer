@@ -147,5 +147,10 @@
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=9.0.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "@tanstack/router-generator": "1.158.0"
+    }
   }
 }
