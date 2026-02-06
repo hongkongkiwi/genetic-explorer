@@ -17,7 +17,7 @@ import {
   Copy,
   Check,
 } from 'lucide-react';
-import { compareTraits, getShareableTraitData } from '~/utils/traitsAnalysis';
+import { compareTraits, getShareableTraitData } from '~/utils/analysis/traits';
 import type { GenomeData, TraitResult } from '~/types/traits';
 import { CATEGORY_DISPLAY_NAMES, CATEGORY_ICONS } from '~/data/traitsDatabase';
 

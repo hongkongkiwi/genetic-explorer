@@ -318,8 +318,8 @@ describe('Database Queries', () => {
 
       const result = await analyzeSNP(snp);
 
-      expect(result?.recommendations.length).toBeGreaterThan(0);
-      expect(result?.recommendations.some(r => r.includes('methylfolate') || r.includes('homocysteine'))).toBe(true);
+      expect(result?.recommendations?.length).toBeGreaterThan(0);
+      expect(result?.recommendations?.some(r => r.includes('methylfolate') || r.includes('homocysteine'))).toBe(true);
     });
 
     it('should generate recommendations for drug metabolism variants', async () => {
@@ -332,8 +332,8 @@ describe('Database Queries', () => {
 
       const result = await analyzeSNP(snp);
 
-      expect(result?.recommendations.length).toBeGreaterThan(0);
-      expect(result?.recommendations.some(r => r.includes('caffeine'))).toBe(true);
+      expect(result?.recommendations?.length).toBeGreaterThan(0);
+      expect(result?.recommendations?.some(r => r.includes('caffeine'))).toBe(true);
     });
 
     it('should generate fitness recommendations based on genotype', async () => {
@@ -345,7 +345,7 @@ describe('Database Queries', () => {
       };
 
       const resultTT = await analyzeSNP(snpTT);
-      expect(resultTT?.recommendations.some(r => r.includes('endurance'))).toBe(true);
+      expect(resultTT?.recommendations?.some(r => r.includes('endurance'))).toBe(true);
 
       const snpCC: SNP = {
         rsid: 'rs1815739',
@@ -355,7 +355,7 @@ describe('Database Queries', () => {
       };
 
       const resultCC = await analyzeSNP(snpCC);
-      expect(resultCC?.recommendations.some(r => r.includes('strength'))).toBe(true);
+      expect(resultCC?.recommendations?.some(r => r.includes('strength'))).toBe(true);
     });
 
     it('should include study references', async () => {
@@ -504,7 +504,7 @@ describe('Database Queries', () => {
           snp: { rsid: 'rs1', chromosome: '1', position: 1, genotype: 'AA' },
           gene: '',
           impact: 3,
-          category: 'unknown',
+          category: 'disease_risk',
           significance: 'uncertain',
           description: 'Test',
           studies: [],
@@ -559,7 +559,7 @@ describe('Database Queries', () => {
       const result = await analyzeSNP(snp);
       expect(result).not.toBeNull();
       // Should provide general recommendations when genotype is unknown
-      expect(result?.recommendations.length).toBeGreaterThanOrEqual(0);
+      expect(result?.recommendations?.length).toBeGreaterThanOrEqual(0);
     });
 
     it('should handle unknown RSIDs gracefully', async () => {

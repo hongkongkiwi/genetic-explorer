@@ -1,6 +1,5 @@
-import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
-import { requireAuth } from '~/utils/auth';
+import { requireAuth } from '~/utils/auth.server';
 import { getClientIp } from '~/utils/rateLimit';
 import { logActivity } from '~/utils/database';
 import { sendSecurityNotification } from '~/utils/securityNotifications';
@@ -38,7 +37,7 @@ export const APIRouteGetSessions = createAPIFileRoute('/api/auth/sessions')({
       // Get session history
       const history = getSessionHistory(auth.id, 20);
 
-      return json({
+      return Response.json({
         success: true,
         data: {
           activeSessions: sessions,
@@ -47,10 +46,10 @@ export const APIRouteGetSessions = createAPIFileRoute('/api/auth/sessions')({
       });
     } catch (error) {
       if (error instanceof Error && error.message === 'Unauthorized') {
-        return json({ success: false, error: 'Unauthorized' }, { status: 401 });
+        return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
       }
       console.error('Get sessions error:', error);
-      return json(
+      return Response.json(
         { success: false, error: 'An unexpected error occurred' },
         { status: 500 }
       );
@@ -73,7 +72,7 @@ export const APIRouteDeleteSession = createAPIFileRoute('/api/auth/sessions')({
       const { sessionId } = body;
 
       if (!sessionId) {
-        return json(
+        return Response.json(
           { success: false, error: 'Session ID required' },
           { status: 400 }
         );
@@ -88,7 +87,7 @@ export const APIRouteDeleteSession = createAPIFileRoute('/api/auth/sessions')({
       const targetSession = sessions.find(s => s.id === sessionId);
       
       if (!targetSession) {
-        return json(
+        return Response.json(
           { success: false, error: 'Session not found' },
           { status: 404 }
         );
@@ -100,7 +99,7 @@ export const APIRouteDeleteSession = createAPIFileRoute('/api/auth/sessions')({
       const terminated = terminateSession(auth.id, sessionId, 'user_terminated');
 
       if (!terminated) {
-        return json(
+        return Response.json(
           { success: false, error: 'Failed to terminate session' },
           { status: 500 }
         );
@@ -129,17 +128,17 @@ export const APIRouteDeleteSession = createAPIFileRoute('/api/auth/sessions')({
         userAgent || undefined
       );
 
-      return json({
+      return Response.json({
         success: true,
         message: 'Session terminated successfully',
         terminatedCurrentSession: isCurrentSession,
       });
     } catch (error) {
       if (error instanceof Error && error.message === 'Unauthorized') {
-        return json({ success: false, error: 'Unauthorized' }, { status: 401 });
+        return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
       }
       console.error('Terminate session error:', error);
-      return json(
+      return Response.json(
         { success: false, error: 'An unexpected error occurred' },
         { status: 500 }
       );
@@ -163,7 +162,7 @@ export const APIRouteTerminateOthers = createAPIFileRoute('/api/auth/sessions')(
       const currentToken = cookieHeader?.match(/session_token=([^;]+)/)?.[1];
 
       if (!currentToken) {
-        return json(
+        return Response.json(
           { success: false, error: 'Current session not found' },
           { status: 400 }
         );
@@ -195,17 +194,17 @@ export const APIRouteTerminateOthers = createAPIFileRoute('/api/auth/sessions')(
         userAgent || undefined
       );
 
-      return json({
+      return Response.json({
         success: true,
         message: `${terminatedCount} other session(s) terminated`,
         terminatedCount,
       });
     } catch (error) {
       if (error instanceof Error && error.message === 'Unauthorized') {
-        return json({ success: false, error: 'Unauthorized' }, { status: 401 });
+        return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
       }
       console.error('Terminate other sessions error:', error);
-      return json(
+      return Response.json(
         { success: false, error: 'An unexpected error occurred' },
         { status: 500 }
       );
@@ -249,7 +248,7 @@ export const APIRouteTerminateAll = createAPIFileRoute('/api/auth/sessions')({
         userAgent || undefined
       );
 
-      return json({
+      return Response.json({
         success: true,
         message: `All ${terminatedCount} session(s) terminated. You have been logged out.`,
         terminatedCount,
@@ -257,10 +256,10 @@ export const APIRouteTerminateAll = createAPIFileRoute('/api/auth/sessions')({
       });
     } catch (error) {
       if (error instanceof Error && error.message === 'Unauthorized') {
-        return json({ success: false, error: 'Unauthorized' }, { status: 401 });
+        return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
       }
       console.error('Terminate all sessions error:', error);
-      return json(
+      return Response.json(
         { success: false, error: 'An unexpected error occurred' },
         { status: 500 }
       );

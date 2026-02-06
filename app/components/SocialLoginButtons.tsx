@@ -71,7 +71,7 @@ export function SocialLoginButtons({ redirectTo, className, showDivider = true }
   const [isLoading, setIsLoading] = useState<OAuthProvider | null>(null);
 
   // Get redirectTo from URL params or use provided value
-  const finalRedirectTo = redirectTo || (searchParams.redirectTo as string) || '/dashboard';
+  const finalRedirectTo = redirectTo || (searchParams as Record<string, string>).redirectTo || '/dashboard';
 
   const handleOAuthLogin = async (provider: OAuthProvider) => {
     setIsLoading(provider);

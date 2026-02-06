@@ -100,7 +100,7 @@ export function trackPageView(path: string) {
  * React hook for automatic page view tracking
  */
 export function usePageTracking(path: string) {
-  const previousPath = useRef<string>();
+  const previousPath = useRef<string | undefined>(undefined);
   
   useEffect(() => {
     if (path !== previousPath.current) {

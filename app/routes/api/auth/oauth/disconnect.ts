@@ -1,10 +1,9 @@
-import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
-import { requireAuth } from '~/utils/auth';
+import { requireAuth } from '~/utils/auth.server';
 import { unlinkOAuthAccount, getUserOAuthAccounts } from '~/utils/database';
 import { logActivity } from '~/utils/database';
 import { getClientIp } from '~/utils/rateLimit';
-import { OAuthProvider } from '~/utils/oauth';
+import type { OAuthProvider } from '~/auth/oauth';
 import { csrfProtection } from '~/utils/csrf';
 
 export const APIRoute = createAPIFileRoute('/api/auth/oauth/disconnect')({
@@ -17,7 +16,7 @@ export const APIRoute = createAPIFileRoute('/api/auth/oauth/disconnect')({
       const cookieHeader = request.headers.get('cookie');
       const csrfCheck = csrfProtection(request, cookieHeader);
       if (!csrfCheck.valid) {
-        return json({ success: false, error: csrfCheck.error }, { status: csrfCheck.status });
+        return Response.json({ success: false, error: csrfCheck.error }, { status: csrfCheck.status });
       }
 
       const body = await request.json();
@@ -25,7 +24,7 @@ export const APIRoute = createAPIFileRoute('/api/auth/oauth/disconnect')({
 
       // Validate provider
       if (!provider || !['google', 'github'].includes(provider)) {
-        return json({ success: false, error: 'Invalid OAuth provider' }, { status: 400 });
+        return Response.json({ success: false, error: 'Invalid OAuth provider' }, { status: 400 });
       }
 
       // Check if user has other OAuth accounts or password
@@ -42,7 +41,7 @@ export const APIRoute = createAPIFileRoute('/api/auth/oauth/disconnect')({
       const success = unlinkOAuthAccount(auth.id, provider);
 
       if (!success) {
-        return json({ success: false, error: 'OAuth account not found' }, { status: 404 });
+        return Response.json({ success: false, error: 'OAuth account not found' }, { status: 404 });
       }
 
       const ipAddress = getClientIp(request);
@@ -50,16 +49,16 @@ export const APIRoute = createAPIFileRoute('/api/auth/oauth/disconnect')({
       // Log activity
       logActivity(auth.id, 'oauth_disconnect', 'oauth_account', auth.id, { provider }, ipAddress);
 
-      return json({
+      return Response.json({
         success: true,
         message: `Successfully disconnected ${provider}`,
       });
     } catch (error) {
       if (error instanceof Error && error.message === 'Unauthorized') {
-        return json({ success: false, error: 'Unauthorized' }, { status: 401 });
+        return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
       }
       console.error('OAuth disconnect error:', error);
-      return json({ success: false, error: 'Failed to disconnect OAuth account' }, { status: 500 });
+      return Response.json({ success: false, error: 'Failed to disconnect OAuth account' }, { status: 500 });
     }
   },
 });

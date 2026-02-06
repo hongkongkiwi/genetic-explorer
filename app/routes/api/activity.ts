@@ -1,14 +1,13 @@
-import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
 import { getUserActivity } from '~/utils/database';
-import { requireAuth } from '~/utils/auth';
+import { requireAuth } from '~/utils/auth.server';
 
 export const APIRoute = createAPIFileRoute('/api/activity')({
   GET: async ({ request }) => {
     try {
       const auth = requireAuth(request);
       if (!auth) {
-        return json({ success: false, error: 'Unauthorized' }, { status: 401 });
+        return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
       }
 
       const url = new URL(request.url);
@@ -16,7 +15,7 @@ export const APIRoute = createAPIFileRoute('/api/activity')({
 
       const activities = getUserActivity(auth.id, limit);
 
-      return json({
+      return Response.json({
         success: true,
         activities: activities.map(a => ({
           id: a.id,
@@ -29,7 +28,7 @@ export const APIRoute = createAPIFileRoute('/api/activity')({
       });
     } catch (error) {
       console.error('Get activity error:', error);
-      return json({ success: false, error: 'An unexpected error occurred' }, { status: 500 });
+      return Response.json({ success: false, error: 'An unexpected error occurred' }, { status: 500 });
     }
   },
 });

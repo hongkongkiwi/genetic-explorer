@@ -12,7 +12,7 @@
 
 import { getDb } from '~/db';
 import { v4 as uuidv4 } from 'uuid';
-import { SENSITIVITY_CATEGORIES, SHARE_LEVELS, SensitivityLevel } from './sensitiveData';
+import { SENSITIVITY_CATEGORIES, SHARE_LEVELS, type SensitivityLevel } from '~/utils/privacy/sensitive-data';
 
 // ============================================================================
 // Share Types

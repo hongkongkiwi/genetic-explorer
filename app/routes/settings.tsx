@@ -71,7 +71,7 @@ function SettingsPage() {
             </Link>
 
             <Link
-              to="/settings/notifications"
+              to={"/settings/notifications" as any}
               className="flex items-center justify-between p-4 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
             >
               <div className="flex items-center gap-3">
@@ -160,7 +160,7 @@ function SettingsPage() {
             </Link>
 
             <Link
-              to="/settings/privacy"
+              to={"/settings/privacy" as any}
               className="flex items-center justify-between p-4 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
             >
               <div className="flex items-center gap-3">

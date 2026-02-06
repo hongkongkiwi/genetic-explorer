@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
-  plugins: [react(), tsconfigPaths()],
+  plugins: [react(), tsconfigPaths()] as any,
   test: {
     environment: 'jsdom',
     globals: true,
@@ -11,11 +11,6 @@ export default defineConfig({
     include: ['app/**/*.{test,spec}.{ts,tsx}'],
     exclude: ['node_modules', 'dist', '.vinxi', '.output'],
     pool: 'forks',
-    poolOptions: {
-      forks: {
-        singleFork: true,
-      },
-    },
     deps: {
       optimizer: {
         web: {
@@ -34,7 +29,7 @@ export default defineConfig({
         'app/**/types.ts',
       ],
     },
-  },
+  } as any,
   resolve: {
     alias: {
       'entities': 'entities/lib/escape.js',

@@ -44,7 +44,7 @@ export const CRYPTO_CONSTANTS = {
   SCRYPT_N: 16384 as const,  // 2^14
   SCRYPT_R: 8 as const,
   SCRYPT_P: 1 as const,
-  SCRYPT_MAXMEM: 64 * 1024 * 1024 as const, // 64MB
+  SCRYPT_MAXMEM: 67108864 as const, // 64MB = 64 * 1024 * 1024
 } as const;
 
 // Type-level assertion that key size matches algorithm

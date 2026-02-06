@@ -40,6 +40,7 @@ interface Genome {
   compressionType: string | null;
   checksum: string;
   processedAt: string;
+  uploadedAt: string;
   status: string;
   reports?: {
     health: boolean;

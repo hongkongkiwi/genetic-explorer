@@ -8,6 +8,7 @@
  */
 
 import { getDb } from '~/db';
+import { registerInterval } from './intervalRegistry';
 
 interface RateLimitOptions {
   windowMs: number;      // Time window in milliseconds
@@ -205,4 +206,4 @@ export function getDistributedRateLimitStats(): {
 }
 
 // Start periodic cleanup
-setInterval(cleanupExpiredRateLimits, CLEANUP_INTERVAL_MS);
+registerInterval(setInterval(cleanupExpiredRateLimits, CLEANUP_INTERVAL_MS));

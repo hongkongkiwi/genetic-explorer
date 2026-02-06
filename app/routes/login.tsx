@@ -44,8 +44,8 @@ function LoginPage() {
       // Check if terms acceptance is required
       if (result.requiresTermsAcceptance && result.user) {
         navigate({ 
-          to: '/accept-terms',
-          search: { userId: result.user.id }
+          to: '/accept-terms' as any,
+          search: { userId: result.user.id } as any
         });
         return;
       }
@@ -53,11 +53,11 @@ function LoginPage() {
       // Check if 2FA is required
       if (result.requires2FA && result.pendingToken) {
         navigate({ 
-          to: '/verify-2fa',
+          to: '/verify-2fa' as any,
           search: {
             token: result.pendingToken,
             methods: result.methods?.join(','),
-          }
+          } as any
         });
       } else {
         navigate({ to: '/' });
@@ -175,7 +175,7 @@ function LoginPage() {
           {/* Magic link option */}
           <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
             <Link
-              to="/login/magic"
+              to={"/login/magic" as any}
               className="flex items-center justify-center gap-2 text-sm text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium transition-colors"
             >
               <Sparkles className="w-4 h-4" />

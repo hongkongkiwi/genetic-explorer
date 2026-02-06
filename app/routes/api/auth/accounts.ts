@@ -1,6 +1,5 @@
-import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
-import { requireAuth } from '~/utils/auth';
+import { requireAuth } from '~/utils/auth.server';
 import { getUserOAuthAccounts, unlinkOAuthAccount, getUserById } from '~/utils/database';
 import { logActivity } from '~/utils/database';
 import { getClientIp } from '~/utils/rateLimit';
@@ -14,7 +13,7 @@ export const APIRouteGet = createAPIFileRoute('/api/auth/accounts')({
       const accounts = getUserOAuthAccounts(auth.id);
       const user = getUserById(auth.id);
 
-      return json({
+      return Response.json({
         success: true,
         accounts: accounts.map(a => ({
           id: a.id,
@@ -28,10 +27,10 @@ export const APIRouteGet = createAPIFileRoute('/api/auth/accounts')({
       });
     } catch (error) {
       if (error instanceof Error && error.message === 'Unauthorized') {
-        return json({ success: false, error: 'Unauthorized' }, { status: 401 });
+        return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
       }
       console.error('Get accounts error:', error);
-      return json({ success: false, error: 'An unexpected error occurred' }, { status: 500 });
+      return Response.json({ success: false, error: 'An unexpected error occurred' }, { status: 500 });
     }
   },
 });
@@ -45,7 +44,7 @@ export const APIRouteDelete = createAPIFileRoute('/api/auth/accounts')({
       const { provider } = body;
 
       if (!provider || !['google', 'github'].includes(provider)) {
-        return json({ success: false, error: 'Invalid provider' }, { status: 400 });
+        return Response.json({ success: false, error: 'Invalid provider' }, { status: 400 });
       }
 
       // Check if user has a password or other OAuth accounts
@@ -55,7 +54,7 @@ export const APIRouteDelete = createAPIFileRoute('/api/auth/accounts')({
       const hasPassword = !!user?.passwordHash;
 
       if (!hasOtherAccounts && !hasPassword) {
-        return json({
+        return Response.json({
           success: false,
           error: 'You cannot disconnect your only sign-in method. Please set a password first.',
         }, { status: 400 });
@@ -64,22 +63,22 @@ export const APIRouteDelete = createAPIFileRoute('/api/auth/accounts')({
       const success = unlinkOAuthAccount(auth.id, provider as 'google' | 'github');
 
       if (!success) {
-        return json({ success: false, error: 'Account not found' }, { status: 404 });
+        return Response.json({ success: false, error: 'Account not found' }, { status: 404 });
       }
 
       const ipAddress = getClientIp(request);
       logActivity(auth.id, 'oauth_disconnected', 'oauth_account', auth.id, { provider }, ipAddress);
 
-      return json({
+      return Response.json({
         success: true,
         message: `Successfully disconnected ${provider} account`,
       });
     } catch (error) {
       if (error instanceof Error && error.message === 'Unauthorized') {
-        return json({ success: false, error: 'Unauthorized' }, { status: 401 });
+        return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
       }
       console.error('Disconnect account error:', error);
-      return json({ success: false, error: 'An unexpected error occurred' }, { status: 500 });
+      return Response.json({ success: false, error: 'An unexpected error occurred' }, { status: 500 });
     }
   },
 });

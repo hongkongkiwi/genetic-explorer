@@ -6,8 +6,8 @@ import { cn } from '~/utils/shared/cn';
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
-  title?: string;
-  description?: string;
+  title?: React.ReactNode;
+  description?: React.ReactNode;
   children: React.ReactNode;
   size?: 'sm' | 'md' | 'lg' | 'xl';
   showCloseButton?: boolean;
@@ -110,8 +110,8 @@ interface ConfirmModalProps extends Omit<ModalProps, 'children'> {
   confirmLabel?: string;
   cancelLabel?: string;
   onConfirm: () => void;
-  onCancel: () => void;
-  variant?: 'danger' | 'warning' | 'info';
+  onCancel?: () => void;
+  variant?: 'destructive' | 'warning' | 'info';
   message: string;
 }
 
@@ -126,7 +126,7 @@ export function ConfirmModal({
   ...props
 }: ConfirmModalProps) {
   const variants = {
-    danger: {
+    destructive: {
       icon: 'text-red-600 bg-red-100',
       button: 'bg-red-600 hover:bg-red-700',
     },
@@ -141,7 +141,7 @@ export function ConfirmModal({
   };
 
   return (
-    <Modal {...props} title={title} onClose={onCancel} size="sm">
+    <Modal {...props} title={title} onClose={onCancel || (() => {})} size="sm">
       <div className="text-center">
         <div className={cn('w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4', variants[variant].icon)}>
           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -151,7 +151,7 @@ export function ConfirmModal({
         <p className="text-slate-600 dark:text-slate-400 mb-6">{message}</p>
         <div className="flex gap-3 justify-center">
           <button
-            onClick={onCancel}
+            onClick={onCancel || props.onClose}
             className="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium transition-colors"
           >
             {cancelLabel}

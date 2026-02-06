@@ -32,7 +32,7 @@ import { useAuth } from '~/hooks/useAuth';
 import { PageHeader } from '~/components/PageHeader';
 import { Breadcrumb, predefinedBreadcrumbs } from '~/components/Breadcrumb';
 
-export const Route = createFileRoute('/settings/privacy')({
+export const Route = createFileRoute('/settings/privacy' as any)({
   component: PrivacySettingsPage,
 });
 

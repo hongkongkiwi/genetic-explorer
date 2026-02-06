@@ -1,4 +1,3 @@
-import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
 import { getGenome, canAccessGenome, logActivity } from '~/utils/database';
 import { 
@@ -8,7 +7,7 @@ import {
   filterTraitResults,
   getAnalysisStats 
 } from '~/utils/traitsAnalysis';
-import { requireAuth } from '~/utils/auth';
+import { requireAuth } from '~/utils/auth.server';
 import { rateLimitByUser, createRateLimitHeaders } from '~/utils/rateLimit';
 import type { TraitCategory, ConfidenceLevel } from '~/types/traits';
 
@@ -18,7 +17,7 @@ export const APIRoute = createAPIFileRoute('/api/traits/$id')({
       // Check authentication
       const auth = requireAuth(request);
       if (!auth) {
-        return json(
+        return Response.json(
           { success: false, error: 'Unauthorized' },
           { status: 401 }
         );
@@ -27,16 +26,16 @@ export const APIRoute = createAPIFileRoute('/api/traits/$id')({
       // Apply rate limiting
       const rateLimit = rateLimitByUser(auth.id, 50, 60 * 1000); // 50 requests per minute
       if (!rateLimit.allowed) {
-        return json(
+        return Response.json(
           { success: false, error: 'Rate limit exceeded. Please try again later.' },
-          { status: 429, headers: createRateLimitHeaders(rateLimit) }
+          { status: 429, headers: createRateLimitHeaders(rateLimit.remaining, rateLimit.resetTime, 60) }
         );
       }
 
       // Check access to genome
       const access = canAccessGenome(auth.id, params.id);
       if (!access.canAccess) {
-        return json(
+        return Response.json(
           { success: false, error: 'Access denied' },
           { status: 403 }
         );
@@ -45,7 +44,7 @@ export const APIRoute = createAPIFileRoute('/api/traits/$id')({
       // Get genome data
       const genome = getGenome(params.id);
       if (!genome) {
-        return json(
+        return Response.json(
           { success: false, error: 'Genome not found' },
           { status: 404 }
         );
@@ -59,14 +58,13 @@ export const APIRoute = createAPIFileRoute('/api/traits/$id')({
       const hasData = url.searchParams.get('hasData');
 
       // Perform traits analysis
-      let results = analyzeTraits(genome);
+      const snps = genome.snps || genome;
+      let results = analyzeTraits(snps);
 
       // Apply filters
       results = filterTraitResults(results, {
-        category: category || 'all',
-        confidence: confidence || 'all',
-        search: search || undefined,
-        hasData: hasData !== null ? hasData === 'true' : undefined,
+        category: (category === 'all' ? undefined : category) as TraitCategory | undefined,
+        confidence: (confidence === 'all' ? undefined : confidence) as ConfidenceLevel | undefined,
       });
 
       // Get statistics
@@ -78,7 +76,7 @@ export const APIRoute = createAPIFileRoute('/api/traits/$id')({
         resultsCount: results.length,
       });
 
-      return json({
+      return Response.json({
         success: true,
         traits: results.map(r => ({
           id: r.trait.id,
@@ -99,11 +97,11 @@ export const APIRoute = createAPIFileRoute('/api/traits/$id')({
           search: search || null,
         },
       }, {
-        headers: createRateLimitHeaders(rateLimit),
+        headers: createRateLimitHeaders(rateLimit.remaining, rateLimit.resetTime, 60),
       });
     } catch (error) {
       console.error('Traits analysis error:', error);
-      return json(
+      return Response.json(
         {
           success: false,
           error: error instanceof Error ? error.message : 'Traits analysis failed',
@@ -118,7 +116,7 @@ export const APIRoute = createAPIFileRoute('/api/traits/$id')({
       // Check authentication
       const auth = requireAuth(request);
       if (!auth) {
-        return json(
+        return Response.json(
           { success: false, error: 'Unauthorized' },
           { status: 401 }
         );
@@ -127,16 +125,16 @@ export const APIRoute = createAPIFileRoute('/api/traits/$id')({
       // Apply rate limiting
       const rateLimit = rateLimitByUser(auth.id, 20, 60 * 1000); // 20 comparisons per minute
       if (!rateLimit.allowed) {
-        return json(
+        return Response.json(
           { success: false, error: 'Rate limit exceeded. Please try again later.' },
-          { status: 429, headers: createRateLimitHeaders(rateLimit) }
+          { status: 429, headers: createRateLimitHeaders(rateLimit.remaining, rateLimit.resetTime, 60) }
         );
       }
 
       // Check access to primary genome
       const access = canAccessGenome(auth.id, params.id);
       if (!access.canAccess) {
-        return json(
+        return Response.json(
           { success: false, error: 'Access denied to primary genome' },
           { status: 403 }
         );
@@ -147,7 +145,7 @@ export const APIRoute = createAPIFileRoute('/api/traits/$id')({
       const { compareGenomeId } = body;
 
       if (!compareGenomeId) {
-        return json(
+        return Response.json(
           { success: false, error: 'Missing compareGenomeId in request body' },
           { status: 400 }
         );
@@ -156,7 +154,7 @@ export const APIRoute = createAPIFileRoute('/api/traits/$id')({
       // Check access to comparison genome
       const compareAccess = canAccessGenome(auth.id, compareGenomeId);
       if (!compareAccess.canAccess) {
-        return json(
+        return Response.json(
           { success: false, error: 'Access denied to comparison genome' },
           { status: 403 }
         );
@@ -167,14 +165,16 @@ export const APIRoute = createAPIFileRoute('/api/traits/$id')({
       const genomeB = getGenome(compareGenomeId);
 
       if (!genomeA || !genomeB) {
-        return json(
+        return Response.json(
           { success: false, error: 'One or both genomes not found' },
           { status: 404 }
         );
       }
 
       // Compare traits
-      const comparison = compareTraits(genomeA, genomeB);
+      const snpsA = genomeA.snps || genomeA;
+      const snpsB = genomeB.snps || genomeB;
+      const comparison = compareTraits(snpsA, snpsB);
 
       // Calculate summary statistics
       const identical = comparison.filter(c => c.similarity === 'identical').length;
@@ -189,7 +189,7 @@ export const APIRoute = createAPIFileRoute('/api/traits/$id')({
         different,
       });
 
-      return json({
+      return Response.json({
         success: true,
         comparison: {
           genomeA: { id: params.id },
@@ -219,11 +219,11 @@ export const APIRoute = createAPIFileRoute('/api/traits/$id')({
           })),
         },
       }, {
-        headers: createRateLimitHeaders(rateLimit),
+        headers: createRateLimitHeaders(rateLimit.remaining, rateLimit.resetTime, 60),
       });
     } catch (error) {
       console.error('Traits comparison error:', error);
-      return json(
+      return Response.json(
         {
           success: false,
           error: error instanceof Error ? error.message : 'Traits comparison failed',

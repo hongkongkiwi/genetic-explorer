@@ -16,6 +16,21 @@ export interface User {
       shareAnonymized: boolean;
       allowFamilySharing: boolean;
     };
+    notificationPreferences?: {
+      email?: {
+        newFeatures: boolean;
+        researchUpdates: boolean;
+        sharingInvites: boolean;
+        securityAlerts: boolean;
+        reportReady: boolean;
+      };
+      inApp?: {
+        newFeatures: boolean;
+        researchUpdates: boolean;
+        sharingActivity: boolean;
+        genomeAnalysisComplete: boolean;
+      };
+    };
   };
   termsStatus?: {
     hasAcceptedCurrentTerms: boolean;

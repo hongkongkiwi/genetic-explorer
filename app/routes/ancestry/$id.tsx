@@ -39,7 +39,7 @@ import { ChromosomePainting, ChromosomePaintingCompact } from '~/components/ance
 import { HaplogroupCard, HaplogroupCardCompact } from '~/components/ancestry/HaplogroupCard';
 import { AncestrySummary, AncestrySummarySkeleton } from '~/components/ancestry/AncestrySummary';
 import { Card, CardHeader, CardTitle, CardContent } from '~/components/ui/Card';
-import { getGenome } from '~/utils/database';
+import { useQuery } from '@tanstack/react-query';
 import { generatePDF, printToPDF } from '~/utils/pdfExport';
 import { cn } from '~/lib/utils';
 import type { 
@@ -235,34 +235,44 @@ function AncestryReportPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'detailed' | 'chromosomes' | 'health'>('overview');
 
+  // Fetch genome from API
+  const { data: genomeData, isLoading: isGenomeLoading, error: genomeError } = useQuery({
+    queryKey: ['genome', id],
+    queryFn: async () => {
+      const response = await fetch(`/api/genome/${id}`);
+      if (!response.ok) throw new Error('Failed to fetch genome');
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error || 'Failed to fetch genome');
+      return data.genome;
+    },
+  });
+
   useEffect(() => {
-    loadReport();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
-
-  const loadReport = async () => {
-    try {
-      setIsLoading(true);
-      
-      // Get genome data
-      const genomeData = getGenome(id);
-      if (!genomeData) {
-        setError('Genome not found');
-        return;
-      }
-      
-      setGenome(genomeData);
-
-      // Run ancestry analysis
-      const result = await analyzeAncestry(genomeData);
-      setReport(result);
-    } catch (err) {
-      console.error('Ancestry report generation error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to generate ancestry report');
-    } finally {
-      setIsLoading(false);
+    if (genomeError) {
+      setError(genomeError instanceof Error ? genomeError.message : 'Failed to load genome');
+      return;
     }
-  };
+    if (!genomeData || isGenomeLoading) return;
+
+    const loadReport = async () => {
+      try {
+        setIsLoading(true);
+        
+        setGenome(genomeData);
+
+        // Run ancestry analysis
+        const result = await analyzeAncestry(genomeData);
+        setReport(result);
+      } catch (err) {
+        console.error('Ancestry report generation error:', err);
+        setError(err instanceof Error ? err.message : 'Failed to generate ancestry report');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadReport();
+  }, [id, genomeData, isGenomeLoading, genomeError]);
 
   const handlePrint = () => {
     printToPDF();

@@ -37,8 +37,9 @@ import {
   CheckCircle,
   Heart,
   Baby,
+  Phone,
 } from 'lucide-react';
-import type { CarrierReport, CarrierResult, CarrierStatus, InheritancePattern } from '~/types/carrier';
+import { ClinicalSignificance, type CarrierReport, type CarrierResult, type CarrierStatus, type InheritancePattern } from '~/types/carrier';
 
 // Mock data for demonstration - replace with actual API call
 const mockCarrierReport: CarrierReport = {
@@ -92,7 +93,7 @@ const generateMockResults = (): CarrierResult[] => {
         pathogenicVariants: [],
         associatedSNPs: ['rs113993960', 'rs199422239'],
         prevalence: { 'european': '1 in 25', 'general': '1 in 31' },
-        clinicalSignificance: 'definitive',
+        clinicalSignificance: ClinicalSignificance.DEFINITIVE,
         severity: 'critical',
         recommendations: ['Genetic counseling', 'Partner screening', 'Prenatal testing options'],
         resources: [
@@ -129,7 +130,7 @@ const generateMockResults = (): CarrierResult[] => {
         pathogenicVariants: [],
         associatedSNPs: ['rs334'],
         prevalence: { 'african': '1 in 13', 'general': '1 in 365' },
-        clinicalSignificance: 'definitive',
+        clinicalSignificance: ClinicalSignificance.DEFINITIVE,
         severity: 'critical',
         recommendations: ['Genetic counseling', 'Pain management plan', 'Infection prevention'],
         resources: [
@@ -165,7 +166,7 @@ const generateMockResults = (): CarrierResult[] => {
         pathogenicVariants: [],
         associatedSNPs: ['rs76173981'],
         prevalence: { 'ashkenazi': '1 in 27', 'general': '1 in 300' },
-        clinicalSignificance: 'definitive',
+        clinicalSignificance: ClinicalSignificance.DEFINITIVE,
         severity: 'critical',
         recommendations: ['Genetic counseling essential', 'Prenatal diagnosis options', 'Family testing'],
         resources: [
@@ -201,7 +202,7 @@ const generateMockResults = (): CarrierResult[] => {
         pathogenicVariants: [],
         associatedSNPs: ['rs1800562', 'rs1799945'],
         prevalence: { 'european': '1 in 200', 'general': '1 in 300' },
-        clinicalSignificance: 'definitive',
+        clinicalSignificance: ClinicalSignificance.DEFINITIVE,
         severity: 'moderate',
         recommendations: ['Serum ferritin monitoring', 'Regular phlebotomy if needed'],
         resources: [
@@ -237,7 +238,7 @@ const generateMockResults = (): CarrierResult[] => {
         pathogenicVariants: [],
         associatedSNPs: ['rs76763715'],
         prevalence: { 'ashkenazi': '1 in 15', 'general': '1 in 100' },
-        clinicalSignificance: 'definitive',
+        clinicalSignificance: ClinicalSignificance.DEFINITIVE,
         severity: 'high',
         recommendations: ['Genetic counseling', 'Enzyme level testing', 'Bone density monitoring'],
         resources: [
@@ -276,7 +277,7 @@ const generateMockResults = (): CarrierResult[] => {
         pathogenicVariants: [],
         associatedSNPs: [],
         prevalence: { general: '1 in 1000' },
-        clinicalSignificance: 'limited',
+        clinicalSignificance: ClinicalSignificance.LIMITED,
         severity: 'low',
         recommendations: ['No action needed'],
         resources: [],
@@ -447,7 +448,7 @@ function CarrierReportPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
         <div className="mb-6">
-          <Breadcrumb items={predefinedBreadcrumbs.carrier(report?.condition)} />
+          <Breadcrumb items={predefinedBreadcrumbs.carrier(report?.results?.[0]?.condition?.name)} />
         </div>
         
         {/* Prominent Medical Disclaimer - Top */}

@@ -8,6 +8,7 @@
  * replace professional medical advice or clinical genetic testing.
  */
 
+import crypto from 'crypto';
 import type { 
   GenomeData, 
   SNP 
@@ -740,7 +741,7 @@ export function getCarrierResultsSummary(results: CarrierResult[]) {
  * Generate unique report ID
  */
 function generateReportId(): string {
-  return `CR-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  return `CR-${Date.now()}-${crypto.randomUUID().replace(/-/g, '').substring(0, 9)}`;
 }
 
 /**

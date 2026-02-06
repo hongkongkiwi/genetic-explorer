@@ -170,7 +170,7 @@ export function RelationshipGuide({ className, compact = false }: RelationshipGu
                   {rel.displayName}
                 </p>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  ~{rel.percentageRange.average}%
+                  ~{((rel.percentageRange.min + rel.percentageRange.max) / 2).toFixed(1)}%
                 </p>
               </div>
             ))}
@@ -410,7 +410,7 @@ function RelationshipRow({ relationship, isSelected, onClick }: RelationshipRowP
           </p>
         </div>
         <Badge variant="primary" size="sm">
-          ~{relationship.percentageRange.average}%
+          ~{((relationship.percentageRange.min + relationship.percentageRange.max) / 2).toFixed(1)}%
         </Badge>
       </div>
 

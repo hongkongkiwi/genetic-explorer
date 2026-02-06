@@ -3,9 +3,10 @@ import { motion } from 'framer-motion';
 interface DNALogoProps {
   size?: number;
   animate?: boolean;
+  className?: string;
 }
 
-export function DNALogo({ size = 40, animate = true }: DNALogoProps) {
+export function DNALogo({ size = 40, animate = true, className }: DNALogoProps) {
   const colors = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444'];
   
   return (
@@ -15,6 +16,7 @@ export function DNALogo({ size = 40, animate = true }: DNALogoProps) {
       viewBox="0 0 100 100"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      className={className}
     >
       <motion.g
         animate={animate ? { rotateY: [0, 360] } : {}}

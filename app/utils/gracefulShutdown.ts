@@ -15,6 +15,7 @@
 
 import { setApplicationNotReady } from './health';
 import { getDb } from '~/db';
+import { clearAllIntervals } from './intervalRegistry';
 
 interface ShutdownConfig {
   timeoutMs: number;           // Maximum time to wait for shutdown
@@ -97,6 +98,15 @@ export async function gracefulShutdown(config: ShutdownConfig): Promise<void> {
     } catch (error) {
       console.error('❌ Custom cleanup failed:', error);
     }
+  }
+  
+  // Clear all intervals
+  try {
+    console.log('🧹 Clearing all intervals...');
+    clearAllIntervals();
+    console.log('✅ All intervals cleared');
+  } catch (error) {
+    console.error('❌ Failed to clear intervals:', error);
   }
   
   // Close database connection

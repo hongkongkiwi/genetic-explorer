@@ -16,7 +16,7 @@ export function DNAHelixAnimation({
   glowIntensity?: number;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationRef = useRef<number>();
+  const animationRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -129,6 +129,8 @@ export function DNAHelixAnimation({
     }
 
     function animate() {
+      if (!ctx) return;
+      
       const width = rect.width;
       const centerX = width / 2;
 

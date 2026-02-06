@@ -1,7 +1,6 @@
-import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
 import { logActivity } from '~/utils/database';
-import { requireAuth } from '~/utils/auth';
+import { requireAuth } from '~/utils/auth.server';
 import { rateLimitByUser, createRateLimitHeaders, rateLimitSensitive } from '~/utils/rateLimit';
 
 // Mock database for match management
@@ -20,7 +19,7 @@ export const APIRoute = createAPIFileRoute('/api/relatives/matches')({
       // Check authentication
       const auth = requireAuth(request);
       if (!auth) {
-        return json(
+        return Response.json(
           { success: false, error: 'Unauthorized' },
           { status: 401 }
         );
@@ -29,9 +28,9 @@ export const APIRoute = createAPIFileRoute('/api/relatives/matches')({
       // Apply rate limiting
       const rateLimit = rateLimitByUser(auth.id, 60, 60 * 1000); // 60 requests per minute
       if (!rateLimit.allowed) {
-        return json(
+        return Response.json(
           { success: false, error: 'Rate limit exceeded. Please try again later.' },
-          { status: 429, headers: createRateLimitHeaders(rateLimit) }
+          { status: 429, headers: createRateLimitHeaders(rateLimit.remaining, rateLimit.resetTime, 60) }
         );
       }
 
@@ -40,7 +39,7 @@ export const APIRoute = createAPIFileRoute('/api/relatives/matches')({
       const relativeId = url.searchParams.get('id');
 
       if (!relativeId) {
-        return json(
+        return Response.json(
           { success: false, error: 'Missing relative ID' },
           { status: 400 }
         );
@@ -59,7 +58,7 @@ export const APIRoute = createAPIFileRoute('/api/relatives/matches')({
       // Log activity
       logActivity(auth.id, 'view_match_details', 'relative', relativeId);
 
-      return json({
+      return Response.json({
         success: true,
         match: {
           relativeId,
@@ -74,11 +73,11 @@ export const APIRoute = createAPIFileRoute('/api/relatives/matches')({
           communicationHistory: [],
         },
       }, {
-        headers: createRateLimitHeaders(rateLimit),
+        headers: createRateLimitHeaders(rateLimit.remaining, rateLimit.resetTime, 60),
       });
     } catch (error) {
       console.error('Match details error:', error);
-      return json(
+      return Response.json(
         {
           success: false,
           error: error instanceof Error ? error.message : 'Failed to fetch match details',
@@ -93,7 +92,7 @@ export const APIRoute = createAPIFileRoute('/api/relatives/matches')({
       // Check authentication
       const auth = requireAuth(request);
       if (!auth) {
-        return json(
+        return Response.json(
           { success: false, error: 'Unauthorized' },
           { status: 401 }
         );
@@ -102,9 +101,9 @@ export const APIRoute = createAPIFileRoute('/api/relatives/matches')({
       // Apply rate limiting
       const rateLimit = rateLimitSensitive(auth.id);
       if (!rateLimit.allowed) {
-        return json(
+        return Response.json(
           { success: false, error: 'Rate limit exceeded. Please try again later.' },
-          { status: 429, headers: createRateLimitHeaders(rateLimit) }
+          { status: 429, headers: createRateLimitHeaders(rateLimit.remaining, rateLimit.resetTime, 60) }
         );
       }
 
@@ -113,14 +112,14 @@ export const APIRoute = createAPIFileRoute('/api/relatives/matches')({
       const { relativeId, action, notes } = body;
 
       if (!relativeId || !action) {
-        return json(
+        return Response.json(
           { success: false, error: 'Missing relativeId or action' },
           { status: 400 }
         );
       }
 
       if (!['hide', 'unhide', 'contact'].includes(action)) {
-        return json(
+        return Response.json(
           { success: false, error: 'Invalid action. Must be hide, unhide, or contact' },
           { status: 400 }
         );
@@ -161,7 +160,7 @@ export const APIRoute = createAPIFileRoute('/api/relatives/matches')({
         notes: notes || null,
       });
 
-      return json({
+      return Response.json({
         success: true,
         message: `Match ${action}d successfully`,
         match: {
@@ -171,11 +170,11 @@ export const APIRoute = createAPIFileRoute('/api/relatives/matches')({
           contactedAt: existingMatch.contactedAt || null,
         },
       }, {
-        headers: createRateLimitHeaders(rateLimit),
+        headers: createRateLimitHeaders(rateLimit.remaining, rateLimit.resetTime, 60),
       });
     } catch (error) {
       console.error('Match action error:', error);
-      return json(
+      return Response.json(
         {
           success: false,
           error: error instanceof Error ? error.message : 'Failed to update match',
@@ -190,7 +189,7 @@ export const APIRoute = createAPIFileRoute('/api/relatives/matches')({
       // Check authentication
       const auth = requireAuth(request);
       if (!auth) {
-        return json(
+        return Response.json(
           { success: false, error: 'Unauthorized' },
           { status: 401 }
         );
@@ -199,9 +198,9 @@ export const APIRoute = createAPIFileRoute('/api/relatives/matches')({
       // Apply rate limiting
       const rateLimit = rateLimitSensitive(auth.id);
       if (!rateLimit.allowed) {
-        return json(
+        return Response.json(
           { success: false, error: 'Rate limit exceeded. Please try again later.' },
-          { status: 429, headers: createRateLimitHeaders(rateLimit) }
+          { status: 429, headers: createRateLimitHeaders(rateLimit.remaining, rateLimit.resetTime, 60) }
         );
       }
 
@@ -210,7 +209,7 @@ export const APIRoute = createAPIFileRoute('/api/relatives/matches')({
       const relativeId = url.searchParams.get('id');
 
       if (!relativeId) {
-        return json(
+        return Response.json(
           { success: false, error: 'Missing relative ID' },
           { status: 400 }
         );
@@ -220,7 +219,7 @@ export const APIRoute = createAPIFileRoute('/api/relatives/matches')({
       
       // Check if match exists
       if (!matchStore.has(matchKey)) {
-        return json(
+        return Response.json(
           { success: false, error: 'Match not found' },
           { status: 404 }
         );
@@ -232,15 +231,15 @@ export const APIRoute = createAPIFileRoute('/api/relatives/matches')({
       // Log activity
       logActivity(auth.id, 'match_removed', 'relative', relativeId);
 
-      return json({
+      return Response.json({
         success: true,
         message: 'Match removed successfully',
       }, {
-        headers: createRateLimitHeaders(rateLimit),
+        headers: createRateLimitHeaders(rateLimit.remaining, rateLimit.resetTime, 60),
       });
     } catch (error) {
       console.error('Match removal error:', error);
-      return json(
+      return Response.json(
         {
           success: false,
           error: error instanceof Error ? error.message : 'Failed to remove match',

@@ -21,7 +21,7 @@ function ChangePasswordPage() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [message, setMessage] = useState<{ type: 'success' | 'destructive'; text: string } | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
 
   if (!isLoading && !isAuthenticated) {
@@ -44,12 +44,12 @@ function ChangePasswordPage() {
     setMessage(null);
 
     if (!allRequirementsMet) {
-      setMessage({ type: 'error', text: 'Please meet all password requirements' });
+      setMessage({ type: 'destructive', text: 'Please meet all password requirements' });
       return;
     }
 
     if (!passwordsMatch) {
-      setMessage({ type: 'error', text: 'New passwords do not match' });
+      setMessage({ type: 'destructive', text: 'New passwords do not match' });
       return;
     }
 
@@ -67,10 +67,10 @@ function ChangePasswordPage() {
       if (response.ok) {
         setShowSuccess(true);
       } else {
-        setMessage({ type: 'error', text: data.error || 'Failed to change password' });
+        setMessage({ type: 'destructive', text: data.error || 'Failed to change password' });
       }
     } catch {
-      setMessage({ type: 'error', text: 'An unexpected error occurred' });
+      setMessage({ type: 'destructive', text: 'An unexpected error occurred' });
     }
 
     setIsSubmitting(false);

@@ -10,12 +10,19 @@
  */
 
 import crypto from 'crypto';
-import { authenticator } from 'otplib';
+import { TOTP } from 'otplib';
 import { getDb } from '~/db';
 
 const BACKUP_CODE_COUNT = 10;
 const BACKUP_CODE_LENGTH = 10;
 const EMAIL_CODE_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes
+
+// Create TOTP instance with default options
+const totp = new TOTP({
+  algorithm: 'sha1',
+  digits: 6,
+  period: 30,
+});
 
 /**
  * Generate backup codes for 2FA recovery
@@ -42,14 +49,17 @@ export function hashBackupCode(code: string, userId: string): string {
  * Generate TOTP secret
  */
 export function generateTOTPSecret(): string {
-  return authenticator.generateSecret();
+  return crypto.randomBytes(20).toString('hex');
 }
 
 /**
  * Generate TOTP URI for QR code
  */
 export function generateTOTPUri(secret: string, email: string): string {
-  return authenticator.keyuri(email, 'Genetic Explorer', secret);
+  const issuer = 'Genetic Explorer';
+  const label = encodeURIComponent(email);
+  const encodedIssuer = encodeURIComponent(issuer);
+  return `otpauth://totp/${label}?secret=${secret}&issuer=${encodedIssuer}&algorithm=SHA1&digits=6&period=30`;
 }
 
 /**
@@ -57,7 +67,63 @@ export function generateTOTPUri(secret: string, email: string): string {
  */
 export function verifyTOTP(token: string, secret: string): boolean {
   try {
-    return authenticator.verify({ token, secret });
+    // Simple TOTP verification using time-based comparison
+    const now = Math.floor(Date.now() / 1000);
+    const period = 30;
+    const timeStep = Math.floor(now / period);
+    
+    // Check current and adjacent time windows for clock drift
+    for (let i = -1; i <= 1; i++) {
+      const expectedToken = generateTOTPAtTime(secret, timeStep + i);
+      if (timingSafeEqual(token, expectedToken)) {
+        return true;
+      }
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Generate TOTP token at a specific time step
+ */
+function generateTOTPAtTime(secret: string, timeStep: number): string {
+  const period = 30;
+  const t = Math.floor(timeStep * period);
+  
+  // Decode hex secret
+  const secretBytes = Buffer.from(secret, 'hex');
+  
+  // Create time buffer (8 bytes, big-endian)
+  const timeBuffer = Buffer.alloc(8);
+  timeBuffer.writeBigUInt64BE(BigInt(t), 0);
+  
+  // HMAC-SHA1
+  const hmac = crypto.createHmac('sha1', secretBytes);
+  hmac.update(timeBuffer);
+  const hash = hmac.digest();
+  
+  // Dynamic truncation
+  const offset = hash[hash.length - 1] & 0x0f;
+  const code = ((hash[offset] & 0x7f) << 24 |
+                (hash[offset + 1] & 0xff) << 16 |
+                (hash[offset + 2] & 0xff) << 8 |
+                (hash[offset + 3] & 0xff)) % 1000000;
+  
+  // Pad to 6 digits
+  return code.toString().padStart(6, '0');
+}
+
+/**
+ * Timing-safe string comparison
+ */
+function timingSafeEqual(a: string, b: string): boolean {
+  try {
+    const bufA = Buffer.from(a);
+    const bufB = Buffer.from(b);
+    if (bufA.length !== bufB.length) return false;
+    return crypto.timingSafeEqual(bufA, bufB);
   } catch {
     return false;
   }

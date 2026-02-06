@@ -1,4 +1,3 @@
-import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
 import { sendEmail } from '~/utils/email';
 import { ContactFormNotification, ContactFormConfirmation } from '~/emails/ContactForm';
@@ -12,7 +11,7 @@ export const APIRoute = createAPIFileRoute('/api/contact')({
 
       // Validate required fields
       if (!name || !email || !subject || !message) {
-        return json({ 
+        return Response.json({ 
           success: false, 
           error: 'Name, email, subject, and message are required' 
         }, { status: 400 });
@@ -21,7 +20,7 @@ export const APIRoute = createAPIFileRoute('/api/contact')({
       // Validate email format
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
-        return json({ 
+        return Response.json({ 
           success: false, 
           error: 'Invalid email address' 
         }, { status: 400 });
@@ -63,13 +62,13 @@ export const APIRoute = createAPIFileRoute('/api/contact')({
         // Don't fail the request if confirmation fails, but log it
       }
 
-      return json({ 
+      return Response.json({ 
         success: true, 
         message: 'Message received successfully' 
       });
     } catch (error) {
       console.error('Contact form error:', error);
-      return json({ 
+      return Response.json({ 
         success: false, 
         error: 'An unexpected error occurred' 
       }, { status: 500 });

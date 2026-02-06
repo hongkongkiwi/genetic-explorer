@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useSearch } from '@tanstack/react-router'
 import { useState, useMemo, useEffect } from 'react'
+import DOMPurify from 'dompurify'
 import { ImpactBadge } from '~/components/ImpactBadge'
 import { CategoryBadge } from '~/components/CategoryBadge'
 import { SNPBadge } from '~/components/SNPBadge'
@@ -273,6 +274,11 @@ function SNPExplorerPage() {
     const printWindow = window.open('', '_blank')
     if (!printWindow) return
 
+    // Helper to sanitize text for HTML insertion
+    const sanitize = (text: string): string => {
+      return DOMPurify.sanitize(text, { ALLOWED_TAGS: [] })
+    }
+
     const html = `
       <!DOCTYPE html>
       <html>
@@ -288,8 +294,8 @@ function SNPExplorerPage() {
         </head>
         <body>
           <h1>SNP Explorer Export</h1>
-          <p>Generated on ${new Date().toLocaleString()}</p>
-          <p>Genome: ${genomes.find((g: any) => g.id === selectedGenome)?.originalName || selectedGenome}</p>
+          <p>Generated on ${sanitize(new Date().toLocaleString())}</p>
+          <p>Genome: ${sanitize(genomes.find((g: any) => g.id === selectedGenome)?.originalName || selectedGenome)}</p>
           <table>
             <thead>
               <tr>
@@ -304,12 +310,12 @@ function SNPExplorerPage() {
             <tbody>
               ${sortedAndFilteredSNPs.map((snp: SNPResult) => `
                 <tr>
-                  <td>${snp.rsid} ${favorites.has(snp.rsid) ? '★' : ''}</td>
-                  <td>${snp.gene || 'N/A'}</td>
-                  <td>Chr${snp.chromosome}:${snp.position}</td>
-                  <td>${snp.genotype}</td>
-                  <td>${snp.category}</td>
-                  <td>${snp.clinicalImpact}</td>
+                  <td>${sanitize(snp.rsid)} ${favorites.has(snp.rsid) ? '★' : ''}</td>
+                  <td>${sanitize(snp.gene || 'N/A')}</td>
+                  <td>Chr${sanitize(String(snp.chromosome))}:${sanitize(String(snp.position))}</td>
+                  <td>${sanitize(snp.genotype)}</td>
+                  <td>${sanitize(snp.category)}</td>
+                  <td>${sanitize(snp.clinicalImpact)}</td>
                 </tr>
               `).join('')}
             </tbody>

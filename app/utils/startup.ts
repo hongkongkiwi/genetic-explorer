@@ -11,10 +11,10 @@
  */
 
 import { getDb } from '~/db';
-import { initializeEncryption } from '~/security';
+import { initializeEncryption } from './security';
 import { setupGracefulShutdown } from './gracefulShutdown';
 import { isApplicationReady } from './health';
-import { cleanupExpiredRateLimits } from './distributedRateLimit';
+import { cleanupExpiredRateLimits } from './distributed-rate-limit';
 import { cleanupExpiredLocks } from './leaderElection';
 
 interface StartupConfig {

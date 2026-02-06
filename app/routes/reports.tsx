@@ -87,7 +87,7 @@ function ReportsPage() {
                 transition={{ delay: index * 0.1 }}
               >
                 <Link
-                  to={`/report/${report.genome_id}`}
+                  to={`/report/${report.genome_id}` as any}
                   className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-md hover:border-indigo-300 transition-all block group"
                 >
                   <div className="flex items-start justify-between">

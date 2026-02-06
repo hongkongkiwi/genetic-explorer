@@ -1,7 +1,6 @@
-import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
 import { getDb } from '~/utils/database';
-import { requireAuth } from '~/utils/auth';
+import { requireAuth } from '~/utils/auth.server';
 import { csrfProtection } from '~/utils/csrf';
 
 export const APIRoute = createAPIFileRoute('/api/snp-favorites')({
@@ -20,13 +19,13 @@ export const APIRoute = createAPIFileRoute('/api/snp-favorites')({
         ORDER BY created_at DESC
       `).all(user.id);
 
-      return json({
+      return Response.json({
         success: true,
         favorites,
       });
     } catch (error) {
       console.error('SNP Favorites GET error:', error);
-      return json(
+      return Response.json(
         { success: false, error: 'Failed to fetch favorites' },
         { status: 500 }
       );
@@ -41,14 +40,14 @@ export const APIRoute = createAPIFileRoute('/api/snp-favorites')({
       const cookieHeader = request.headers.get('cookie');
       const csrfCheck = csrfProtection(request, cookieHeader);
       if (csrfCheck.valid === false) {
-        return json({ success: false, error: csrfCheck.error }, { status: csrfCheck.status });
+        return Response.json({ success: false, error: csrfCheck.error }, { status: csrfCheck.status });
       }
       
       const db = getDb();
       const { rsid, notes } = await request.json();
       
       if (!rsid) {
-        return json(
+        return Response.json(
           { success: false, error: 'RSID is required' },
           { status: 400 }
         );
@@ -60,7 +59,7 @@ export const APIRoute = createAPIFileRoute('/api/snp-favorites')({
       `).get(user.id, rsid);
       
       if (existing) {
-        return json({ success: true, message: 'Already favorited' });
+        return Response.json({ success: true, message: 'Already favorited' });
       }
       
       db.prepare(`
@@ -68,13 +67,13 @@ export const APIRoute = createAPIFileRoute('/api/snp-favorites')({
         VALUES (?, ?, ?, datetime('now'))
       `).run(user.id, rsid, notes || null);
 
-      return json({
+      return Response.json({
         success: true,
         message: 'Added to favorites',
       });
     } catch (error) {
       console.error('SNP Favorites POST error:', error);
-      return json(
+      return Response.json(
         { success: false, error: 'Failed to add favorite' },
         { status: 500 }
       );
@@ -89,14 +88,14 @@ export const APIRoute = createAPIFileRoute('/api/snp-favorites')({
       const cookieHeader = request.headers.get('cookie');
       const csrfCheck = csrfProtection(request, cookieHeader);
       if (csrfCheck.valid === false) {
-        return json({ success: false, error: csrfCheck.error }, { status: csrfCheck.status });
+        return Response.json({ success: false, error: csrfCheck.error }, { status: csrfCheck.status });
       }
       
       const db = getDb();
       const { rsid } = await request.json();
       
       if (!rsid) {
-        return json(
+        return Response.json(
           { success: false, error: 'RSID is required' },
           { status: 400 }
         );
@@ -106,13 +105,13 @@ export const APIRoute = createAPIFileRoute('/api/snp-favorites')({
         DELETE FROM snp_favorites WHERE user_id = ? AND rsid = ?
       `).run(user.id, rsid);
 
-      return json({
+      return Response.json({
         success: true,
         message: 'Removed from favorites',
       });
     } catch (error) {
       console.error('SNP Favorites DELETE error:', error);
-      return json(
+      return Response.json(
         { success: false, error: 'Failed to remove favorite' },
         { status: 500 }
       );

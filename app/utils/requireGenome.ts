@@ -7,7 +7,7 @@
  */
 
 import { checkGenomeGate, GATED_FEATURES, type GatedFeature } from './genomeGate';
-import { json } from '@tanstack/start';
+// Using native Response instead of json helper
 
 /**
  * Result of genome requirement check
@@ -38,15 +38,15 @@ export function requireGenome(
   
   return {
     allowed: false,
-    response: json(
-      {
+    response: new Response(
+      JSON.stringify({
         success: false,
         error: 'GENOME_REQUIRED',
         message: gateResult.reason,
         redirectTo: gateResult.redirectTo,
         feature,
-      },
-      { status: 403 }
+      }),
+      { status: 403, headers: { 'Content-Type': 'application/json' } }
     ),
     error: {
       code: 'GENOME_REQUIRED',

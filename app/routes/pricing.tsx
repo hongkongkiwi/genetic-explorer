@@ -7,7 +7,7 @@ import {
 import { DNALogo } from '~/components/DNALogo';
 import { useAuth } from '~/hooks/useAuth';
 
-export const Route = createFileRoute('/pricing')({
+export const Route = createFileRoute('/pricing' as any)({
   component: PricingPage,
   head: () => ({
     meta: [

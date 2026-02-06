@@ -1,13 +1,11 @@
-import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
-import { loginUser } from '~/utils/auth';
+import { loginUser } from '~/utils/auth.server';
 import { logActivity, getUserByEmail } from '~/utils/database';
 import { rateLimitAuth, createRateLimitHeaders, getClientIp } from '~/utils/rateLimit';
 import { detectSuspiciousActivity, logSecurityEvent } from '~/utils/security';
 import { 
   createPending2FASession, 
-  generate2FAPendingToken,
-  get2FAStatus 
+  generate2FAPendingToken
 } from '~/utils/twoFactor';
 import { userRequiresTermsAcceptance, getUserTermsStatus } from '~/utils/terms';
 import { canUserLogin, getFormattedRemainingTime } from '~/utils/twoFactorDisableDelay';
@@ -21,7 +19,7 @@ export const APIRoute = createAPIFileRoute('/api/auth/login')({
       const { email, password, rememberMe } = body;
 
       if (!email || !password) {
-        return json({ success: false, error: 'Email and password are required' }, { status: 400 });
+        return Response.json({ success: false, error: 'Email and password are required' }, { status: 400 });
       }
 
       // Get client IP for rate limiting
@@ -29,7 +27,7 @@ export const APIRoute = createAPIFileRoute('/api/auth/login')({
       
       // Check rate limit
       const rateLimitResult = rateLimitAuth(ipAddress);
-      const headers = createRateLimitHeaders(rateLimitResult);
+      const headers = new Headers(createRateLimitHeaders(rateLimitResult.remaining, rateLimitResult.resetTime, 5));
       
       if (!rateLimitResult.allowed) {
         logSecurityEvent('rate_limit_exceeded', {
@@ -38,7 +36,7 @@ export const APIRoute = createAPIFileRoute('/api/auth/login')({
           email: email,
         }, 'warning');
         
-        return json({ 
+        return Response.json({ 
           success: false, 
           error: `Too many login attempts. Please try again in ${rateLimitResult.retryAfter} seconds.` 
         }, { 
@@ -73,7 +71,7 @@ export const APIRoute = createAPIFileRoute('/api/auth/login')({
             remainingTime: loginCheck.remainingTime,
           }, 'warning');
           
-          return json({
+          return Response.json({
             success: false,
             error: loginCheck.reason,
             blockedBy2FADelay: true,
@@ -98,7 +96,7 @@ export const APIRoute = createAPIFileRoute('/api/auth/login')({
             userId: result.user.id,
           }, 'info');
           
-          return json({
+          return Response.json({
             success: true,
             requiresTermsAcceptance: true,
             user: {
@@ -119,7 +117,7 @@ export const APIRoute = createAPIFileRoute('/api/auth/login')({
         if (twoFAStatus.enabled) {
           // Create pending 2FA session instead of full login
           const pendingToken = generate2FAPendingToken();
-          const availableMethods = [];
+          const availableMethods: string[] = [];
           
           if (twoFAStatus.totpEnabled) availableMethods.push('totp');
           if (twoFAStatus.passkeyEnabled) availableMethods.push('passkey');
@@ -138,7 +136,7 @@ export const APIRoute = createAPIFileRoute('/api/auth/login')({
             methods: availableMethods,
           }, 'info');
           
-          return json({
+          return Response.json({
             success: true,
             requires2FA: true,
             pendingToken,
@@ -160,7 +158,7 @@ export const APIRoute = createAPIFileRoute('/api/auth/login')({
           logActivity(result.user.id, 'user_login', 'user', result.user.id, { email }, ipAddress);
 
           const maxAge = rememberMe ? 30 * 24 * 60 * 60 : 7 * 24 * 60 * 60;
-          headers.append('Set-Cookie', `session_token=${result.sessionToken}; HttpOnly; Secure; SameSite=Strict; Max-Age=${maxAge}; Path=/`);
+          headers.set('Set-Cookie', `session_token=${result.sessionToken}; HttpOnly; Secure; SameSite=Strict; Max-Age=${maxAge}; Path=/`);
           
           // Send security notification for new device login
           if (userAgent && isNewDevice(result.user.id, userAgent, ipAddress || '')) {
@@ -173,7 +171,7 @@ export const APIRoute = createAPIFileRoute('/api/auth/login')({
             );
           }
           
-          return json({
+          return Response.json({
             success: true,
             user: {
               id: result.user.id,
@@ -196,10 +194,10 @@ export const APIRoute = createAPIFileRoute('/api/auth/login')({
         reason: result.error,
       }, 'info');
 
-      return json({ success: false, error: result.error }, { status: 401, headers });
+      return Response.json({ success: false, error: result.error }, { status: 401, headers });
     } catch (error) {
       console.error('Login API error:', error);
-      return json({ success: false, error: 'An unexpected error occurred' }, { status: 500 });
+      return Response.json({ success: false, error: 'An unexpected error occurred' }, { status: 500 });
     }
   },
 });

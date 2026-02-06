@@ -7,8 +7,9 @@
 
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import DOMPurify from 'isomorphic-dompurify';
 import type { HealthReport, GenomeData } from '~/types/genetics';
-import { sanitizePlainText, escapeHtml } from './xss';
+import { sanitizePlainText, escapeHtml } from '~/utils/xss';
 
 /**
  * Generate HTML content for PDF report preview
@@ -325,8 +326,13 @@ export async function generatePDF(
   const html = generateReportHTML(report, genome);
   
   // Create a temporary container to render the HTML
+  // Sanitize HTML before insertion to prevent XSS attacks
+  const sanitizedHtml = DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: ['div', 'span', 'h1', 'h2', 'h3', 'h4', 'p', 'br', 'hr', 'strong', 'em', 'b', 'i', 'u', 'table', 'thead', 'tbody', 'tr', 'td', 'th', 'ul', 'ol', 'li', 'img', 'style'],
+    ALLOWED_ATTR: ['class', 'id', 'style', 'src', 'alt', 'width', 'height'],
+  });
   const container = document.createElement('div');
-  container.innerHTML = html;
+  container.innerHTML = sanitizedHtml;
   container.style.position = 'absolute';
   container.style.left = '-9999px';
   container.style.width = '800px';
@@ -454,8 +460,8 @@ export function exportReportJSON(
     genome: {
       id: genome.id,
       filename: genome.filename,
-      uploadDate: genome.uploadDate,
-      assembly: genome.assembly,
+      uploadDate: (genome as any).uploadDate,
+      assembly: (genome as any).assembly,
     },
     report: {
       id: report.id,

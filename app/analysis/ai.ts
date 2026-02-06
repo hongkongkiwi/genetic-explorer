@@ -19,6 +19,7 @@ interface AIAnalysisInput {
     impact: string;
     description: string;
     recommendations: string[];
+    category?: string;
   }>;
   categories: Record<string, number>;
   drugInteractions: string[];

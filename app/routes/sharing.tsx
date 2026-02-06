@@ -40,7 +40,7 @@ function SharingPage() {
   const [inviteEmail, setInviteEmail] = useState('');
   const [invitePermission, setInvitePermission] = useState<'view' | 'download' | 'manage'>('view');
   const [isSending, setIsSending] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [message, setMessage] = useState<{ type: 'success' | 'destructive'; text: string } | null>(null);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -96,10 +96,10 @@ function SharingPage() {
         setShowInviteForm(false);
         loadShares();
       } else {
-        setMessage({ type: 'error', text: data.error || 'Failed to send invitation' });
+        setMessage({ type: 'destructive', text: data.error || 'Failed to send invitation' });
       }
     } catch (error) {
-      setMessage({ type: 'error', text: 'An unexpected error occurred' });
+      setMessage({ type: 'destructive', text: 'An unexpected error occurred' });
     }
 
     setIsSending(false);

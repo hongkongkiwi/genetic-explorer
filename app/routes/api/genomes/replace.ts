@@ -1,6 +1,5 @@
-import { json } from '@tanstack/start'
 import { createAPIFileRoute } from '@tanstack/start/api'
-import { requireAuth } from '~/utils/auth'
+import { requireAuth } from '~/utils/auth.server'
 import { csrfProtection } from '~/utils/csrf'
 import { 
   replaceGenome, 
@@ -24,13 +23,13 @@ export const APIRoute = createAPIFileRoute('/api/genomes/replace')({
   POST: async ({ request }) => {
     const auth = requireAuth(request)
     if (!auth) {
-      return json({ success: false, error: 'Unauthorized' }, { status: 401 })
+      return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
     // CSRF protection
-    const csrfCheck = csrfProtection(request, request.headers.get('cookie'))
+    const csrfCheck = csrfProtection(request)
     if (!csrfCheck.valid) {
-      return json({ success: false, error: csrfCheck.error }, { status: csrfCheck.status })
+      return Response.json({ success: false, error: csrfCheck.error }, { status: csrfCheck.status })
     }
 
     try {
@@ -51,7 +50,7 @@ export const APIRoute = createAPIFileRoute('/api/genomes/replace')({
 
       // Validate required fields
       if (!file || !genomeId) {
-        return json(
+        return Response.json(
           { success: false, error: 'Missing required fields: file and genomeId' },
           { status: 400 }
         )
@@ -60,7 +59,7 @@ export const APIRoute = createAPIFileRoute('/api/genomes/replace')({
       // Check if genome can be replaced
       const canReplace = canReplaceGenome(genomeId, auth.id)
       if (!canReplace.canReplace) {
-        return json(
+        return Response.json(
           { success: false, error: canReplace.reason },
           { status: 403 }
         )
@@ -68,7 +67,7 @@ export const APIRoute = createAPIFileRoute('/api/genomes/replace')({
 
       // File size validation
       if (file.size > MAX_FILE_SIZE) {
-        return json(
+        return Response.json(
           {
             success: false,
             error: `File size (${formatFileSize(file.size)}) exceeds maximum allowed (${formatFileSize(MAX_FILE_SIZE)})`,
@@ -83,7 +82,7 @@ export const APIRoute = createAPIFileRoute('/api/genomes/replace')({
       // Validate file magic
       const compressionType = detectCompressionType(file.name)
       if (!validateFileMagic(fileBuffer, compressionType)) {
-        return json(
+        return Response.json(
           {
             success: false,
             error: `File type validation failed. The file does not appear to be a valid ${compressionType === 'none' ? 'text' : compressionType} file.`,
@@ -95,10 +94,10 @@ export const APIRoute = createAPIFileRoute('/api/genomes/replace')({
       // Decompress to validate content
       let content: string
       try {
-        const decompressed = await decompressBuffer(fileBuffer, file.name)
-        content = decompressed.content
+        const decompressed = await decompressBuffer(fileBuffer)
+        content = decompressed.data.toString('utf-8')
       } catch (decompressError) {
-        return json(
+        return Response.json(
           {
             success: false,
             error: decompressError instanceof Error
@@ -112,7 +111,7 @@ export const APIRoute = createAPIFileRoute('/api/genomes/replace')({
       // Validate decompressed size
       const decompressedSize = Buffer.byteLength(content, 'utf8')
       if (decompressedSize > MAX_DECOMPRESSED_SIZE) {
-        return json(
+        return Response.json(
           {
             success: false,
             error: `Decompressed file size (${formatFileSize(decompressedSize)}) exceeds maximum allowed (${formatFileSize(MAX_DECOMPRESSED_SIZE)})`,
@@ -130,7 +129,7 @@ export const APIRoute = createAPIFileRoute('/api/genomes/replace')({
       )
 
       if (!compatibility.compatible) {
-        return json(
+        return Response.json(
           {
             success: false,
             error: 'Replacement validation failed',
@@ -162,7 +161,7 @@ export const APIRoute = createAPIFileRoute('/api/genomes/replace')({
       if (!result.success) {
         // Check if this is a danger zone response
         if (result.dangerZone?.show) {
-          return json(
+          return Response.json(
             {
               success: false,
               error: result.error,
@@ -176,7 +175,7 @@ export const APIRoute = createAPIFileRoute('/api/genomes/replace')({
           )
         }
         
-        return json(
+        return Response.json(
           {
             success: false,
             error: result.error,
@@ -186,7 +185,7 @@ export const APIRoute = createAPIFileRoute('/api/genomes/replace')({
         )
       }
 
-      return json({
+      return Response.json({
         success: true,
         message: 'Genome successfully replaced',
         newGenomeId: result.newGenomeId,
@@ -198,7 +197,7 @@ export const APIRoute = createAPIFileRoute('/api/genomes/replace')({
       })
     } catch (error) {
       console.error('Genome replacement error:', error)
-      return json(
+      return Response.json(
         {
           success: false,
           error: error instanceof Error

@@ -1,7 +1,7 @@
 // DNA Relatives Page
 // Main page for discovering and managing DNA relative matches
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -96,6 +96,7 @@ function RelativesPage() {
   const [isComparisonLoading, setIsComparisonLoading] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
   const [anonymousName, setAnonymousName] = useState('');
+  const regenerateCounter = useRef(0);
   const [stats, setStats] = useState({
     totalMatches: 0,
     closeMatches: 0,
@@ -271,9 +272,10 @@ function RelativesPage() {
 
   const handleRegenerateName = useCallback(() => {
     if (user?.id) {
-      // Generate a new random name
-      const randomSuffix = Math.floor(Math.random() * 10000);
-      const newName = generateAnonymousName(user.id + randomSuffix);
+      // Generate a new random name using counter for uniqueness
+      regenerateCounter.current += 1;
+      const suffix = `${Date.now()}-${regenerateCounter.current}`;
+      const newName = generateAnonymousName(user.id + suffix);
       setAnonymousName(newName);
     }
   }, [user?.id]);

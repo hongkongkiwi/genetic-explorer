@@ -9,7 +9,8 @@ initMonitoring()
 
 const router = createRouter()
 
-hydrateRoot(document, <StartClient router={router} />)
+const Client = StartClient as any
+hydrateRoot(document, <Client router={router} />)
 
 // Handle graceful shutdown
 window.addEventListener('beforeunload', () => {

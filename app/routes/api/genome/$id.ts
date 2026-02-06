@@ -1,8 +1,7 @@
-import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
 import { getGenome } from '~/utils/database';
 import { verifyOwnership, canAccessGenome, DataAccessError } from '~/utils/dataAccessControl';
-import { requireAuth } from '~/utils/auth';
+import { requireAuth } from '~/utils/auth.server';
 
 export const APIRoute = createAPIFileRoute('/api/genome/$id')({
   GET: async ({ request, params }) => {
@@ -11,18 +10,18 @@ export const APIRoute = createAPIFileRoute('/api/genome/$id')({
       const genome = getGenome(params.id);
 
       if (!genome) {
-        return json({ success: false, error: 'Genome not found' }, { status: 404 });
+        return Response.json({ success: false, error: 'Genome not found' }, { status: 404 });
       }
 
       // Verify user has access to this genome
       const access = await canAccessGenome(auth.id, params.id);
       if (!access.canAccess) {
-        return json({ success: false, error: 'Access denied' }, { status: 403 });
+        return Response.json({ success: false, error: 'Access denied' }, { status: 403 });
       }
 
       // If not owner, don't return sensitive data
       if (access.permissionLevel !== 'owner') {
-        return json({
+        return Response.json({
           success: true,
           genome: {
             id: genome.id,
@@ -39,13 +38,13 @@ export const APIRoute = createAPIFileRoute('/api/genome/$id')({
         });
       }
 
-      return json({ success: true, genome, permissionLevel: 'owner' });
+      return Response.json({ success: true, genome, permissionLevel: 'owner' });
     } catch (error) {
       if (error instanceof DataAccessError) {
-        return json({ success: false, error: error.message }, { status: error.code === 'UNAUTHORIZED' ? 401 : 403 });
+        return Response.json({ success: false, error: error.message }, { status: error.code === 'UNAUTHORIZED' ? 401 : 403 });
       }
       console.error('Failed to fetch genome:', error);
-      return json({ success: false, error: 'Failed to fetch genome' }, { status: 500 });
+      return Response.json({ success: false, error: 'Failed to fetch genome' }, { status: 500 });
     }
   },
 
@@ -61,16 +60,16 @@ export const APIRoute = createAPIFileRoute('/api/genome/$id')({
       const success = deleteGenome(params.id, auth.id);
 
       if (!success) {
-        return json({ success: false, error: 'Failed to delete genome' }, { status: 500 });
+        return Response.json({ success: false, error: 'Failed to delete genome' }, { status: 500 });
       }
 
-      return json({ success: true, message: 'Genome deleted successfully' });
+      return Response.json({ success: true, message: 'Genome deleted successfully' });
     } catch (error) {
       if (error instanceof DataAccessError) {
-        return json({ success: false, error: error.message }, { status: error.code === 'UNAUTHORIZED' ? 401 : 403 });
+        return Response.json({ success: false, error: error.message }, { status: error.code === 'UNAUTHORIZED' ? 401 : 403 });
       }
       console.error('Failed to delete genome:', error);
-      return json({ success: false, error: 'Failed to delete genome' }, { status: 500 });
+      return Response.json({ success: false, error: 'Failed to delete genome' }, { status: 500 });
     }
   },
 });

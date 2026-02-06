@@ -214,9 +214,13 @@ describe('Encryption Utilities', () => {
       const encrypted = encrypt(plaintext, key);
 
       // Corrupt the auth tag
+      const authTagBuffer = Buffer.from(encrypted.authTag, 'base64');
+      for (let i = 0; i < authTagBuffer.length; i++) {
+        authTagBuffer[i] = authTagBuffer[i] ^ 0xFF;
+      }
       const corrupted: EncryptedData = {
         ...encrypted,
-        authTag: Buffer.from(encrypted.authTag, 'base64').map(b => b ^ 0xFF).toString('base64'),
+        authTag: authTagBuffer.toString('base64'),
       };
 
       expect(() => decrypt(corrupted, key)).toThrow();

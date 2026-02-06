@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "description": "MCP server and CLI for Genetic Explorer",
   "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "bin": {
     "genetic-mcp": "./dist/cli.js",
     "genetic-mcp-server": "./dist/mcp.js"
@@ -12,7 +14,7 @@
     "dev": "tsx src/cli.ts"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.27.0",
+    "@modelcontextprotocol/sdk": "^1.0.0",
     "commander": "^12.0.0",
     "inquirer": "^9.2.0",
     "open": "^10.0.0"

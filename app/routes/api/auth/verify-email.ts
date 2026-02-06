@@ -1,6 +1,7 @@
-import { json } from '@tanstack/start'
 import { createAPIFileRoute } from '@tanstack/start/api'
 import { getDb, logActivity } from '~/utils/database'
+import { sendEmail } from '~/email'
+import { EmailVerification } from '~/emails'
 
 export const APIRoute = createAPIFileRoute('/api/auth/verify-email')({
   POST: async ({ request }) => {
@@ -9,7 +10,7 @@ export const APIRoute = createAPIFileRoute('/api/auth/verify-email')({
       const { token } = body
 
       if (!token) {
-        return json(
+        return Response.json(
           { success: false, error: 'Token is required' },
           { status: 400 },
         )
@@ -28,7 +29,7 @@ export const APIRoute = createAPIFileRoute('/api/auth/verify-email')({
         .get(token) as any
 
       if (!verification) {
-        return json(
+        return Response.json(
           { success: false, error: 'Invalid or expired verification token' },
           { status: 400 },
         )
@@ -56,10 +57,10 @@ export const APIRoute = createAPIFileRoute('/api/auth/verify-email')({
         verification.user_id,
       )
 
-      return json({ success: true, message: 'Email verified successfully' })
+      return Response.json({ success: true, message: 'Email verified successfully' })
     } catch (error) {
       console.error('Verify email error:', error)
-      return json(
+      return Response.json(
         { success: false, error: 'An unexpected error occurred' },
         { status: 500 },
       )
@@ -83,7 +84,7 @@ export const APIRouteResend = createAPIFileRoute('/api/auth/verify-email')({
       }
 
       if (!sessionToken) {
-        return json({ success: false, error: 'Unauthorized' }, { status: 401 })
+        return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 })
       }
 
       // Validate session and get user
@@ -99,7 +100,7 @@ export const APIRouteResend = createAPIFileRoute('/api/auth/verify-email')({
         .get(sessionToken) as any
 
       if (!session) {
-        return json({ success: false, error: 'Unauthorized' }, { status: 401 })
+        return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 })
       }
 
       // Check if already verified
@@ -107,7 +108,7 @@ export const APIRouteResend = createAPIFileRoute('/api/auth/verify-email')({
         .prepare(`SELECT email_verified FROM users WHERE id = ?`)
         .get(session.user_id) as any
       if (user.email_verified) {
-        return json(
+        return Response.json(
           { success: false, error: 'Email already verified' },
           { status: 400 },
         )
@@ -125,13 +126,29 @@ export const APIRouteResend = createAPIFileRoute('/api/auth/verify-email')({
       `,
       ).run(session.user_id, token, expiresAt.toISOString())
 
-      // TODO: Send verification email
-      console.log(`Verification token for ${session.email}: ${token}`)
+      // Send verification email
+      const verificationUrl = `${process.env.APP_URL || 'http://localhost:3000'}/verify-email?token=${token}`
+      const emailResult = await sendEmail({
+        to: session.email,
+        subject: 'Verify your email - Genetic Explorer',
+        react: EmailVerification({
+          verificationUrl,
+          userName: session.email,
+        }),
+      })
 
-      return json({ success: true, message: 'Verification email sent' })
+      if (!emailResult.success) {
+        console.error('Failed to send verification email:', emailResult.error)
+        return Response.json(
+          { success: false, error: 'Failed to send verification email' },
+          { status: 500 },
+        )
+      }
+
+      return Response.json({ success: true, message: 'Verification email sent' })
     } catch (error) {
       console.error('Resend verification error:', error)
-      return json(
+      return Response.json(
         { success: false, error: 'An unexpected error occurred' },
         { status: 500 },
       )

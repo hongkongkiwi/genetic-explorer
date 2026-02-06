@@ -1,6 +1,5 @@
-import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
-import { registerUser } from '~/utils/auth';
+import { registerUser } from '~/utils/auth.server';
 import {
   canSignUpWithPassword,
   validateSignupEmail,
@@ -21,37 +20,37 @@ export const APIRoute = createAPIFileRoute('/api/auth/register')({
 
       // Validate terms acceptance
       if (!userAcceptedTerms) {
-        return json({ 
+        return Response.json({ 
           success: false, 
           error: 'You must accept the Terms of Service and Privacy Policy to create an account' 
         }, { status: 400 });
       }
 
       if (!email || !password) {
-        return json({ success: false, error: 'Email and password are required' }, { status: 400 });
+        return Response.json({ success: false, error: 'Email and password are required' }, { status: 400 });
       }
 
       // Check if password signup is allowed
       const passwordCheck = canSignUpWithPassword();
       if (!passwordCheck.allowed) {
-        return json({ success: false, error: passwordCheck.reason }, { status: 403 });
+        return Response.json({ success: false, error: passwordCheck.reason }, { status: 403 });
       }
 
       // Check if signup is completely disabled
       const signupCheck = validateSignupEmail(email);
       if (!signupCheck.allowed) {
-        return json({ success: false, error: signupCheck.reason }, { status: 403 });
+        return Response.json({ success: false, error: signupCheck.reason }, { status: 403 });
       }
 
       // Check rate limit
-      const rateLimit = getSignupRateLimit(ipAddress);
-      const headers = createRateLimitHeaders({ allowed: true, remaining: rateLimit.remaining, retryAfter: 0 });
+      const rateLimit = getSignupRateLimit(ipAddress || 'unknown');
+      const headers = createRateLimitHeaders(rateLimit.remaining, Date.now() + 60000, 10);
 
       if (!rateLimit.allowed) {
-        return json({
+        return Response.json({
           success: false,
           error: 'Too many signup attempts. Please try again later.',
-        }, { status: 429, headers });
+        }, { status: 429, headers: new Headers(headers) });
       }
 
       const result = await registerUser({ email, password, displayName });
@@ -73,7 +72,7 @@ export const APIRoute = createAPIFileRoute('/api/auth/register')({
           // Email verification logic would be triggered here
         }
 
-        return json({
+        return Response.json({
           success: true,
           user: {
             id: result.user.id,
@@ -83,10 +82,10 @@ export const APIRoute = createAPIFileRoute('/api/auth/register')({
         }, { status: 201 });
       }
 
-      return json({ success: false, error: result.error }, { status: 400 });
+      return Response.json({ success: false, error: result.error }, { status: 400 });
     } catch (error) {
       console.error('Registration API error:', error);
-      return json({ success: false, error: 'An unexpected error occurred' }, { status: 500 });
+      return Response.json({ success: false, error: 'An unexpected error occurred' }, { status: 500 });
     }
   },
 });

@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { DNALogo } from './DNALogo';
+import { DNALogo } from '~/components/DNALogo';
 import { Github, Twitter, Mail } from 'lucide-react';
 
 export function Footer() {
@@ -51,12 +51,12 @@ export function Footer() {
             <h3 className="font-semibold text-slate-900 dark:text-white mb-4">Product</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/features" className="text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                <Link to={"/features" as any} className="text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                   Features
                 </Link>
               </li>
               <li>
-                <Link to="/pricing" className="text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                <Link to={"/pricing" as any} className="text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                   Pricing
                 </Link>
               </li>
@@ -68,11 +68,6 @@ export function Footer() {
               <li>
                 <Link to="/explorer" className="text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                   SNP Explorer
-                </Link>
-              </li>
-              <li>
-                <Link to="/research" className="text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                  Research Database
                 </Link>
               </li>
               <li>
@@ -88,7 +83,7 @@ export function Footer() {
             <h3 className="font-semibold text-slate-900 dark:text-white mb-4">Company</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/about" className="text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                <Link to={"/about" as any} className="text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                   About Us
                 </Link>
               </li>

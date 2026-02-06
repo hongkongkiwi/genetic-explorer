@@ -1,8 +1,7 @@
-import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
 import { getGenome, canAccessGenome, logActivity } from '~/utils/database';
 import { analyzeAncestry, hasSufficientCoverage } from '~/utils/ancestryAnalysis';
-import { requireAuth } from '~/utils/auth';
+import { requireAuth } from '~/utils/auth.server';
 import { rateLimitByUser, createRateLimitHeaders } from '~/utils/rateLimit';
 
 export const APIRoute = createAPIFileRoute('/api/ancestry/$id')({
@@ -11,7 +10,7 @@ export const APIRoute = createAPIFileRoute('/api/ancestry/$id')({
       // Check authentication
       const auth = requireAuth(request);
       if (!auth) {
-        return json(
+        return Response.json(
           { success: false, error: 'Unauthorized' },
           { status: 401 }
         );
@@ -20,16 +19,16 @@ export const APIRoute = createAPIFileRoute('/api/ancestry/$id')({
       // Apply rate limiting
       const rateLimit = rateLimitByUser(auth.id, 30, 60 * 1000); // 30 requests per minute
       if (!rateLimit.allowed) {
-        return json(
+        return Response.json(
           { success: false, error: 'Rate limit exceeded. Please try again later.' },
-          { status: 429, headers: createRateLimitHeaders(rateLimit) }
+          { status: 429, headers: createRateLimitHeaders(rateLimit.remaining, rateLimit.resetTime, 60) }
         );
       }
 
       // Check access to genome
       const access = canAccessGenome(auth.id, params.id);
       if (!access.canAccess) {
-        return json(
+        return Response.json(
           { success: false, error: 'Access denied' },
           { status: 403 }
         );
@@ -38,7 +37,7 @@ export const APIRoute = createAPIFileRoute('/api/ancestry/$id')({
       // Get genome data
       const genome = getGenome(params.id);
       if (!genome) {
-        return json(
+        return Response.json(
           { success: false, error: 'Genome not found' },
           { status: 404 }
         );
@@ -47,7 +46,7 @@ export const APIRoute = createAPIFileRoute('/api/ancestry/$id')({
       // Check for sufficient coverage
       const coverageCheck = hasSufficientCoverage(genome.snps);
       if (!coverageCheck.sufficient) {
-        return json({
+        return Response.json({
           success: false,
           error: 'Insufficient SNP coverage for ancestry analysis',
           coverage: coverageCheck.coverage,
@@ -65,7 +64,7 @@ export const APIRoute = createAPIFileRoute('/api/ancestry/$id')({
         populations: ancestryResult.ethnicity.length,
       });
 
-      return json({
+      return Response.json({
         success: true,
         ancestry: {
           ethnicity: ancestryResult.ethnicity,
@@ -84,11 +83,11 @@ export const APIRoute = createAPIFileRoute('/api/ancestry/$id')({
           recommendations: coverageCheck.recommendations,
         },
       }, {
-        headers: createRateLimitHeaders(rateLimit),
+        headers: createRateLimitHeaders(rateLimit.remaining, rateLimit.resetTime, 60),
       });
     } catch (error) {
       console.error('Ancestry analysis error:', error);
-      return json(
+      return Response.json(
         {
           success: false,
           error: error instanceof Error ? error.message : 'Ancestry analysis failed',

@@ -23,7 +23,7 @@ import {
   Linkedin,
   Link as LinkIcon,
 } from 'lucide-react';
-import { getGenome } from '~/utils/database';
+import { useQuery } from '@tanstack/react-query';
 import {
   generateTraitsReport,
   filterTraitResults,
@@ -32,7 +32,7 @@ import {
   type ConfidenceLevel,
 } from '~/utils/traitsAnalysis';
 import type { TraitsReport, TraitResult, TraitCategory } from '~/types/traits';
-import type { GenomeData } from '~/types/genetics';
+import type { GenomeData, SNP } from '~/types/genetics';
 import {
   CATEGORY_DISPLAY_NAMES,
   CATEGORY_ICONS,
@@ -66,34 +66,60 @@ function TraitsReportPage() {
   const [copied, setCopied] = useState(false);
   const [showComparisonModal, setShowComparisonModal] = useState(false);
 
+  // Fetch genome from API
+  const { data: genomeData, isLoading: isGenomeLoading, error: genomeError } = useQuery({
+    queryKey: ['genome', id],
+    queryFn: async () => {
+      const response = await fetch(`/api/genome/${id}`);
+      if (!response.ok) throw new Error('Failed to fetch genome');
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error || 'Failed to fetch genome');
+      return data.genome;
+    },
+  });
+
   useEffect(() => {
-    loadReport();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
-
-  const loadReport = async () => {
-    try {
-      setIsLoading(true);
-
-      // Get genome data
-      const genomeData = getGenome(id);
-      if (!genomeData) {
-        setError('Genome not found');
-        return;
-      }
-
-      setGenome(genomeData);
-
-      // Generate traits report
-      const traitsReport = generateTraitsReport(genomeData);
-      setReport(traitsReport);
-    } catch (err) {
-      console.error('Traits report generation error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to generate traits report');
-    } finally {
-      setIsLoading(false);
+    if (genomeError) {
+      setError(genomeError instanceof Error ? genomeError.message : 'Failed to load genome');
+      return;
     }
-  };
+    if (!genomeData || isGenomeLoading) return;
+
+    const loadReport = async () => {
+      try {
+        setIsLoading(true);
+
+        setGenome(genomeData as GenomeData);
+
+        // Generate traits report
+        const snps = (genomeData as any).snps || genomeData;
+        const results = generateTraitsReport(snps as SNP[]);
+        // Convert TraitResult[] to TraitsReport format
+        const traitsReport: TraitsReport = {
+          id: `traits-${Date.now()}`,
+          genomeId: genomeData.id,
+          generatedAt: new Date(),
+          totalTraits: results.length,
+          analyzedTraits: results.filter(r => r.userGenotype).length,
+          categories: [],
+          highlights: {
+            mostInteresting: results.slice(0, 3),
+            rareTraits: [],
+            sharedTraits: [],
+          },
+          shareableSummary: `Analyzed ${results.length} traits`,
+        };
+        setReport(traitsReport);
+      } catch (err) {
+        console.error('Traits report generation error:', err);
+        setError(err instanceof Error ? err.message : 'Failed to generate traits report');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadReport();
+  }, [id, genomeData, isGenomeLoading, genomeError]);
 
   // Get all trait results from all categories
   const allResults = useMemo(() => {
@@ -104,9 +130,11 @@ function TraitsReportPage() {
   // Filter results based on current filters
   const filteredResults = useMemo(() => {
     return filterTraitResults(allResults, {
-      category: activeCategory,
-      confidence: confidenceFilter,
-      search: searchQuery,
+      category: (activeCategory === 'all' ? undefined : activeCategory) as any,
+      confidence: (confidenceFilter === 'all' ? undefined : confidenceFilter) as any,
+    }).filter(r => {
+      if (!searchQuery) return true;
+      return r.trait.name.toLowerCase().includes(searchQuery.toLowerCase());
     });
   }, [allResults, activeCategory, confidenceFilter, searchQuery]);
 
@@ -151,6 +179,7 @@ function TraitsReportPage() {
 
   const handleShareTrait = (result: TraitResult) => {
     const shareData = getShareableTraitData(result);
+    if (!shareData) return;
     const text = `${shareData.emoji} ${shareData.traitName}: ${shareData.result}\n\n💡 ${shareData.funFact}\n\nAnalyzed with Genetic Explorer 🧬`;
     copyToClipboard(text);
   };

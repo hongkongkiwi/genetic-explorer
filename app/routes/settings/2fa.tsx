@@ -42,7 +42,7 @@ function TwoFactorPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [message, setMessage] = useState<{ type: 'success' | 'destructive'; text: string } | null>(null);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -91,10 +91,10 @@ function TwoFactorPage() {
           setSetupStep('totp');
         }
       } else {
-        setMessage({ type: 'error', text: data.error || 'Failed to start 2FA setup' });
+        setMessage({ type: 'destructive', text: data.error || 'Failed to start 2FA setup' });
       }
     } catch (error) {
-      setMessage({ type: 'error', text: 'An unexpected error occurred' });
+      setMessage({ type: 'destructive', text: 'An unexpected error occurred' });
     }
 
     setIsEnabling(false);
@@ -102,7 +102,7 @@ function TwoFactorPage() {
 
   const verifyAndEnable = async () => {
     if (!verificationCode || verificationCode.length !== 6) {
-      setMessage({ type: 'error', text: 'Please enter a 6-digit code' });
+      setMessage({ type: 'destructive', text: 'Please enter a 6-digit code' });
       return;
     }
 
@@ -128,10 +128,10 @@ function TwoFactorPage() {
         setVerificationCode('');
         await loadStatus();
       } else {
-        setMessage({ type: 'error', text: data.error || 'Invalid verification code' });
+        setMessage({ type: 'destructive', text: data.error || 'Invalid verification code' });
       }
     } catch (error) {
-      setMessage({ type: 'error', text: 'An unexpected error occurred' });
+      setMessage({ type: 'destructive', text: 'An unexpected error occurred' });
     }
 
     setIsEnabling(false);
@@ -139,7 +139,7 @@ function TwoFactorPage() {
 
   const disable2FA = async () => {
     if (!password) {
-      setMessage({ type: 'error', text: 'Please enter your password' });
+      setMessage({ type: 'destructive', text: 'Please enter your password' });
       return;
     }
 
@@ -161,10 +161,10 @@ function TwoFactorPage() {
         setPassword('');
         await loadStatus();
       } else {
-        setMessage({ type: 'error', text: data.error || 'Failed to disable 2FA' });
+        setMessage({ type: 'destructive', text: data.error || 'Failed to disable 2FA' });
       }
     } catch (error) {
-      setMessage({ type: 'error', text: 'An unexpected error occurred' });
+      setMessage({ type: 'destructive', text: 'An unexpected error occurred' });
     }
 
     setIsDisabling(false);
@@ -178,7 +178,7 @@ function TwoFactorPage() {
 
   const regenerateBackupCodes = async () => {
     if (!password) {
-      setMessage({ type: 'error', text: 'Please enter your password first' });
+      setMessage({ type: 'destructive', text: 'Please enter your password first' });
       return;
     }
 
@@ -198,10 +198,10 @@ function TwoFactorPage() {
         setShowBackupCodesModal(true);
         setMessage({ type: 'success', text: 'New backup codes generated' });
       } else {
-        setMessage({ type: 'error', text: data.error || 'Failed to regenerate backup codes' });
+        setMessage({ type: 'destructive', text: data.error || 'Failed to regenerate backup codes' });
       }
     } catch (error) {
-      setMessage({ type: 'error', text: 'An unexpected error occurred' });
+      setMessage({ type: 'destructive', text: 'An unexpected error occurred' });
     }
 
     setIsEnabling(false);
@@ -275,7 +275,7 @@ function TwoFactorPage() {
                     View Backup Codes ({status.backupCodesRemaining} remaining)
                   </Button>
                   <Button
-                    variant="danger"
+                    variant="destructive"
                     onClick={() => setShowDisableModal(true)}
                   >
                     Disable 2FA
@@ -499,7 +499,7 @@ function TwoFactorPage() {
               Cancel
             </Button>
             <Button
-              variant="danger"
+              variant="destructive"
               onClick={disable2FA}
               isLoading={isDisabling}
               disabled={!password}

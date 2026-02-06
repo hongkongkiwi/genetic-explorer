@@ -1,6 +1,5 @@
-import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
-import { requireAuth } from '~/utils/auth';
+import { requireAuth } from '~/utils/auth.server';
 import { getUserProfile, getUserById } from '~/utils/database';
 import { getUserTermsStatus } from '~/utils/terms';
 
@@ -10,20 +9,20 @@ export const APIRoute = createAPIFileRoute('/api/auth/me')({
       const auth = requireAuth(request);
       
       if (!auth) {
-        return json({ success: false, error: 'Unauthorized' }, { status: 401 });
+        return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
       }
 
       const profile = getUserProfile(auth.id);
       const user = getUserById(auth.id);
 
       if (!user) {
-        return json({ success: false, error: 'User not found' }, { status: 404 });
+        return Response.json({ success: false, error: 'User not found' }, { status: 404 });
       }
 
       // Get terms acceptance status
       const termsStatus = getUserTermsStatus(auth.id);
 
-      return json({
+      return Response.json({
         success: true,
         user: {
           id: user.id,
@@ -44,7 +43,7 @@ export const APIRoute = createAPIFileRoute('/api/auth/me')({
       });
     } catch (error) {
       console.error('Get user API error:', error);
-      return json({ success: false, error: 'An unexpected error occurred' }, { status: 500 });
+      return Response.json({ success: false, error: 'An unexpected error occurred' }, { status: 500 });
     }
   },
 });

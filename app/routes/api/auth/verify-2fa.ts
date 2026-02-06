@@ -4,7 +4,6 @@
  * Verifies TOTP codes, backup codes, or email codes for 2FA login
  */
 
-import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
 import { createSession, logActivity, getUserById } from '~/utils/database';
 import { rateLimitAuth, createRateLimitHeaders, getClientIp } from '~/utils/rateLimit';
@@ -24,7 +23,7 @@ export const APIRoute = createAPIFileRoute('/api/auth/verify-2fa')({
       const { pendingToken, method, code, rememberMe } = body;
 
       if (!pendingToken || !method || !code) {
-        return json({ 
+        return Response.json({ 
           success: false, 
           error: 'Missing required fields' 
         }, { status: 400 });
@@ -35,10 +34,12 @@ export const APIRoute = createAPIFileRoute('/api/auth/verify-2fa')({
       
       // Check rate limit
       const rateLimitResult = rateLimitAuth(ipAddress);
-      const headers = createRateLimitHeaders(rateLimitResult);
+      const rateLimitHeaderObj = createRateLimitHeaders(rateLimitResult.remaining, rateLimitResult.resetTime, 5);
+      const headers = new Headers();
+      Object.entries(rateLimitHeaderObj).forEach(([key, value]) => headers.set(key, value));
       
       if (!rateLimitResult.allowed) {
-        return json({ 
+        return Response.json({ 
           success: false, 
           error: `Too many attempts. Please try again in ${rateLimitResult.retryAfter} seconds.` 
         }, { 
@@ -50,7 +51,7 @@ export const APIRoute = createAPIFileRoute('/api/auth/verify-2fa')({
       // Validate pending session
       const pendingSession = getPending2FASession(pendingToken);
       if (!pendingSession) {
-        return json({ 
+        return Response.json({ 
           success: false, 
           error: 'Session expired. Please log in again.' 
         }, { status: 401, headers });
@@ -68,12 +69,12 @@ export const APIRoute = createAPIFileRoute('/api/auth/verify-2fa')({
           break;
         case 'passkey':
           // Passkey verification would be handled separately via WebAuthn
-          return json({ 
+          return Response.json({ 
             success: false, 
             error: 'Passkey verification not supported via this endpoint' 
           }, { status: 400, headers });
         default:
-          return json({ 
+          return Response.json({ 
             success: false, 
             error: 'Invalid 2FA method' 
           }, { status: 400, headers });
@@ -86,7 +87,7 @@ export const APIRoute = createAPIFileRoute('/api/auth/verify-2fa')({
           method,
         }, 'warning');
         
-        return json({ 
+        return Response.json({ 
           success: false, 
           error: 'Invalid verification code. Please try again.' 
         }, { status: 401, headers });
@@ -95,7 +96,7 @@ export const APIRoute = createAPIFileRoute('/api/auth/verify-2fa')({
       // Get user details
       const user = getUserById(pendingSession.userId);
       if (!user) {
-        return json({ 
+        return Response.json({ 
           success: false, 
           error: 'User not found' 
         }, { status: 404, headers });
@@ -126,9 +127,9 @@ export const APIRoute = createAPIFileRoute('/api/auth/verify-2fa')({
 
       // Set session cookie
       const maxAge = rememberMe ? 30 * 24 * 60 * 60 : SESSION_DURATION_DAYS * 24 * 60 * 60;
-      headers.append('Set-Cookie', `session_token=${sessionToken}; HttpOnly; Secure; SameSite=Strict; Max-Age=${maxAge}; Path=/`);
+      headers.set('Set-Cookie', `session_token=${sessionToken}; HttpOnly; Secure; SameSite=Strict; Max-Age=${maxAge}; Path=/`);
 
-      return json({
+      return Response.json({
         success: true,
         user: {
           id: user.id,
@@ -142,7 +143,7 @@ export const APIRoute = createAPIFileRoute('/api/auth/verify-2fa')({
       });
     } catch (error) {
       console.error('2FA verification error:', error);
-      return json({ 
+      return Response.json({ 
         success: false, 
         error: 'An unexpected error occurred' 
       }, { status: 500 });

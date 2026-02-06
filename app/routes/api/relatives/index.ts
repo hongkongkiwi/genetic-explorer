@@ -1,10 +1,9 @@
-import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
 import { getGenome, canAccessGenome, getUserGenomes, logActivity } from '~/utils/database';
 import { findRelatives, filterMatchesByRelationship } from '~/utils/relativeMatching';
-import { requireAuth } from '~/utils/auth';
+import { requireAuth } from '~/utils/auth.server';
 import { rateLimitByUser, createRateLimitHeaders } from '~/utils/rateLimit';
-import type { RelationshipType } from '~/types/relatives';
+import type { RelationshipType, RelativeMatch } from '~/types/relatives';
 
 export const APIRoute = createAPIFileRoute('/api/relatives')({
   GET: async ({ request }) => {
@@ -12,7 +11,7 @@ export const APIRoute = createAPIFileRoute('/api/relatives')({
       // Check authentication
       const auth = requireAuth(request);
       if (!auth) {
-        return json(
+        return Response.json(
           { success: false, error: 'Unauthorized' },
           { status: 401 }
         );
@@ -21,9 +20,9 @@ export const APIRoute = createAPIFileRoute('/api/relatives')({
       // Apply rate limiting
       const rateLimit = rateLimitByUser(auth.id, 30, 60 * 1000); // 30 requests per minute
       if (!rateLimit.allowed) {
-        return json(
+        return Response.json(
           { success: false, error: 'Rate limit exceeded. Please try again later.' },
-          { status: 429, headers: createRateLimitHeaders(rateLimit) }
+          { status: 429, headers: createRateLimitHeaders(rateLimit.remaining, rateLimit.resetTime, 60) }
         );
       }
 
@@ -39,7 +38,7 @@ export const APIRoute = createAPIFileRoute('/api/relatives')({
       // Get user's genomes
       const userGenomes = getUserGenomes(auth.id);
       if (!userGenomes || userGenomes.length === 0) {
-        return json(
+        return Response.json(
           { success: false, error: 'No genomes found for user' },
           { status: 404 }
         );
@@ -51,7 +50,7 @@ export const APIRoute = createAPIFileRoute('/api/relatives')({
       // Get genome data with SNPs
       const genome = getGenome(primaryGenome.id);
       if (!genome) {
-        return json(
+        return Response.json(
           { success: false, error: 'Genome data not found' },
           { status: 404 }
         );
@@ -60,7 +59,7 @@ export const APIRoute = createAPIFileRoute('/api/relatives')({
       // In a real implementation, this would query the database for other users
       // who have opted in to relative matching. For now, return an empty list
       // with the proper structure.
-      const matches: any[] = []; // Would be populated from database query
+      const matches: RelativeMatch[] = []; // Would be populated from database query
 
       // Apply filters
       let filteredMatches = matches;
@@ -78,9 +77,9 @@ export const APIRoute = createAPIFileRoute('/api/relatives')({
       // Filter by relationship type
       if (relationshipType) {
         filteredMatches = filterMatchesByRelationship(
-          filteredMatches,
-          [relationshipType]
-        );
+          filteredMatches as any,
+          relationshipType
+        ) as any;
       }
 
       // Apply sorting
@@ -111,7 +110,7 @@ export const APIRoute = createAPIFileRoute('/api/relatives')({
         count: paginatedMatches.length,
       });
 
-      return json({
+      return Response.json({
         success: true,
         matches: paginatedMatches.map(m => ({
           relativeId: m.relativeId,
@@ -143,11 +142,11 @@ export const APIRoute = createAPIFileRoute('/api/relatives')({
           nickname: primaryGenome.nickname || primaryGenome.original_filename,
         },
       }, {
-        headers: createRateLimitHeaders(rateLimit),
+        headers: createRateLimitHeaders(rateLimit.remaining, rateLimit.resetTime, 60),
       });
     } catch (error) {
       console.error('Relatives listing error:', error);
-      return json(
+      return Response.json(
         {
           success: false,
           error: error instanceof Error ? error.message : 'Failed to fetch relatives',

@@ -1,6 +1,5 @@
-import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
-import { requireAuth } from '~/utils/auth';
+import { requireAuth } from '~/utils/auth.server';
 import { getDb, logActivity } from '~/utils/database';
 import { csrfProtection } from '~/utils/csrf';
 import crypto from 'crypto';
@@ -30,35 +29,35 @@ export const APIRoute = createAPIFileRoute('/api/auth/change-password')({
     try {
       const auth = requireAuth(request);
       if (!auth) {
-        return json({ success: false, error: 'Unauthorized' }, { status: 401 });
+        return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
       }
 
       // CSRF protection
       const cookieHeader = request.headers.get('cookie');
       const csrfCheck = csrfProtection(request, cookieHeader);
       if (!csrfCheck.valid) {
-        return json({ success: false, error: csrfCheck.error }, { status: csrfCheck.status });
+        return Response.json({ success: false, error: csrfCheck.error }, { status: csrfCheck.status });
       }
 
       const body = await request.json();
       const { currentPassword, newPassword } = body;
 
       if (!currentPassword || !newPassword) {
-        return json({ success: false, error: 'Current and new password are required' }, { status: 400 });
+        return Response.json({ success: false, error: 'Current and new password are required' }, { status: 400 });
       }
 
       // Validate new password strength
       if (newPassword.length < 8) {
-        return json({ success: false, error: 'Password must be at least 8 characters' }, { status: 400 });
+        return Response.json({ success: false, error: 'Password must be at least 8 characters' }, { status: 400 });
       }
       if (!/[A-Z]/.test(newPassword)) {
-        return json({ success: false, error: 'Password must contain an uppercase letter' }, { status: 400 });
+        return Response.json({ success: false, error: 'Password must contain an uppercase letter' }, { status: 400 });
       }
       if (!/[a-z]/.test(newPassword)) {
-        return json({ success: false, error: 'Password must contain a lowercase letter' }, { status: 400 });
+        return Response.json({ success: false, error: 'Password must contain a lowercase letter' }, { status: 400 });
       }
       if (!/[0-9]/.test(newPassword)) {
-        return json({ success: false, error: 'Password must contain a number' }, { status: 400 });
+        return Response.json({ success: false, error: 'Password must contain a number' }, { status: 400 });
       }
 
       const db = getDb();
@@ -66,13 +65,13 @@ export const APIRoute = createAPIFileRoute('/api/auth/change-password')({
       // Get user's current password hash
       const user = db.prepare(`SELECT password_hash FROM users WHERE id = ?`).get(auth.id) as any;
       if (!user) {
-        return json({ success: false, error: 'User not found' }, { status: 404 });
+        return Response.json({ success: false, error: 'User not found' }, { status: 404 });
       }
 
       // Verify current password
       const [salt, hash] = user.password_hash.split(':');
       if (!verifyPassword(currentPassword, hash, salt)) {
-        return json({ success: false, error: 'Current password is incorrect' }, { status: 401 });
+        return Response.json({ success: false, error: 'Current password is incorrect' }, { status: 401 });
       }
 
       // Hash new password
@@ -101,14 +100,14 @@ export const APIRoute = createAPIFileRoute('/api/auth/change-password')({
         userAgent || undefined
       );
 
-      return json({ 
+      return Response.json({ 
         success: true, 
         message: 'Password changed successfully. All other sessions have been terminated for security.',
         terminatedSessions: terminatedCount,
       });
     } catch (error) {
       console.error('Change password error:', error);
-      return json({ success: false, error: 'An unexpected error occurred' }, { status: 500 });
+      return Response.json({ success: false, error: 'An unexpected error occurred' }, { status: 500 });
     }
   },
 });

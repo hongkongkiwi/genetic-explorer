@@ -7,6 +7,7 @@
  * - Deep health check: Are all dependencies working?
  */
 
+import crypto from 'crypto';
 import { getDb } from '~/db';
 import { getEncryptionStatus } from '~/security';
 import { isCloudKMSEnabled, getKMSProvider } from './kms';
@@ -28,7 +29,7 @@ interface HealthCheckResult {
 }
 
 // Generate unique instance ID for this deployment
-const INSTANCE_ID = `instance-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+const INSTANCE_ID = `instance-${Date.now()}-${crypto.randomUUID().replace(/-/g, '').substring(0, 9)}`;
 
 // Track startup time for readiness probe
 const STARTUP_TIME = Date.now();
@@ -224,6 +225,18 @@ export function performHealthCheck(): HealthCheckResult {
       ...(diskCheck && { diskSpace: diskCheck }),
       ...(memoryCheck && { memory: memoryCheck }),
     },
+  };
+}
+
+/**
+ * Get startup status for readiness probe
+ */
+export function getStartupStatus(): { status: string; ready: boolean; uptime: number } {
+  const uptime = Date.now() - STARTUP_TIME;
+  return {
+    status: isReady ? 'ready' : 'starting',
+    ready: isReady,
+    uptime,
   };
 }
 

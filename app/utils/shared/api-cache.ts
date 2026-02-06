@@ -1,4 +1,5 @@
 import type { ApiResponse } from '~/types/api';
+import { registerInterval } from '~/utils/intervalRegistry';
 
 interface CacheEntry<T> {
   data: T;
@@ -81,7 +82,7 @@ class APICache {
 export const apiCache = new APICache();
 
 // Auto-cleanup every 5 minutes
-setInterval(() => apiCache.cleanup(), 5 * 60 * 1000);
+registerInterval(setInterval(() => apiCache.cleanup(), 5 * 60 * 1000));
 
 // ============================================
 // Request Deduplication
@@ -193,12 +194,12 @@ export function throttle<T extends (...args: unknown[]) => unknown>(
 // ============================================
 
 interface FetchOptions extends RequestInit {
-  cache?: CacheConfig;
+  cacheConfig?: CacheConfig;
   dedupe?: boolean;
   dedupeKey?: string;
   retryCount?: number;
   retryDelay?: number;
-  throttle?: ThrottleConfig;
+  throttleConfig?: ThrottleConfig;
 }
 
 export async function cachedFetch<T>(
@@ -206,12 +207,12 @@ export async function cachedFetch<T>(
   options: FetchOptions = {}
 ): Promise<ApiResponse<T>> {
   const {
-    cache,
+    cacheConfig,
     dedupe = true,
     dedupeKey = url,
     retryCount = 1,
     retryDelay = 1000,
-    throttle: throttleConfig,
+    throttleConfig,
     ...fetchOptions
   } = options;
 
@@ -228,18 +229,23 @@ export async function cachedFetch<T>(
   }
 
   // Check cache
-  if (cache) {
+  if (cacheConfig) {
     const cached = apiCache.get<T>(dedupeKey);
     if (cached) {
       // If stale, trigger background refresh
-      if (apiCache.isStale(dedupeKey, cache)) {
+      if (apiCache.isStale(dedupeKey, cacheConfig)) {
         // Background refresh (don't await)
         fetch(url, fetchOptions).then(async (response) => {
           if (response.ok) {
             const data = await response.json();
-            apiCache.set(dedupeKey, data, cache);
+            apiCache.set(dedupeKey, data, cacheConfig);
           }
-        }).catch(() => {});
+        }).catch((error) => {
+          // Silently ignore background refresh errors
+          if (process.env.NODE_ENV === 'development') {
+            console.debug('Background cache refresh failed:', error);
+          }
+        });
       }
       return { success: true, data: cached.data };
     }
@@ -266,8 +272,8 @@ export async function cachedFetch<T>(
         const data = await response.json() as ApiResponse<T>;
 
         // Cache successful response
-        if (cache && data.success) {
-          apiCache.set(dedupeKey, data, cache);
+        if (cacheConfig && data.success) {
+          apiCache.set(dedupeKey, data, cacheConfig);
         }
 
         return data;
@@ -316,7 +322,12 @@ export function prefetch<T>(
       : (cb: () => void) => setTimeout(cb, delay);
 
     scheduler(() => {
-      cachedFetch<T>(url, { ...fetchOptions, dedupe: true }).catch(() => {});
+      cachedFetch<T>(url, { ...fetchOptions, dedupe: true }).catch((error) => {
+        // Silently ignore prefetch errors
+        if (process.env.NODE_ENV === 'development') {
+          console.debug('Prefetch failed:', error);
+        }
+      });
     });
   };
 

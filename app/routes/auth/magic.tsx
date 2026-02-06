@@ -13,13 +13,13 @@ import { Button } from '~/components/ui/Button';
 import { useAuth } from '~/hooks/useAuth';
 import { useToastActions } from '~/components/Toast';
 
-export const Route = createFileRoute('/auth/magic')({
+export const Route = createFileRoute('/auth/magic' as any)({
   component: MagicCallbackPage,
 });
 
 function MagicCallbackPage() {
   const navigate = useNavigate();
-  const search = useSearch({ from: '/auth/magic' }) as { token?: string; redirect?: string };
+  const search = useSearch({ from: '/auth/magic' as any }) as { token?: string; redirect?: string };
   const { refreshUser } = useAuth();
   const toast = useToastActions();
   
@@ -116,12 +116,12 @@ function MagicCallbackPage() {
               {error}
             </p>
             <div className="mt-6 space-y-3">
-              <Button onClick={() => navigate({ to: '/login/magic' })} fullWidth>
+              <Button onClick={() => navigate({ to: '/login/magic' as any })} fullWidth>
                 Request New Link
               </Button>
               <Button 
                 variant="secondary" 
-                onClick={() => navigate({ to: '/login' })}
+                onClick={() => navigate({ to: '/login' as any })}
                 fullWidth
               >
                 Sign In with Password

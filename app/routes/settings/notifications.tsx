@@ -37,7 +37,7 @@ interface Preferences {
   categories: Record<string, CategoryPreference>;
 }
 
-export const Route = createFileRoute('/settings/notifications')({
+export const Route = createFileRoute('/settings/notifications' as any)({
   component: NotificationsSettingsPage,
 });
 
@@ -49,7 +49,7 @@ function NotificationsSettingsPage() {
   const [options, setOptions] = useState<PreferenceOption[]>([]);
   const [isLoadingPrefs, setIsLoadingPrefs] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [message, setMessage] = useState<{ type: 'success' | 'destructive'; text: string } | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
   const [showUnsavedModal, setShowUnsavedModal] = useState(false);
 
@@ -77,7 +77,7 @@ function NotificationsSettingsPage() {
       }
     } catch (error) {
       console.error('Failed to load preferences:', error);
-      setMessage({ type: 'error', text: 'Failed to load preferences' });
+      setMessage({ type: 'destructive', text: 'Failed to load preferences' });
     }
     setIsLoadingPrefs(false);
   };
@@ -103,10 +103,10 @@ function NotificationsSettingsPage() {
         setMessage({ type: 'success', text: 'Preferences saved successfully' });
         setHasChanges(false);
       } else {
-        setMessage({ type: 'error', text: data.error || 'Failed to save preferences' });
+        setMessage({ type: 'destructive', text: data.error || 'Failed to save preferences' });
       }
     } catch (error) {
-      setMessage({ type: 'error', text: 'An unexpected error occurred' });
+      setMessage({ type: 'destructive', text: 'An unexpected error occurred' });
     }
 
     setIsSaving(false);
@@ -338,7 +338,7 @@ function NotificationsSettingsPage() {
                       loadPreferences();
                     }
                   } catch {
-                    setMessage({ type: 'error', text: 'Failed to unsubscribe' });
+                    setMessage({ type: 'destructive', text: 'Failed to unsubscribe' });
                   }
                 }}
                 disabled={!preferences.categories.marketing?.enabled}

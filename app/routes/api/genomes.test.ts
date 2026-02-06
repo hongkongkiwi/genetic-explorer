@@ -163,14 +163,14 @@ describe('Genomes API Schema', () => {
 
     it('should require ownership for deletion', () => {
       const permissionLevel = 'owner';
-      const canDelete = permissionLevel === 'owner';
+      const canDelete = (permissionLevel as string) === 'owner';
 
       expect(canDelete).toBe(true);
     });
 
     it('should deny deletion for non-owners', () => {
       const permissionLevel = 'view';
-      const canDelete = permissionLevel === 'owner';
+      const canDelete = (permissionLevel as string) === 'owner';
 
       expect(canDelete).toBe(false);
     });

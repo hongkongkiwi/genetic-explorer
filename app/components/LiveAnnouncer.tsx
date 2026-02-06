@@ -11,7 +11,7 @@
  *   announce('Analysis complete', 'polite');
  */
 
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useRef, type ReactNode } from 'react';
 
 interface Announcement {
   id: string;
@@ -39,9 +39,11 @@ interface LiveAnnouncerProviderProps {
 
 export function LiveAnnouncerProvider({ children }: LiveAnnouncerProviderProps) {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const idCounter = useRef(0);
 
   const announce = useCallback((message: string, priority: 'polite' | 'assertive' = 'polite') => {
-    const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    idCounter.current += 1;
+    const id = `announce-${Date.now()}-${idCounter.current}`;
     setAnnouncements(prev => [...prev, { id, message, priority }]);
     
     // Remove announcement after screen reader has had time to read it

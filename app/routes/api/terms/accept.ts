@@ -1,7 +1,6 @@
-import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
 import { acceptTerms, getUserTermsStatus } from '~/utils/terms';
-import { getAuthUserSafe } from '~/utils/auth';
+import { getAuthUserSafe } from '~/utils/auth.server';
 import { getClientIp } from '~/utils/rateLimit';
 import { logActivity } from '~/utils/database';
 
@@ -18,7 +17,7 @@ export const APIRoute = createAPIFileRoute('/api/terms/accept')({
         const { pendingUserId } = body;
         
         if (!pendingUserId) {
-          return json({ 
+          return Response.json({ 
             success: false, 
             error: 'Authentication required' 
           }, { status: 401 });
@@ -31,7 +30,7 @@ export const APIRoute = createAPIFileRoute('/api/terms/accept')({
         const result = acceptTerms(pendingUserId, ipAddress, userAgent);
         
         if (!result.success) {
-          return json({ 
+          return Response.json({ 
             success: false, 
             error: result.error || 'Failed to accept terms' 
           }, { status: 500 });
@@ -43,7 +42,7 @@ export const APIRoute = createAPIFileRoute('/api/terms/accept')({
         // Return the updated status
         const termsStatus = getUserTermsStatus(pendingUserId);
         
-        return json({
+        return Response.json({
           success: true,
           message: 'Terms accepted successfully',
           termsStatus,
@@ -57,7 +56,7 @@ export const APIRoute = createAPIFileRoute('/api/terms/accept')({
       const result = acceptTerms(auth.user.id, ipAddress, userAgent);
       
       if (!result.success) {
-        return json({ 
+        return Response.json({ 
           success: false, 
           error: result.error || 'Failed to accept terms' 
         }, { status: 500 });
@@ -69,7 +68,7 @@ export const APIRoute = createAPIFileRoute('/api/terms/accept')({
       // Return the updated status
       const termsStatus = getUserTermsStatus(auth.user.id);
       
-      return json({
+      return Response.json({
         success: true,
         message: 'Terms accepted successfully',
         termsStatus,
@@ -77,7 +76,7 @@ export const APIRoute = createAPIFileRoute('/api/terms/accept')({
       
     } catch (error) {
       console.error('Error accepting terms:', error);
-      return json({ 
+      return Response.json({ 
         success: false, 
         error: 'An unexpected error occurred' 
       }, { status: 500 });

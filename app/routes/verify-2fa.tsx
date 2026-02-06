@@ -32,13 +32,13 @@ interface TwoFAMethod {
   icon: React.ReactNode;
 }
 
-export const Route = createFileRoute('/verify-2fa')({
+export const Route = createFileRoute('/verify-2fa' as any)({
   component: Verify2FAPage,
 });
 
 function Verify2FAPage() {
   const navigate = useNavigate();
-  const search = useSearch({ from: '/verify-2fa' }) as { token?: string; methods?: string };
+  const search = useSearch({ from: '/verify-2fa' as any }) as { token?: string; methods?: string };
   const { refreshUser } = useAuth();
   
   const [pendingToken, setPendingToken] = useState<string>('');
@@ -57,7 +57,7 @@ function Verify2FAPage() {
     
     if (!token) {
       // No pending token - redirect to login
-      navigate({ to: '/login' });
+      navigate({ to: '/login' as any });
       return;
     }
     

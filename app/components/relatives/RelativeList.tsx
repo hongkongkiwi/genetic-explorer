@@ -87,8 +87,8 @@ const sortOptions: { value: MatchSortField; label: string }[] = [
   { value: 'largestSegment', label: 'Largest Segment' },
 ];
 
-const confidenceLevels: { value: ConfidenceLevel | 'all'; label: string }[] = [
-  { value: 'all', label: 'All Confidence' },
+const confidenceLevels: { value: ConfidenceLevel | undefined; label: string }[] = [
+  { value: undefined, label: 'All Confidence' },
   { value: 'very_high', label: 'Very High' },
   { value: 'high', label: 'High' },
   { value: 'medium', label: 'Medium' },
@@ -127,7 +127,7 @@ export function RelativeList({
     relationshipType: 'all',
     minSharedCM: 0,
     maxSharedCM: Infinity,
-    minConfidence: 'all' as ConfidenceLevel,
+    minConfidence: undefined,
     optInOnly: false,
     includeHidden: false,
   });
@@ -166,7 +166,7 @@ export function RelativeList({
     }
 
     // Confidence filter
-    if (filters.minConfidence && filters.minConfidence !== 'all') {
+    if (filters.minConfidence) {
       const confidenceOrder = ['very_low', 'low', 'medium', 'high', 'very_high'];
       const minIndex = confidenceOrder.indexOf(filters.minConfidence);
       result = result.filter(
@@ -235,7 +235,7 @@ export function RelativeList({
       relationshipType: 'all',
       minSharedCM: 0,
       maxSharedCM: Infinity,
-      minConfidence: 'all' as ConfidenceLevel,
+      minConfidence: undefined,
       optInOnly: false,
       includeHidden: false,
     });
@@ -245,7 +245,7 @@ export function RelativeList({
     let count = 0;
     if (filters.relationshipType && filters.relationshipType !== 'all') count++;
     if (filters.minSharedCM && filters.minSharedCM > 0) count++;
-    if (filters.minConfidence && filters.minConfidence !== 'all') count++;
+    if (filters.minConfidence) count++;
     if (filters.optInOnly) count++;
     if (filters.includeHidden) count++;
     return count;
@@ -406,7 +406,7 @@ export function RelativeList({
                         onClick={() =>
                           setFilters((f) => ({
                             ...f,
-                            minConfidence: level.value as ConfidenceLevel,
+                            minConfidence: level.value,
                           }))
                         }
                         className={cn(

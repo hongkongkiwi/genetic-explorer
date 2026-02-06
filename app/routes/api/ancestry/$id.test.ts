@@ -196,7 +196,7 @@ describe('Ancestry API Schema', () => {
       const genomeOwnerId = 'user-789';
       const sharedWith = ['user-123'];
 
-      const canAccess = userId === genomeOwnerId || sharedWith.includes(userId);
+      const canAccess = (userId as string) === (genomeOwnerId as string) || sharedWith.includes(userId);
 
       expect(canAccess).toBe(true);
     });
@@ -206,7 +206,7 @@ describe('Ancestry API Schema', () => {
       const genomeOwnerId = 'user-789';
       const sharedWith: string[] = [];
 
-      const canAccess = userId === genomeOwnerId || sharedWith.includes(userId);
+      const canAccess = (userId as string) === (genomeOwnerId as string) || sharedWith.includes(userId);
       const response = { success: false, error: 'Access denied' };
       const status = 403;
 

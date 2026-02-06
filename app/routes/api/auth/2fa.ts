@@ -1,7 +1,6 @@
-import { json } from '@tanstack/start'
 import { createAPIFileRoute } from '@tanstack/start/api'
 import crypto from 'crypto'
-import { requireAuth } from '~/utils/auth'
+import { requireAuth } from '~/utils/auth.server'
 import {
   generateTotpSecret,
   getTotpUri,
@@ -13,6 +12,12 @@ import {
   verifyEmailCode,
   verifyPasskeyRegistration,
   savePasskeyChallenge,
+  isDelayRequiredForMethod,
+  getPendingDisableRequest,
+  createDisable2FARequest,
+  cancelDisableRequest,
+  terminateAllUserSessions,
+  sendSecurityNotification,
 } from '~/utils/twoFactor'
 import {
   saveTotpSecret,
@@ -47,7 +52,7 @@ export const APIRouteSetup = createAPIFileRoute('/api/auth/2fa')({
       const { method } = body
 
       if (!method || !['totp', 'passkey'].includes(method)) {
-        return json(
+        return Response.json(
           { success: false, error: 'Invalid method. Use "totp" or "passkey".' },
           { status: 400 },
         )
@@ -55,7 +60,7 @@ export const APIRouteSetup = createAPIFileRoute('/api/auth/2fa')({
 
       // Check if 2FA is already enabled
       if (isTwoFactorEnabled(auth.id)) {
-        return json(
+        return Response.json(
           {
             success: false,
             error: '2FA is already enabled. Disable it first to reconfigure.',
@@ -81,7 +86,7 @@ export const APIRouteSetup = createAPIFileRoute('/api/auth/2fa')({
           ipAddress,
         )
 
-        return json({
+        return Response.json({
           success: true,
           method: 'totp',
           secret, // Show secret for manual entry
@@ -121,20 +126,20 @@ export const APIRouteSetup = createAPIFileRoute('/api/auth/2fa')({
           ipAddress,
         )
 
-        return json({
+        return Response.json({
           success: true,
           method: 'passkey',
           options,
         })
       }
 
-      return json({ success: false, error: 'Unknown method' }, { status: 400 })
+      return Response.json({ success: false, error: 'Unknown method' }, { status: 400 })
     } catch (error) {
       if (error instanceof Error && error.message === 'Unauthorized') {
-        return json({ success: false, error: 'Unauthorized' }, { status: 401 })
+        return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 })
       }
       console.error('2FA setup error:', error)
-      return json(
+      return Response.json(
         { success: false, error: 'An unexpected error occurred' },
         { status: 500 },
       )
@@ -155,7 +160,7 @@ export const APIRouteVerify = createAPIFileRoute('/api/auth/2fa')({
       const { method, code, passkeyResponse } = body
 
       if (!method || !['totp', 'passkey', 'email', 'backup'].includes(method)) {
-        return json(
+        return Response.json(
           { success: false, error: 'Invalid method' },
           { status: 400 },
         )
@@ -166,7 +171,7 @@ export const APIRouteVerify = createAPIFileRoute('/api/auth/2fa')({
 
       if (method === 'totp') {
         if (!code) {
-          return json(
+          return Response.json(
             { success: false, error: 'Verification code required' },
             { status: 400 },
           )
@@ -174,7 +179,7 @@ export const APIRouteVerify = createAPIFileRoute('/api/auth/2fa')({
 
         const secret = getTotpSecret(auth.id)
         if (!secret) {
-          return json(
+          return Response.json(
             {
               success: false,
               error: 'No TOTP secret found. Start setup first.',
@@ -213,7 +218,7 @@ export const APIRouteVerify = createAPIFileRoute('/api/auth/2fa')({
         }
       } else if (method === 'passkey') {
         if (!passkeyResponse) {
-          return json(
+          return Response.json(
             { success: false, error: 'Passkey response required' },
             { status: 400 },
           )
@@ -330,22 +335,22 @@ export const APIRouteVerify = createAPIFileRoute('/api/auth/2fa')({
           { method },
           ipAddress,
         )
-        return json(
+        return Response.json(
           { success: false, error: 'Invalid verification code' },
           { status: 401 },
         )
       }
 
-      return json({
+      return Response.json({
         success: true,
         ...verificationData,
       })
     } catch (error) {
       if (error instanceof Error && error.message === 'Unauthorized') {
-        return json({ success: false, error: 'Unauthorized' }, { status: 401 })
+        return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 })
       }
       console.error('2FA verification error:', error)
-      return json(
+      return Response.json(
         { success: false, error: 'An unexpected error occurred' },
         { status: 500 },
       )
@@ -364,7 +369,7 @@ export const APIRouteStatus = createAPIFileRoute('/api/auth/2fa')({
 
       const status = getTwoFactorStatus(auth.id)
 
-      return json({
+      return Response.json({
         success: true,
         status: {
           enabled: status.enabled,
@@ -378,10 +383,10 @@ export const APIRouteStatus = createAPIFileRoute('/api/auth/2fa')({
       })
     } catch (error) {
       if (error instanceof Error && error.message === 'Unauthorized') {
-        return json({ success: false, error: 'Unauthorized' }, { status: 401 })
+        return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 })
       }
       console.error('2FA status error:', error)
-      return json(
+      return Response.json(
         { success: false, error: 'An unexpected error occurred' },
         { status: 500 },
       )
@@ -406,13 +411,13 @@ export const APIRouteDisable = createAPIFileRoute('/api/auth/2fa')({
       const user = getUserByEmail(auth.email)
       if (user && user.passwordHash) {
         const [salt, hash] = user.passwordHash.split(':')
-        const { hash: computedHash } = crypto.pbkdf2Sync(
+        const computedHash = crypto.pbkdf2Sync(
           password,
           salt,
           100000,
           64,
           'sha256',
-        )
+        ).toString('hex')
         if (computedHash !== hash) {
           logActivity(
             auth.id,
@@ -422,7 +427,7 @@ export const APIRouteDisable = createAPIFileRoute('/api/auth/2fa')({
             { reason: 'invalid_password' },
             ipAddress,
           )
-          return json(
+          return Response.json(
             { success: false, error: 'Invalid password' },
             { status: 401 },
           )
@@ -454,7 +459,7 @@ export const APIRouteDisable = createAPIFileRoute('/api/auth/2fa')({
             { reason: 'invalid_2fa' },
             ipAddress,
           )
-          return json(
+          return Response.json(
             { success: false, error: 'Invalid 2FA code' },
             { status: 401 },
           )
@@ -466,7 +471,7 @@ export const APIRouteDisable = createAPIFileRoute('/api/auth/2fa')({
           const existingRequest = getPendingDisableRequest(auth.id)
           if (existingRequest) {
             // Return the existing request details
-            return json({
+            return Response.json({
               success: true,
               requiresDelay: true,
               message: 'A 2FA disable request is already pending.',
@@ -487,7 +492,7 @@ export const APIRouteDisable = createAPIFileRoute('/api/auth/2fa')({
           )
 
           if (!requestResult.success) {
-            return json(
+            return Response.json(
               { success: false, error: requestResult.error },
               { status: 500 }
             )
@@ -509,7 +514,7 @@ export const APIRouteDisable = createAPIFileRoute('/api/auth/2fa')({
             terminateAllUserSessions(auth.id, '2fa_disable_delay_initiated')
           }
 
-          return json({
+          return Response.json({
             success: true,
             requiresDelay: true,
             message: `Two-factor authentication disable request received. For your security, you will not be able to log in for 24 hours.`,
@@ -541,22 +546,22 @@ export const APIRouteDisable = createAPIFileRoute('/api/auth/2fa')({
           userAgent || undefined
         )
 
-        return json({
+        return Response.json({
           success: true,
           message: '2FA has been disabled.',
         })
       }
 
-      return json(
+      return Response.json(
         { success: false, error: '2FA verification required to disable 2FA' },
         { status: 400 }
       )
     } catch (error) {
       if (error instanceof Error && error.message === 'Unauthorized') {
-        return json({ success: false, error: 'Unauthorized' }, { status: 401 })
+        return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 })
       }
       console.error('2FA disable error:', error)
-      return json(
+      return Response.json(
         { success: false, error: 'An unexpected error occurred' },
         { status: 500 },
       )
@@ -580,7 +585,7 @@ export const APIRouteRegenerateBackupCodes = createAPIFileRoute(
 
       // Verify 2FA is enabled
       if (!isTwoFactorEnabled(auth.id)) {
-        return json(
+        return Response.json(
           { success: false, error: '2FA must be enabled first' },
           { status: 400 },
         )
@@ -590,13 +595,13 @@ export const APIRouteRegenerateBackupCodes = createAPIFileRoute(
       const user = getUserByEmail(auth.email)
       if (user && user.passwordHash) {
         const [salt, hash] = user.passwordHash.split(':')
-        const { hash: computedHash } = crypto.pbkdf2Sync(
+        const computedHash = crypto.pbkdf2Sync(
           password,
           salt,
           100000,
           64,
           'sha256',
-        )
+        ).toString('hex')
         if (computedHash !== hash) {
           logActivity(
             auth.id,
@@ -606,7 +611,7 @@ export const APIRouteRegenerateBackupCodes = createAPIFileRoute(
             { reason: 'invalid_password' },
             ipAddress,
           )
-          return json(
+          return Response.json(
             { success: false, error: 'Invalid password' },
             { status: 401 },
           )
@@ -635,7 +640,7 @@ export const APIRouteRegenerateBackupCodes = createAPIFileRoute(
             { reason: 'invalid_2fa' },
             ipAddress,
           )
-          return json(
+          return Response.json(
             { success: false, error: 'Invalid 2FA code' },
             { status: 401 },
           )
@@ -644,7 +649,7 @@ export const APIRouteRegenerateBackupCodes = createAPIFileRoute(
 
       // Generate new backup codes
       const backupCodes = generateBackupCodes()
-      const hashedCodes = backupCodes.map(hashBackupCode)
+      const hashedCodes = backupCodes.map(code => hashBackupCode(code, auth.id))
       saveBackupCodes(auth.id, hashedCodes)
 
       logActivity(
@@ -656,17 +661,17 @@ export const APIRouteRegenerateBackupCodes = createAPIFileRoute(
         ipAddress,
       )
 
-      return json({
+      return Response.json({
         success: true,
         backupCodes,
         message: 'New backup codes generated. Old codes are no longer valid.',
       })
     } catch (error) {
       if (error instanceof Error && error.message === 'Unauthorized') {
-        return json({ success: false, error: 'Unauthorized' }, { status: 401 })
+        return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 })
       }
       console.error('Backup codes regeneration error:', error)
-      return json(
+      return Response.json(
         { success: false, error: 'An unexpected error occurred' },
         { status: 500 },
       )
@@ -687,7 +692,7 @@ export const APIRoutePasskeyAuth = createAPIFileRoute('/api/auth/2fa')({
       const passkeys = getPasskeys(auth.id)
 
       if (passkeys.length === 0) {
-        return json(
+        return Response.json(
           { success: false, error: 'No passkeys registered' },
           { status: 400 },
         )
@@ -696,16 +701,16 @@ export const APIRoutePasskeyAuth = createAPIFileRoute('/api/auth/2fa')({
       const credentialIds = passkeys.map((p: any) => p.credentialId)
       const options = getPasskeyAuthenticationOptions(auth.id, credentialIds)
 
-      return json({
+      return Response.json({
         success: true,
         options,
       })
     } catch (error) {
       if (error instanceof Error && error.message === 'Unauthorized') {
-        return json({ success: false, error: 'Unauthorized' }, { status: 401 })
+        return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 })
       }
       console.error('Passkey auth options error:', error)
-      return json(
+      return Response.json(
         { success: false, error: 'An unexpected error occurred' },
         { status: 500 },
       )

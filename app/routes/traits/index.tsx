@@ -23,7 +23,7 @@ import {
   Search,
   Lock,
 } from 'lucide-react';
-import { getAllGenomes } from '~/utils/database';
+import { useQuery } from '@tanstack/react-query';
 import { TRAITS_DATABASE, CATEGORY_ICONS, CATEGORY_DISPLAY_NAMES } from '~/data/traitsDatabase';
 
 export const Route = createFileRoute('/traits/')({
@@ -137,15 +137,19 @@ const SAMPLE_TRAITS = [
 ];
 
 function TraitsLandingPage() {
-  const [hasGenome, setHasGenome] = useState<boolean | null>(null);
-  const [genomeCount, setGenomeCount] = useState(0);
-
-  useEffect(() => {
-    // Check if user has any genomes
-    const genomes = getAllGenomes();
-    setHasGenome(genomes.length > 0);
-    setGenomeCount(genomes.length);
-  }, []);
+  // Fetch genomes from API
+  const { data: genomesData } = useQuery({
+    queryKey: ['genomes'],
+    queryFn: async () => {
+      const response = await fetch('/api/genomes');
+      if (!response.ok) throw new Error('Failed to fetch genomes');
+      return response.json();
+    },
+  });
+  
+  const genomes = genomesData?.genomes || [];
+  const hasGenome = genomes.length > 0;
+  const genomeCount = genomes.length;
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
@@ -186,7 +190,7 @@ function TraitsLandingPage() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               {hasGenome ? (
                 <>
-                  <Link to={`/traits/${getAllGenomes()[0]?.id}`}>
+                  <Link to={`/traits/${genomes[0]?.id}` as any}>
                     <Button
                       size="lg"
                       className="bg-white text-indigo-700 hover:bg-white/90 font-semibold px-8"
@@ -221,7 +225,7 @@ function TraitsLandingPage() {
                       <ArrowRight className="w-5 h-5 ml-2" />
                     </Button>
                   </Link>
-                  <Link to="#learn-more">
+                  <Link to={"#learn-more" as any}>
                     <Button
                       size="lg"
                       variant="outline"
@@ -515,7 +519,7 @@ function TraitsLandingPage() {
             </p>
 
             {hasGenome ? (
-              <Link to={`/traits/${getAllGenomes()[0]?.id}`}>
+              <Link to={`/traits/${genomes[0]?.id}` as any}>
                 <Button
                   size="lg"
                   className="bg-white text-indigo-600 hover:bg-white/90 font-semibold px-8 text-lg"

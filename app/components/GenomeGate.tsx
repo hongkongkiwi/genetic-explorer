@@ -9,7 +9,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '~/components/ui/card';
+} from '~/components/ui/Card';
 
 interface GenomeGateProps {
   children: React.ReactNode;
@@ -74,7 +74,7 @@ export function GenomeGate({
                 Upload Genome
               </Button>
             </Link>
-            <Link to="/help/upload-guide">
+            <Link to={"/help/upload-guide" as any}>
               <Button variant="outline" size="lg" className="w-full sm:w-auto">
                 Learn More
                 <ChevronRight className="w-4 h-4 ml-2" />

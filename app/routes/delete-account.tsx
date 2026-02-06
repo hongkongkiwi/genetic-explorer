@@ -241,7 +241,7 @@ function DeleteAccountPage() {
                 Cancel
               </Link>
               <Button
-                variant="danger"
+                variant="destructive"
                 onClick={() => setShowConfirmModal(true)}
                 disabled={!password || confirmText !== 'DELETE'}
                 className="gap-2"
@@ -263,7 +263,7 @@ function DeleteAccountPage() {
         message="This will permanently delete your account and all associated data. This action cannot be undone."
         confirmLabel="Yes, Delete Everything"
         cancelLabel="Cancel"
-        variant="danger"
+        variant="destructive"
       />
 
       {/* Export Modal */}

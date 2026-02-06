@@ -1,28 +1,27 @@
-import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
 import { getGenome, saveReport, canAccessGenome, logActivity } from '~/utils/database';
 import { analyzeGenome, getDrugInteractions } from '~/utils/databaseQueries';
 import { generateFullReport } from '~/utils/llmAnalysis';
-import { requireAuth } from '~/utils/auth';
+import { requireAuth } from '~/utils/auth.server';
 
 export const APIRoute = createAPIFileRoute('/api/analyze/$id')({
   POST: async ({ params, request }) => {
     try {
       const auth = requireAuth(request);
       if (!auth) {
-        return json({ success: false, error: 'Unauthorized' }, { status: 401 });
+        return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
       }
 
       // Check access to genome
       const access = canAccessGenome(auth.id, params.id);
       if (!access.canAccess) {
-        return json({ success: false, error: 'Access denied' }, { status: 403 });
+        return Response.json({ success: false, error: 'Access denied' }, { status: 403 });
       }
 
       const genome = getGenome(params.id);
       
       if (!genome) {
-        return json({ success: false, error: 'Genome not found' }, { status: 404 });
+        return Response.json({ success: false, error: 'Genome not found' }, { status: 404 });
       }
 
       // Analyze variants
@@ -43,7 +42,7 @@ export const APIRoute = createAPIFileRoute('/api/analyze/$id')({
         genomeId: genome.id,
       });
 
-      return json({ 
+      return Response.json({ 
         success: true, 
         reportId,
         report: {
@@ -58,7 +57,7 @@ export const APIRoute = createAPIFileRoute('/api/analyze/$id')({
       });
     } catch (error) {
       console.error('Analysis error:', error);
-      return json({ 
+      return Response.json({ 
         success: false, 
         error: error instanceof Error ? error.message : 'Analysis failed' 
       }, { status: 500 });

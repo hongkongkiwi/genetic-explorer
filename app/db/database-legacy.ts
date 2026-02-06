@@ -1,3 +1,5 @@
+'use server';
+
 import Database from 'better-sqlite3';
 import { v4 as uuidv4 } from 'uuid';
 import crypto from 'crypto';
@@ -13,18 +15,19 @@ import { initSessionManagementTables } from '~/utils/sessionManagement';
 import { initTwoFactorDisableDelayTables } from '~/utils/twoFactorDisableDelay';
 import { initNotificationPreferencesTables } from '~/auth/notification-preferences';
 import { logError, logWarn, logInfo } from '~/utils/secureLogger';
+import { env } from '~/utils/shared/env';
 
 let db: Database.Database | null = null;
 
 // Ensure uploads directory exists
-const UPLOADS_DIR = './uploads/genomes';
+const UPLOADS_DIR = env.UPLOADS_DIR;
 if (!existsSync(UPLOADS_DIR)) {
   mkdirSync(UPLOADS_DIR, { recursive: true });
 }
 
 export function getDb(): Database.Database {
   if (!db) {
-    db = new Database('./data/genetic_explorer.db');
+    db = new Database(env.DATABASE_URL);
     
     // Performance optimizations
     db.pragma('journal_mode = WAL'); // Write-Ahead Logging for better concurrency
@@ -35,10 +38,6 @@ export function getDb(): Database.Database {
     db.pragma('page_size = 4096'); // Optimal page size for most systems
     
     initDatabase();
-    // Dynamic import to avoid circular dependency
-    void import('~/utils/research/database').then(({ initializeResearchDatabase }) => {
-      initializeResearchDatabase(db);
-    });
     runMigrations(db);
   }
   return db;
@@ -284,6 +283,7 @@ function initDatabase() {
       user_id TEXT NOT NULL,
       code_hash TEXT NOT NULL,
       used INTEGER DEFAULT 0,
+      used_at DATETIME,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     )
@@ -817,7 +817,7 @@ export function saveGenome(
   // Store ALL SNPs in batches for better performance
   // SECURITY: Genotype data is encrypted at rest using AES-256-GCM
   const BATCH_SIZE = 10000;
-  const userKey = getUserEncryptionKey(userId);
+  const userKey = getUserEncryptionKey(userId || 'anonymous');
   
   const insertSNP = db.prepare(`
     INSERT INTO snps (genome_id, rsid, chromosome, position, genotype_encrypted)
@@ -1025,6 +1025,8 @@ export interface GenomeMetadata {
   compression_type: string | null;
   processed_at: string;
   status: string;
+  is_primary?: number;
+  nickname?: string;
 }
 
 export function getAllGenomes(): GenomeMetadata[] {
@@ -1120,6 +1122,7 @@ export function getDatabaseStats(): {
 export interface User {
   id: string;
   email: string;
+  passwordHash?: string;
   displayName: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -1734,7 +1737,7 @@ export function verifyAndUseBackupCode(userId: string, code: string): boolean {
 export function savePasskey(userId: string, credentialId: string, publicKey: string, counter: number): void {
   const db = getDb();
   db.prepare(`
-    INSERT OR REPLACE INTO passkeys (user_id, credential_id, public_key, counter, created_at)
+    INSERT OR REPLACE INTO passkeys (user_id, credential_id, credential_public_key, counter, created_at)
     VALUES (?, ?, ?, ?, datetime('now'))
   `).run(userId, credentialId, publicKey, counter);
 }
@@ -1745,11 +1748,11 @@ export function savePasskey(userId: string, credentialId: string, publicKey: str
 export function getPasskeys(userId: string): Array<{ credentialId: string; publicKey: string; counter: number }> {
   const db = getDb();
   const results = db.prepare(`
-    SELECT credential_id, public_key, counter FROM passkeys WHERE user_id = ?
-  `).all(userId) as Array<{ credential_id: string; public_key: string; counter: number }>;
+    SELECT credential_id, credential_public_key, counter FROM passkeys WHERE user_id = ?
+  `).all(userId) as Array<{ credential_id: string; credential_public_key: string; counter: number }>;
   return results.map(r => ({
     credentialId: r.credential_id,
-    publicKey: r.public_key,
+    publicKey: r.credential_public_key,
     counter: r.counter,
   }));
 }
@@ -1760,11 +1763,11 @@ export function getPasskeys(userId: string): Array<{ credentialId: string; publi
 export function getPasskey(credentialId: string): { userId: string; publicKey: string; counter: number } | null {
   const db = getDb();
   const result = db.prepare(`
-    SELECT user_id, public_key, counter FROM passkeys WHERE credential_id = ?
-  `).get(credentialId) as { user_id: string; public_key: string; counter: number } | undefined;
+    SELECT user_id, credential_public_key, counter FROM passkeys WHERE credential_id = ?
+  `).get(credentialId) as { user_id: string; credential_public_key: string; counter: number } | undefined;
   return result ? {
     userId: result.user_id,
-    publicKey: result.public_key,
+    publicKey: result.credential_public_key,
     counter: result.counter,
   } : null;
 }

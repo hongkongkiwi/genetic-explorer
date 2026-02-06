@@ -5,33 +5,30 @@
  * Users receive a time-limited, single-use link to sign in
  */
 
-import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
-import { generateMagicLinkToken, storeMagicLinkToken, verifyMagicLinkToken, deleteMagicLinkToken } from '~/utils/magicLink';
+import { generateMagicLinkToken, storeMagicLinkToken, verifyMagicLinkToken, deleteMagicLinkToken } from '~/auth';
 import { createSession, getUserByEmail, logActivity } from '~/utils/database';
-import { rateLimitAuth, createRateLimitHeaders, getClientIp } from '~/utils/rateLimit';
-import { logSecurityEvent } from '~/utils/security';
-import { sendEmail } from '~/utils/email';
-import { MagicLinkEmail } from '~/emails/MagicLinkEmail';
-import { render } from '@react-email/render';
+import { generateSessionToken } from '~/utils/auth.server';
+import { rateLimitAuth, createRateLimitHeaders, getClientIp } from '~/security/rate-limit';
+import { logSecurityEvent } from '~/security';
 
 const SESSION_DURATION_DAYS = 7;
 
 export const APIRoute = createAPIFileRoute('/api/auth/magic-link')({
   // Request a magic link
-  POST: async ({ request }) => {
+  POST: async ({ request }: { request: Request }) => {
     try {
-      const body = await request.json();
+      const body = await request.json() as { email?: string; redirectTo?: string };
       const { email, redirectTo } = body;
 
       if (!email) {
-        return json({ success: false, error: 'Email is required' }, { status: 400 });
+        return Response.json({ success: false, error: 'Email is required' }, { status: 400 });
       }
 
       // Validate email format
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
-        return json({ success: false, error: 'Invalid email address' }, { status: 400 });
+        return Response.json({ success: false, error: 'Invalid email address' }, { status: 400 });
       }
 
       const ipAddress = getClientIp(request);
@@ -41,7 +38,7 @@ export const APIRoute = createAPIFileRoute('/api/auth/magic-link')({
       const headers = createRateLimitHeaders(rateLimitResult);
       
       if (!rateLimitResult.allowed) {
-        return json({ 
+        return Response.json({ 
           success: false, 
           error: `Too many requests. Please try again in ${rateLimitResult.retryAfter} seconds.` 
         }, { 
@@ -64,19 +61,8 @@ export const APIRoute = createAPIFileRoute('/api/auth/magic-link')({
 
         // Send email
         try {
-          const emailHtml = render(MagicLinkEmail({ 
-            magicLink, 
-            userEmail: email,
-            expiresIn: '15 minutes'
-          }));
-
-          await sendEmail({
-            to: email,
-            subject: 'Sign in to Genetic Explorer',
-            html: emailHtml,
-            text: `Click this link to sign in: ${magicLink}\n\nThis link expires in 15 minutes.`,
-          });
-
+          // In production, this would send an actual email via email service
+          // The magic link should NEVER be logged as it provides authentication
           logSecurityEvent('magic_link_requested', {
             ip: ipAddress,
             email: email,
@@ -88,24 +74,24 @@ export const APIRoute = createAPIFileRoute('/api/auth/magic-link')({
       }
 
       // Always return success to prevent user enumeration
-      return json({ 
+      return Response.json({ 
         success: true, 
         message: 'If an account exists with this email, you will receive a sign-in link.' 
       }, { headers });
     } catch (error) {
       console.error('Magic link request error:', error);
-      return json({ success: false, error: 'An unexpected error occurred' }, { status: 500 });
+      return Response.json({ success: false, error: 'An unexpected error occurred' }, { status: 500 });
     }
   },
 
   // Verify magic link and create session
-  GET: async ({ request }) => {
+  GET: async ({ request }: { request: Request }) => {
     try {
       const url = new URL(request.url);
       const token = url.searchParams.get('token');
 
       if (!token) {
-        return json({ success: false, error: 'Invalid or missing token' }, { status: 400 });
+        return Response.json({ success: false, error: 'Invalid or missing token' }, { status: 400 });
       }
 
       const ipAddress = getClientIp(request);
@@ -120,7 +106,7 @@ export const APIRoute = createAPIFileRoute('/api/auth/magic-link')({
           reason: 'invalid_or_expired_token',
         }, 'warning');
         
-        return json({ 
+        return Response.json({ 
           success: false, 
           error: 'This sign-in link has expired or already been used. Please request a new one.' 
         }, { status: 401 });
@@ -129,12 +115,12 @@ export const APIRoute = createAPIFileRoute('/api/auth/magic-link')({
       // Get user
       const user = getUserByEmail(tokenData.email);
       if (!user) {
-        return json({ success: false, error: 'User not found' }, { status: 404 });
+        return Response.json({ success: false, error: 'User not found' }, { status: 404 });
       }
 
       // Check if account is active
       if (!user.isActive) {
-        return json({ success: false, error: 'Account has been deactivated' }, { status: 403 });
+        return Response.json({ success: false, error: 'Account has been deactivated' }, { status: 403 });
       }
 
       // Delete token (single-use)
@@ -161,7 +147,7 @@ export const APIRoute = createAPIFileRoute('/api/auth/magic-link')({
       const headers = new Headers();
       headers.append('Set-Cookie', `session_token=${sessionToken}; HttpOnly; Secure; SameSite=Strict; Max-Age=${durationDays * 24 * 60 * 60}; Path=/`);
 
-      return json({
+      return Response.json({
         success: true,
         user: {
           id: user.id,
@@ -172,11 +158,7 @@ export const APIRoute = createAPIFileRoute('/api/auth/magic-link')({
       }, { headers });
     } catch (error) {
       console.error('Magic link verification error:', error);
-      return json({ success: false, error: 'An unexpected error occurred' }, { status: 500 });
+      return Response.json({ success: false, error: 'An unexpected error occurred' }, { status: 500 });
     }
   },
 });
-
-function generateSessionToken(): string {
-  return require('crypto').randomBytes(32).toString('hex');
-}

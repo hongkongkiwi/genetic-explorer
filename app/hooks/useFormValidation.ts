@@ -86,7 +86,7 @@ export function useFormValidation<T extends Record<string, any>>(
       return true;
     } catch (error) {
       if (error instanceof z.ZodError) {
-        const validationErrors = error.errors.map((err) => ({
+        const validationErrors = error.issues.map((err) => ({
           field: err.path.join('.'),
           message: err.message,
         }));
@@ -113,7 +113,7 @@ export function useFormValidation<T extends Record<string, any>>(
         return true;
       } catch (error) {
         if (error instanceof z.ZodError) {
-          const message = error.errors[0]?.message || 'Invalid value';
+          const message = error.issues[0]?.message || 'Invalid value';
           setErrors((prev) => [
             ...prev.filter((e) => e.field !== field),
             { field: field as string, message },

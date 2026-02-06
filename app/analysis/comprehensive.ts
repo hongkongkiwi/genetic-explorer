@@ -10,7 +10,7 @@ import type { SNP, GenomeData, HealthReport, ReportSection } from '~/types/genet
 // Local type for RiskAssessment
 interface RiskAssessment {
   condition: string;
-  riskLevel: 'High' | 'Moderate' | 'Low' | 'Protective';
+  riskLevel: 'high' | 'moderate' | 'low' | 'protective';
   description: string;
   associatedVariants: string[];
   preventionStrategies: string[];
@@ -32,7 +32,7 @@ export interface AnalyzedVariant {
   conditions: string[];
   recommendations: string[];
   evidenceLevel: string;
-  affectedDrugs?: Array<{ drug: string; effect: string }>;
+  affectedDrugs?: string[];
   magnitude: 'Normal' | 'Low' | 'Moderate' | 'High' | 'Very High';
 }
 
@@ -97,8 +97,8 @@ export async function analyzeGenomeComprehensive(
       conditions: snpInfo.conditions || [],
       recommendations: snpInfo.recommendations || [],
       evidenceLevel: snpInfo.evidenceLevel || 'Limited',
-      affectedDrugs: snpInfo.affectedDrugs,
-      magnitude,
+      affectedDrugs: snpInfo.affectedDrugs as string[],
+      magnitude: magnitude as AnalyzedVariant['magnitude'],
     };
 
     analyzedVariants.push(variant);
@@ -188,8 +188,7 @@ function buildAnalysisSummary(
 
   // Protective factors
   const protectiveFactors = variants.filter(v => 
-    v.clinicalSignificance.toLowerCase().includes('protective') ||
-    v.magnitude === 'Protective'
+    v.clinicalSignificance.toLowerCase().includes('protective')
   );
 
   return {
@@ -228,7 +227,7 @@ function calculateDiseaseRisks(variants: AnalyzedVariant[]): RiskAssessment[] {
       return Math.max(max, order[v.impact as keyof typeof order] || 0);
     }, 0);
 
-    const riskLevel = maxImpact >= 4 ? 'High' : maxImpact >= 3 ? 'Moderate' : 'Low';
+    const riskLevel: RiskAssessment['riskLevel'] = maxImpact >= 4 ? 'high' : maxImpact >= 3 ? 'moderate' : 'low';
     
     risks.push({
       condition,
@@ -240,7 +239,7 @@ function calculateDiseaseRisks(variants: AnalyzedVariant[]): RiskAssessment[] {
   }
 
   // Sort by risk level
-  const riskOrder = { High: 3, Moderate: 2, Low: 1, Protective: 0 };
+  const riskOrder = { high: 3, moderate: 2, low: 1, protective: 0 };
   risks.sort((a, b) => riskOrder[b.riskLevel] - riskOrder[a.riskLevel]);
 
   return risks;

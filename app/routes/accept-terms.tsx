@@ -32,7 +32,7 @@ interface TermsData {
   };
 }
 
-export const Route = createFileRoute('/accept-terms')({
+export const Route = createFileRoute('/accept-terms' as any)({
   component: AcceptTermsPage,
   head: () => ({
     meta: [

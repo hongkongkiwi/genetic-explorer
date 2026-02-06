@@ -783,8 +783,8 @@ describe('Database Operations', () => {
         expect(access.permissionLevel).toBe('owner');
       });
 
-      it.skip('should return view permission for shared genome', () => {
-        // Skipped due to schema mismatch with sharing_permissions table
+      it('should return view permission for shared genome', () => {
+        // Test sharing permissions
         const owner = createUser(getUniqueEmail('owner2'), 'pass');
         const viewer = createUser(getUniqueEmail('viewer'), 'pass');
         const snps = createMockSNPs(3);
@@ -888,9 +888,7 @@ describe('Database Operations', () => {
 
   describe('Sharing Features', () => {
     describe('createSharingPermission', () => {
-      // Note: These tests are skipped because the database schema has a mismatch
-      // The code tries to insert into 'created_by' column which doesn't exist
-      it.skip('should create a sharing permission', () => {
+      it('should create a sharing permission', () => {
         const owner = createUser(getUniqueEmail('owner'), 'pass');
         const sharedWith = createUser(getUniqueEmail('shared'), 'pass');
 
@@ -903,7 +901,7 @@ describe('Database Operations', () => {
         expect(permission.status).toBe('active');
       });
 
-      it.skip('should create permission with expiration', () => {
+      it('should create permission with expiration', () => {
         const owner = createUser(getUniqueEmail('ownerexp'), 'pass');
         const sharedWith = createUser(getUniqueEmail('sharedexp'), 'pass');
         const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
@@ -913,7 +911,7 @@ describe('Database Operations', () => {
         expect(permission.expiresAt).toEqual(expiresAt);
       });
 
-      it.skip('should create permission with genome restriction', () => {
+      it('should create permission with genome restriction', () => {
         const owner = createUser(getUniqueEmail('ownergenome'), 'pass');
         const sharedWith = createUser(getUniqueEmail('sharedgenome'), 'pass');
         const snps = createMockSNPs(3);
@@ -926,7 +924,7 @@ describe('Database Operations', () => {
         expect(permission.genomeId).toBe(saved.id);
       });
 
-      it.skip('should create permission with message', () => {
+      it('should create permission with message', () => {
         const owner = createUser(getUniqueEmail('ownermessage'), 'pass');
         const sharedWith = createUser(getUniqueEmail('sharedmessage'), 'pass');
 
@@ -983,7 +981,7 @@ describe('Database Operations', () => {
     });
 
     describe('acceptSharingInvite', () => {
-      it.skip('should accept valid invite and create permission', () => {
+      it('should accept valid invite and create permission', () => {
         const owner = createUser(getUniqueEmail('owneraccept'), 'pass');
         const accepter = createUser(getUniqueEmail('accepter'), 'pass');
 
@@ -1005,7 +1003,7 @@ describe('Database Operations', () => {
     });
 
     describe('getSharedWithMe', () => {
-      it.skip('should return shares for user', () => {
+      it('should return shares for user', () => {
         const owner = createUser(getUniqueEmail('ownershare'), 'pass');
         const sharedWith = createUser(getUniqueEmail('sharedwith'), 'pass');
 
@@ -1023,7 +1021,7 @@ describe('Database Operations', () => {
     });
 
     describe('getMyShares', () => {
-      it.skip('should return shares created by user', () => {
+      it('should return shares created by user', () => {
         const owner = createUser(getUniqueEmail('ownermyshare'), 'pass', 'Owner');
         const sharedWith = createUser(getUniqueEmail('sharedmyshare'), 'pass', 'Shared');
 
@@ -1041,7 +1039,7 @@ describe('Database Operations', () => {
     });
 
     describe('revokeSharingPermission', () => {
-      it.skip('should revoke permission', () => {
+      it('should revoke permission', () => {
         const owner = createUser(getUniqueEmail('ownerrevoke'), 'pass');
         const sharedWith = createUser(getUniqueEmail('sharedrevoke'), 'pass');
 
@@ -1051,7 +1049,7 @@ describe('Database Operations', () => {
         expect(result).toBe(true);
       });
 
-      it.skip('should return false for non-owner', () => {
+      it('should return false for non-owner', () => {
         const owner = createUser(getUniqueEmail('ownerreal'), 'pass');
         const sharedWith = createUser(getUniqueEmail('sharedreal'), 'pass');
         const impostor = createUser(getUniqueEmail('impostor'), 'pass');
@@ -1091,11 +1089,11 @@ describe('Database Operations', () => {
     });
 
     describe('getSessionByToken', () => {
-      it.skip('should return null for expired session', () => {
-        // Skipped: This test has timezone sensitivity issues between Node.js and SQLite
+      it('should return null for expired session', () => {
         const user = createUser(getUniqueEmail('sessionexp'), 'pass');
         const token = `token-exp-${Date.now()}`;
-        const expiresAt = new Date(Date.now() - 1000); // Already expired
+        // Use a date far in the past to avoid timezone issues
+        const expiresAt = new Date('2000-01-01T00:00:00Z'); // Definitely expired
 
         createSession(user.id, token, expiresAt);
 
@@ -1266,8 +1264,8 @@ describe('Database Operations', () => {
     });
 
     describe('verifyAndUseBackupCode', () => {
-      it.skip('should verify and consume valid backup code', () => {
-        // Skipped: backup_codes table may not exist in current schema
+      it('should verify and consume valid backup code', () => {
+        // Test backup code verification
         const user = createUser(getUniqueEmail('backupverify'), 'pass');
         const code = 'ABCD-EFGH-IJKL-MNOP';
         
@@ -1286,8 +1284,7 @@ describe('Database Operations', () => {
         expect(count).toBe(0);
       });
 
-      it.skip('should return false for invalid code', () => {
-        // Skipped: backup_codes table may not exist in current schema
+      it('should return false for invalid code', () => {
         const user = createUser(getUniqueEmail('backupinvalid'), 'pass');
         
         saveBackupCodes(user.id, ['somehash']);
@@ -1298,8 +1295,7 @@ describe('Database Operations', () => {
     });
 
     describe('Passkey Management', () => {
-      it.skip('should save and retrieve passkeys', () => {
-        // Skipped: passkeys table may not exist in current schema
+      it('should save and retrieve passkeys', () => {
         const user = createUser(getUniqueEmail('passkey'), 'pass');
 
         savePasskey(user.id, 'cred-1', 'public-key-data', 0);
@@ -1309,8 +1305,7 @@ describe('Database Operations', () => {
         expect(passkeys.some(p => p.credentialId === 'cred-1')).toBe(true);
       });
 
-      it.skip('should get passkey by credential ID', () => {
-        // Skipped: passkeys table may not exist in current schema
+      it('should get passkey by credential ID', () => {
         const user = createUser(getUniqueEmail('passkeyget'), 'pass');
 
         savePasskey(user.id, 'cred-2', 'key-data', 5);
@@ -1321,14 +1316,12 @@ describe('Database Operations', () => {
         expect(passkey?.counter).toBe(5);
       });
 
-      it.skip('should return null for non-existent credential', () => {
-        // Skipped: passkeys table may not exist in current schema
+      it('should return null for non-existent credential', () => {
         const passkey = getPasskey('non-existent-cred');
         expect(passkey).toBeNull();
       });
 
-      it.skip('should update passkey counter', () => {
-        // Skipped: passkeys table may not exist in current schema
+      it('should update passkey counter', () => {
         const user = createUser(getUniqueEmail('passkeycounter'), 'pass');
 
         savePasskey(user.id, 'cred-3', 'key', 0);
@@ -1338,8 +1331,7 @@ describe('Database Operations', () => {
         expect(passkey?.counter).toBe(10);
       });
 
-      it.skip('should delete passkey by credential ID', () => {
-        // Skipped: passkeys table may not exist in current schema
+      it('should delete passkey by credential ID', () => {
         const user = createUser(getUniqueEmail('passkeydel'), 'pass');
 
         savePasskey(user.id, 'cred-4', 'key', 0);
@@ -1354,8 +1346,7 @@ describe('Database Operations', () => {
         expect(result).toBe(false);
       });
 
-      it.skip('should delete all passkeys for user', () => {
-        // Skipped: passkeys table may not exist in current schema
+      it('should delete all passkeys for user', () => {
         const user = createUser(getUniqueEmail('passkeydelall'), 'pass');
 
         savePasskey(user.id, 'cred-5', 'key1', 0);
@@ -1402,8 +1393,7 @@ describe('Database Operations', () => {
         expect(status.totpEnabled).toBe(true);
       });
 
-      it.skip('should detect passkey as enabled when passkeys exist', () => {
-        // Skipped: passkeys table may not exist in current schema
+      it('should detect passkey as enabled when passkeys exist', () => {
         const user = createUser(getUniqueEmail('2fapasskey'), 'pass');
 
         savePasskey(user.id, 'cred', 'key', 0);

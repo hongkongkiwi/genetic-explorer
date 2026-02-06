@@ -99,7 +99,14 @@ export function getMasterKeySync(): Buffer {
     console.warn('   Set ENCRYPTION_MASTER_KEY to a secure 32+ character random string.');
 
     // Derive a key from available secrets for development
-    const sessionSecret = process.env.SESSION_SECRET || 'dev-secret-change-in-production';
+    const sessionSecret = process.env.SESSION_SECRET;
+    if (!sessionSecret) {
+      throw new Error(
+        'SECURITY ERROR: SESSION_SECRET environment variable must be set. ' +
+        'In production, always set a secure SESSION_SECRET. ' +
+        'In development, you can use a temporary secret, but never commit it.'
+      );
+    }
     return crypto.scryptSync(sessionSecret, 'genetic-explorer-salt', KEY_LENGTH);
   }
 

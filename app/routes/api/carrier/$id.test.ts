@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import type { CarrierStatus, InheritancePattern, OffspringRisk, ClinicalSignificance } from '~/types/carrier';
+import { InheritancePattern, ClinicalSignificance, type CarrierStatus, type OffspringRisk } from '~/types/carrier';
 
 describe('Carrier API Schema', () => {
   describe('GET Response Structure', () => {
@@ -127,17 +127,17 @@ describe('Carrier API Schema', () => {
 
     it('should have valid inheritance patterns', () => {
       const validPatterns: InheritancePattern[] = [
-        'autosomal_recessive',
-        'autosomal_dominant',
-        'x_linked_recessive',
-        'x_linked_dominant',
-        'y_linked',
-        'mitochondrial',
-        'multifactorial',
+        InheritancePattern.AUTOSOMAL_RECESSIVE,
+        InheritancePattern.AUTOSOMAL_DOMINANT,
+        InheritancePattern.X_LINKED_RECESSIVE,
+        InheritancePattern.X_LINKED_DOMINANT,
+        InheritancePattern.Y_LINKED,
+        InheritancePattern.MITOCHONDRIAL,
+        InheritancePattern.MULTIFACTORIAL,
       ];
 
-      expect(validPatterns).toContain('autosomal_recessive');
-      expect(validPatterns).toContain('autosomal_dominant');
+      expect(validPatterns).toContain(InheritancePattern.AUTOSOMAL_RECESSIVE);
+      expect(validPatterns).toContain(InheritancePattern.AUTOSOMAL_DOMINANT);
     });
 
     it('should have valid offspring risk levels', () => {
@@ -156,15 +156,15 @@ describe('Carrier API Schema', () => {
 
     it('should have valid clinical significance levels', () => {
       const validSignificance: ClinicalSignificance[] = [
-        'definitive',
-        'strong',
-        'moderate',
-        'limited',
-        'uncertain',
+        ClinicalSignificance.DEFINITIVE,
+        ClinicalSignificance.STRONG,
+        ClinicalSignificance.MODERATE,
+        ClinicalSignificance.LIMITED,
+        ClinicalSignificance.UNCERTAIN,
       ];
 
-      expect(validSignificance).toContain('definitive');
-      expect(validSignificance).toContain('uncertain');
+      expect(validSignificance).toContain(ClinicalSignificance.DEFINITIVE);
+      expect(validSignificance).toContain(ClinicalSignificance.UNCERTAIN);
     });
   });
 
@@ -254,14 +254,14 @@ describe('Carrier API Schema', () => {
 
   describe('Partner Genome Access', () => {
     it('should check access to partner genome', () => {
-      const userId = 'user-123';
+      const userId: string = 'user-123';
       const partnerGenomeId = 'genome-456';
-      const partnerGenomeOwner = 'user-456';
+      const partnerGenomeOwner: string = 'user-456';
       const sharedWith = ['user-123'];
 
       const canAccess = userId === partnerGenomeOwner || sharedWith.includes(userId);
 
-      expect(canAccess).toBe(true);
+      expect(canAccess).toBe(true); // user-123 !== user-456, but sharedWith includes user-123
     });
 
     it('should deny access when user cannot access partner genome', () => {

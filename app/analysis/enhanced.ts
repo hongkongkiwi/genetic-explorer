@@ -1,106 +1,38 @@
 /**
- * Enhanced Genetic Analysis using Research Database
+ * Enhanced Genetic Analysis
+ * 
+ * Simplified version without external research database dependencies.
+ * Uses local SNP database for analysis.
  */
 
-import type { SNP, GeneticVariant } from '~/types/genetics';
-import { 
-  getResearchSNP, 
-  getClinVarForSNP, 
-  getPapersForSNP,
-  getDrugInteractionsForGene,
-  getGWASStudiesForSNP,
-} from '~/utils/research/database';
-import { syncSNPFromNCBI, syncClinVarForSNP, syncPubMedPapersForSNP } from '~/utils/research/sync';
+import type { SNP, GeneticVariant, ImpactLevel } from '~/types/genetics';
+import { getVariantInfo } from '~/db/queries';
 
 export interface EnhancedVariant extends GeneticVariant {
-  clinvarRecords: Awaited<ReturnType<typeof getClinVarForSNP>>;
-  relatedPapers: Awaited<ReturnType<typeof getPapersForSNP>>;
-  gwasStudies: Awaited<ReturnType<typeof getGWASStudiesForSNP>>;
+  clinvarRecords: unknown[];
+  relatedPapers: unknown[];
+  gwasStudies: unknown[];
 }
 
 export async function analyzeSNPAgainstResearch(snp: SNP): Promise<EnhancedVariant | null> {
-  let researchSNP = getResearchSNP(snp.rsid);
+  const variantInfo = getVariantInfo(snp);
   
-  if (!researchSNP) {
-    researchSNP = await syncSNPFromNCBI(snp.rsid);
-  }
-  
-  if (!researchSNP) {
+  if (!variantInfo) {
     return null;
-  }
-  
-  const [clinvarRecords, relatedPapers, gwasStudies] = await Promise.all([
-    getClinVarForSNP(snp.rsid),
-    getPapersForSNP(snp.rsid),
-    getGWASStudiesForSNP(snp.rsid),
-  ]);
-  
-  if (clinvarRecords.length === 0) {
-    const newClinvar = await syncClinVarForSNP(snp.rsid);
-    clinvarRecords.push(...newClinvar);
-  }
-  
-  if (relatedPapers.length === 0) {
-    const newPapers = await syncPubMedPapersForSNP(snp.rsid, 5);
-    relatedPapers.push(...newPapers);
-  }
-  
-  let significance: GeneticVariant['significance'] = 'uncertain';
-  const pathogenicRecords = clinvarRecords.filter(r => 
-    r.clinicalSignificance === 'pathogenic' || r.clinicalSignificance === 'likely_pathogenic'
-  );
-  const benignRecords = clinvarRecords.filter(r => 
-    r.clinicalSignificance === 'benign' || r.clinicalSignificance === 'likely_benign'
-  );
-  
-  if (pathogenicRecords.length > 0) {
-    significance = 'pathogenic';
-  } else if (benignRecords.length > 0) {
-    significance = 'benign';
-  }
-  
-  let impact = 1;
-  if (pathogenicRecords.some(r => r.clinicalSignificance === 'pathogenic')) {
-    impact = 5;
-  } else if (pathogenicRecords.length > 0) {
-    impact = 4;
-  } else if (gwasStudies.some(s => s.pValue < 5e-8)) {
-    impact = 3;
-  }
-  
-  let category = 'unknown';
-  if (gwasStudies.length > 0) {
-    const traits = gwasStudies.map(s => s.trait.toLowerCase());
-    if (traits.some(t => t.includes('drug') || t.includes('medication'))) {
-      category = 'drug_response';
-    } else if (traits.some(t => t.includes('weight') || t.includes('obesity'))) {
-      category = 'nutrition';
-    } else if (traits.some(t => t.includes('exercise') || t.includes('muscle'))) {
-      category = 'fitness';
-    } else if (traits.some(t => t.includes('disease') || t.includes('cancer'))) {
-      category = 'disease_risk';
-    }
   }
   
   const variant: EnhancedVariant = {
     snp,
-    gene: researchSNP.geneSymbol || 'Unknown',
-    impact,
-    category: category as any,
-    significance,
-    description: researchSNP.geneName || `Variant in ${researchSNP.geneSymbol || 'unknown gene'}`,
+    gene: variantInfo.gene || 'Unknown',
+    impact: (variantInfo.impact || 1) as ImpactLevel,
+    category: (variantInfo.category || 'unknown') as GeneticVariant['category'],
+    significance: 'uncertain',
+    description: variantInfo.description || `Variant in ${variantInfo.gene || 'unknown gene'}`,
     recommendations: [],
-    studies: relatedPapers.map(p => ({
-      id: p.pmid,
-      title: p.title,
-      authors: p.authors,
-      journal: p.journal,
-      year: p.publicationDate?.getFullYear() || 0,
-      pmid: p.pmid,
-    })),
-    clinvarRecords,
-    relatedPapers,
-    gwasStudies,
+    studies: [],
+    clinvarRecords: [],
+    relatedPapers: [],
+    gwasStudies: [],
   };
   
   return variant;

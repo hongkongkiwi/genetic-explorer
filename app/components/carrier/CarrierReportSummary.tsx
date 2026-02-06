@@ -215,8 +215,8 @@ export function CarrierReportSummary({ report, onFilterByStatus }: CarrierReport
                       {summary.affectedCount > 0 
                         ? `You have ${summary.affectedCount} condition(s) that require immediate medical attention. `
                         : ''}
-                      {summary.counselingRecommended.length > 0 
-                        ? `${summary.counselingRecommended.length} result(s) recommend genetic counseling.` 
+                      {report.counselingRecommended.length > 0 
+                        ? `${report.counselingRecommended.length} result(s) recommend genetic counseling.` 
                         : ''}
                       Please consult with a healthcare provider or genetic counselor.
                     </p>

@@ -18,9 +18,11 @@ interface SecurityHeaders {
 export function getSecurityHeaders(isProduction: boolean = true): SecurityHeaders {
   const headers: SecurityHeaders = {
     // Prevent XSS attacks
+    // Note: 'unsafe-inline' is required for React inline styles
+    // Consider implementing nonce-based CSP for stricter security
     'Content-Security-Policy': [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // Needed for React
+      "script-src 'self' 'unsafe-inline'", // 'unsafe-eval' removed - not needed in modern React
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: https:",
       "font-src 'self'",
@@ -28,6 +30,7 @@ export function getSecurityHeaders(isProduction: boolean = true): SecurityHeader
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",
+      "upgrade-insecure-requests", // Force HTTPS
     ].join('; '),
     
     // Prevent clickjacking

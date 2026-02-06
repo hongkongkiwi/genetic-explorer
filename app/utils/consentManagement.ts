@@ -44,6 +44,7 @@ interface UserConsent {
   grantedAt?: string;
   withdrawnAt?: string;
   expiresAt?: string;
+  updatedAt?: string;
   version: string;
   ipAddress?: string;
   userAgent?: string;

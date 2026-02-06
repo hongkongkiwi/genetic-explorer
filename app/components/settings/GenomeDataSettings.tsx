@@ -8,7 +8,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '~/components/ui/card';
+} from '~/components/ui/Card';
 import {
   Dialog,
   DialogContent,
@@ -16,8 +16,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '~/components/ui/dialog';
-import { useToast } from '~/hooks/useToast';
+} from '~/components/ui/Dialog';
+import { useToast } from '~/hooks/use-toast';
 
 /**
  * Genome Data Settings Component

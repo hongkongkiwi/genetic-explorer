@@ -9,7 +9,8 @@ import { Command } from 'commander';
 import inquirer from 'inquirer';
 import open from 'open';
 import { loadConfig, getToken, setToken, clearToken, isAuthenticated } from './config';
-import * as client from './api/client';
+import * as client from './tools/api/client';
+import type { UserData, GenomeSummary, SnpData } from './tools/api/client';
 
 const program = new Command();
 

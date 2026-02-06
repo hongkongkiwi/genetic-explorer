@@ -31,6 +31,9 @@ class ConsoleTransport {
   warn(message: string, metadata?: Record<string, unknown>) { this.log('warn', message, metadata); }
   error(message: string, metadata?: Record<string, unknown>) { this.log('error', message, metadata); }
   fatal(message: string, metadata?: Record<string, unknown>) { this.log('fatal', message, metadata); }
+  
+  // LogLayer transport interface methods
+  shipToLogger(_log: any) { return { success: true }; }
 }
 
 // Initialize transports
@@ -46,7 +49,7 @@ transports.push(new ConsoleTransport());
 
 // Build config - LogLayer requires at least one transport
 const config: LogLayerConfig = {
-  transport: transports.length === 1 ? transports[0] : transports,
+  transport: transports.length === 1 ? transports[0] : transports as any,
 };
 
 /**
@@ -109,7 +112,7 @@ export function logSecurityEvent(
   
   // Also log details if present
   if (Object.keys(details).length > 0) {
-    logger.withContext({ eventType: 'security', severity }).debug('Security details', details);
+    logger.withContext({ eventType: 'security', severity, ...details }).debug('Security details');
   }
 }
 
@@ -131,7 +134,7 @@ export function logAuditEvent(
   log.info(`Audit: ${action}`);
   
   if (details && Object.keys(details).length > 0) {
-    log.debug('Audit details', details);
+    log.withContext(details).debug('Audit details');
   }
 }
 
@@ -187,7 +190,7 @@ export function getLoggingStatus(): {
   axiomUrl?: string;
 } {
   return {
-    consoleEnabled: shouldUseConsole,
+    consoleEnabled: true,
     axiomEnabled: isAxiomConfigured(),
     axiomDataset: process.env.AXIOM_DATASET,
     axiomUrl: process.env.AXIOM_URL,
@@ -200,7 +203,9 @@ export function getLoggingStatus(): {
 export async function flushLogs(): Promise<void> {
   // Flush Axiom transports
   for (const transport of transports) {
-    await transport.shutdown();
+    if ('shutdown' in transport && typeof (transport as any).shutdown === 'function') {
+      await (transport as any).shutdown();
+    }
   }
   
   // Ensure all async operations complete

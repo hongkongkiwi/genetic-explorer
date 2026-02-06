@@ -14,6 +14,7 @@
 
 import crypto from 'crypto';
 import { getDb } from '~/db';
+import { registerInterval } from './intervalRegistry';
 
 // Configuration
 const SIGNATURE_VERSION = 'v1';
@@ -291,7 +292,7 @@ export function cleanupUsedNonces(): void {
 }
 
 // Start periodic cleanup
-setInterval(cleanupUsedNonces, NONCE_CLEANUP_INTERVAL);
+registerInterval(setInterval(cleanupUsedNonces, NONCE_CLEANUP_INTERVAL));
 
 /**
  * Middleware helper for API routes

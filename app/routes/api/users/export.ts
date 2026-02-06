@@ -1,22 +1,21 @@
-import { json } from '@tanstack/start'
 import { createAPIFileRoute } from '@tanstack/start/api'
-import crypto from 'crypto'
-import { requireAuth, getUserByEmail } from '~/utils/auth'
+import * as crypto from 'crypto'
+import { requireAuth, getUserByEmail } from '~/utils/auth.server'
 import {
   getDb,
   getUserById,
   getUserGenomes,
   getUserOAuthAccounts,
   getUserActivity,
+  logActivity,
 } from '~/utils/database'
 import {
-  verifyTotpCode,
   verifyEmailCode,
   verifyBackupCode,
   is2faRequiredForAction,
+  generateEmailCode,
+  storeEmailCode,
 } from '~/utils/twoFactor'
-import { v4 as uuidv4 } from 'uuid'
-import { logActivity } from '~/utils/database'
 import { getClientIp } from '~/utils/rateLimit'
 
 // ============================================================================
@@ -85,7 +84,7 @@ function clearExportVerification(key: string): void {
 // ============================================================================
 
 export const APIRoute = createAPIFileRoute('/api/users/export')({
-  POST: async ({ request }) => {
+  POST: async ({ request }: { request: Request }) => {
     try {
       // Require authentication
       const auth = requireAuth(request)
@@ -96,7 +95,7 @@ export const APIRoute = createAPIFileRoute('/api/users/export')({
 
       // Validate request
       if (!password) {
-        return json(
+        return Response.json(
           { success: false, error: 'Password is required for verification' },
           { status: 400 },
         )
@@ -105,7 +104,7 @@ export const APIRoute = createAPIFileRoute('/api/users/export')({
       // Verify password
       const userWithPassword = getUserByEmail(auth.email)
       if (!userWithPassword) {
-        return json(
+        return Response.json(
           { success: false, error: 'User not found' },
           { status: 404 },
         )
@@ -114,13 +113,13 @@ export const APIRoute = createAPIFileRoute('/api/users/export')({
       // Check if user has a password (OAuth users may not)
       if (userWithPassword.passwordHash) {
         const [salt, hash] = userWithPassword.passwordHash.split(':')
-        const { hash: computedHash } = crypto.pbkdf2Sync(
+        const computedHash = crypto.pbkdf2Sync(
           password,
           salt,
           100000,
           64,
           'sha256',
-        )
+        ).toString('hex')
         if (computedHash !== hash) {
           logActivity(
             auth.id,
@@ -130,7 +129,7 @@ export const APIRoute = createAPIFileRoute('/api/users/export')({
             { reason: 'invalid_password' },
             ipAddress,
           )
-          return json(
+          return Response.json(
             { success: false, error: 'Invalid password' },
             { status: 401 },
           )
@@ -144,7 +143,7 @@ export const APIRoute = createAPIFileRoute('/api/users/export')({
       if (is2faRequiredForAction('export')) {
         if (!twoFactor || !twoFactor.code) {
           // Return challenge to require 2FA
-          return json(
+          return Response.json(
             {
               success: false,
               requiresTwoFactor: true,
@@ -162,7 +161,7 @@ export const APIRoute = createAPIFileRoute('/api/users/export')({
           // Get user's TOTP secret from database (placeholder)
           // const totpSecret = await getUserTotpSecret(auth.id);
           // is2faValid = verifyTotpCode(totpSecret, twoFactor.code);
-          return json(
+          return Response.json(
             { success: false, error: 'TOTP verification not yet configured' },
             { status: 501 },
           )
@@ -182,7 +181,7 @@ export const APIRoute = createAPIFileRoute('/api/users/export')({
             { reason: 'invalid_2fa', method: twoFactor.method },
             ipAddress,
           )
-          return json(
+          return Response.json(
             { success: false, error: 'Invalid verification code' },
             { status: 401 },
           )
@@ -203,7 +202,7 @@ export const APIRoute = createAPIFileRoute('/api/users/export')({
         ipAddress,
       )
 
-      return json({
+      return Response.json({
         success: true,
         verificationKey,
         expiresIn: EXPORT_VERIFICATION_TIMEOUT / 1000, // seconds
@@ -211,10 +210,10 @@ export const APIRoute = createAPIFileRoute('/api/users/export')({
       })
     } catch (error) {
       if (error instanceof Error && error.message === 'Unauthorized') {
-        return json({ success: false, error: 'Unauthorized' }, { status: 401 })
+        return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 })
       }
       console.error('Export verification error:', error)
-      return json(
+      return Response.json(
         { success: false, error: 'An unexpected error occurred' },
         { status: 500 },
       )
@@ -222,7 +221,7 @@ export const APIRoute = createAPIFileRoute('/api/users/export')({
   },
 
   // GET: Actually perform the export (requires verification)
-  GET: async ({ request }) => {
+  GET: async ({ request }: { request: Request }) => {
     try {
       // Require authentication
       const auth = requireAuth(request)
@@ -241,7 +240,7 @@ export const APIRoute = createAPIFileRoute('/api/users/export')({
         url.searchParams.get('includePreferences') !== 'false'
 
       if (!verificationKey || !isExportVerified(verificationKey, auth.id)) {
-        return json(
+        return Response.json(
           {
             success: false,
             error:
@@ -254,14 +253,14 @@ export const APIRoute = createAPIFileRoute('/api/users/export')({
       // Get user data
       const user = getUserById(auth.id)
       if (!user) {
-        return json(
+        return Response.json(
           { success: false, error: 'User not found' },
           { status: 404 },
         )
       }
 
       // Collect export data
-      const exportData: Record<string, any> = {
+      const exportData: Record<string, unknown> = {
         exportedAt: new Date().toISOString(),
         appVersion: '1.0.0',
         user: null,
@@ -293,7 +292,7 @@ export const APIRoute = createAPIFileRoute('/api/users/export')({
           snpCount: g.snp_count,
           uploadedAt: g.processed_at,
           status: g.status,
-          nickname: g.nickname,
+          // nickname: g.nickname, // Property not available on GenomeMetadata
         }))
       }
 
@@ -309,7 +308,7 @@ export const APIRoute = createAPIFileRoute('/api/users/export')({
           ORDER BY generated_at DESC
         `,
           )
-          .all(auth.id) as any[]
+          .all(auth.id) as Array<{ id: string; genome_id: string; generated_at: string; report_data: unknown }>
 
         exportData.reports = reports.map((r) => ({
           id: r.id,
@@ -363,7 +362,7 @@ export const APIRoute = createAPIFileRoute('/api/users/export')({
 
       // Return data
       if (format === 'json') {
-        return json(exportData, {
+        return Response.json(exportData, {
           headers: {
             'Content-Disposition': `attachment; filename="genetic-explorer-data-${Date.now()}.json"`,
             'Content-Type': 'application/json',
@@ -371,76 +370,20 @@ export const APIRoute = createAPIFileRoute('/api/users/export')({
         })
       } else {
         // ZIP format would require additional processing
-        return json(
+        return Response.json(
           { success: false, error: 'ZIP format not yet implemented' },
           { status: 501 },
         )
       }
     } catch (error) {
       if (error instanceof Error && error.message === 'Unauthorized') {
-        return json({ success: false, error: 'Unauthorized' }, { status: 401 })
+        return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 })
       }
       console.error('Export error:', error)
-      return json(
+      return Response.json(
         { success: false, error: 'An unexpected error occurred' },
         { status: 500 },
       )
     }
   },
 })
-
-// ============================================================================
-// POST: Request email verification code for export
-// ============================================================================
-
-export const APIRouteSendVerification = createAPIFileRoute('/api/users/export')(
-  {
-    POST: async ({ request }) => {
-      try {
-        const auth = requireAuth(request)
-
-        // Generate and store email code
-        const {
-          generateEmailCode,
-          storeEmailCode,
-        } = require('~/utils/twoFactor')
-        const code = generateEmailCode()
-        storeEmailCode(auth.email, code)
-
-        // In production, send email with code
-        // For now, log it (remove in production!)
-        console.log(`Export verification code for ${auth.email}: ${code}`)
-
-        // Log the request
-        const ipAddress = getClientIp(request)
-        logActivity(
-          auth.id,
-          'export_verification_sent',
-          'export',
-          auth.id,
-          {},
-          ipAddress,
-        )
-
-        return json({
-          success: true,
-          message: 'Verification code sent to your email',
-          // Remove this in production - only for development
-          // devCode: code,
-        })
-      } catch (error) {
-        if (error instanceof Error && error.message === 'Unauthorized') {
-          return json(
-            { success: false, error: 'Unauthorized' },
-            { status: 401 },
-          )
-        }
-        console.error('Send verification error:', error)
-        return json(
-          { success: false, error: 'An unexpected error occurred' },
-          { status: 500 },
-        )
-      }
-    },
-  },
-)

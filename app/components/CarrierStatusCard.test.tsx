@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { CarrierStatusCard, CarrierSummaryCard } from './CarrierStatusCard';
-import { InheritancePattern } from '~/types/carrier';
+import { InheritancePattern, ClinicalSignificance } from '~/types/carrier';
 import type { CarrierResult } from '~/types/carrier';
 
 // Mock framer-motion
@@ -33,7 +33,7 @@ describe('CarrierStatusCard', () => {
       ],
       associatedSNPs: ['rs113993960'],
       prevalence: { european: '1/25', ashkenazi: '1/29' },
-      clinicalSignificance: 'definitive',
+      clinicalSignificance: ClinicalSignificance.DEFINITIVE,
       severity: 'high',
       recommendations: ['Genetic counseling', 'Family screening', 'Prenatal testing'],
       resources: [

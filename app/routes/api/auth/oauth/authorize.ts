@@ -1,22 +1,30 @@
-import { redirect } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
-import { getOAuthAuthorizationUrl, isOAuthProviderConfigured, OAuthProvider, generateOAuthState } from '~/utils/oauth';
+import type { OAuthProvider } from '~/auth/oauth';
+import { getOAuthAuthorizationUrl, isOAuthProviderConfigured, generateOAuthState } from '~/auth/oauth';
+
+const VALID_PROVIDERS: string[] = ['google', 'github'];
 
 export const APIRoute = createAPIFileRoute('/api/auth/oauth/authorize')({
-  GET: async ({ request, params }) => {
+  GET: async ({ request }: { request: Request }) => {
     try {
       const url = new URL(request.url);
       const provider = url.searchParams.get('provider') as OAuthProvider;
 
       // Validate provider
-      if (!provider || !['google', 'github'].includes(provider)) {
-        throw redirect({ to: '/login', statusCode: 302 });
+      if (!provider || !VALID_PROVIDERS.includes(provider)) {
+        return new Response(null, { 
+          status: 302, 
+          headers: { Location: '/login' } 
+        });
       }
 
       // Check if provider is configured
       if (!isOAuthProviderConfigured(provider)) {
         console.warn(`OAuth provider ${provider} is not configured`);
-        throw redirect({ to: '/login', statusCode: 302 });
+        return new Response(null, { 
+          status: 302, 
+          headers: { Location: '/login' } 
+        });
       }
 
       // Get redirect URI
@@ -36,11 +44,16 @@ export const APIRoute = createAPIFileRoute('/api/auth/oauth/authorize')({
       const authUrl = getOAuthAuthorizationUrl(provider, callbackUrl, state);
 
       // Redirect to OAuth provider
-      throw redirect({ to: authUrl, statusCode: 302 });
+      return new Response(null, { 
+        status: 302, 
+        headers: { Location: authUrl } 
+      });
     } catch (error) {
-      if (error instanceof Response) throw error;
       console.error('OAuth authorize error:', error);
-      throw redirect({ to: '/login', statusCode: 302 });
+      return new Response(null, { 
+        status: 302, 
+        headers: { Location: '/login' } 
+      });
     }
   },
 });

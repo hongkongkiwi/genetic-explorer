@@ -1,6 +1,5 @@
-import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
-import { requireAuth } from '~/utils/auth';
+import { requireAuth } from '~/utils/auth.server';
 import { getGenome, getUserSNPs, logActivity } from '~/utils/database';
 import { generateDoctorReport, formatReportForExport, formatDoctorReportForPrint } from '~/utils/doctorReport';
 import { getClientIp } from '~/utils/rateLimit';
@@ -21,7 +20,7 @@ export const APIRoute = createAPIFileRoute('/api/export/doctor')({
       const format = (url.searchParams.get('format') as 'txt' | 'json' | 'pdf') || 'txt';
 
       if (!genomeId) {
-        return json({ success: false, error: 'Genome ID is required' }, { status: 400 });
+        return Response.json({ success: false, error: 'Genome ID is required' }, { status: 400 });
       }
 
       // Verify access to genome
@@ -29,58 +28,56 @@ export const APIRoute = createAPIFileRoute('/api/export/doctor')({
       const access = await canAccessGenome(auth.id, genomeId);
 
       if (!access.canAccess) {
-        return json({ success: false, error: 'Access denied to this genome' }, { status: 403 });
+        return Response.json({ success: false, error: 'Access denied to this genome' }, { status: 403 });
       }
 
       // Get genome data
       const genome = getGenome(genomeId);
       if (!genome) {
-        return json({ success: false, error: 'Genome not found' }, { status: 404 });
+        return Response.json({ success: false, error: 'Genome not found' }, { status: 404 });
       }
 
-      // Get SNP data
-      const snps = getUserSNPs(genomeId);
-
       // Generate report
-      const report = generateDoctorReport(auth.id, genomeId, [], snps);
+      const snps = genome.snps || genome;
+      const report = generateDoctorReport(auth.id, snps);
 
       // Log the export
       logActivity(auth.id, 'doctor_report_exported', 'genome', genomeId, {
         format,
-        variantsAnalyzed: snps.length,
-        findingsCount: report.clinicallySignificantFindings.length,
+        variantsAnalyzed: 0,
+        findingsCount: report.carrierResults.length,
       }, ipAddress);
 
       // Format for export
-      const exportData = formatReportForExport(report, format);
+      const exportContent = formatReportForExport(report);
 
       // Return appropriate response
       if (format === 'json') {
-        return json(exportData.content, {
+        return new Response(exportContent, {
           headers: {
-            'Content-Disposition': `attachment; filename="${exportData.filename}"`,
-            'Content-Type': exportData.contentType,
+            'Content-Disposition': `attachment; filename="doctor-report-${genomeId}.json"`,
+            'Content-Type': 'application/json',
           },
         });
       }
 
       // For txt format, return as downloadable
-      return json({
+      return Response.json({
         success: true,
         report: formatDoctorReportForPrint(report),
-        filename: exportData.filename,
+        filename: `doctor-report-${genomeId}.txt`,
       }, {
         headers: {
-          'Content-Disposition': `attachment; filename="${exportData.filename}"`,
-          'Content-Type': exportData.contentType,
+          'Content-Disposition': `attachment; filename="doctor-report-${genomeId}.txt"`,
+          'Content-Type': 'text/plain',
         },
       });
     } catch (error) {
       if (error instanceof Error && error.message === 'Unauthorized') {
-        return json({ success: false, error: 'Unauthorized' }, { status: 401 });
+        return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
       }
       console.error('Doctor report export error:', error);
-      return json({ success: false, error: 'An unexpected error occurred' }, { status: 500 });
+      return Response.json({ success: false, error: 'An unexpected error occurred' }, { status: 500 });
     }
   },
 
@@ -94,7 +91,7 @@ export const APIRoute = createAPIFileRoute('/api/export/doctor')({
       const { genomeId } = body;
 
       if (!genomeId) {
-        return json({ success: false, error: 'Genome ID is required' }, { status: 400 });
+        return Response.json({ success: false, error: 'Genome ID is required' }, { status: 400 });
       }
 
       // Verify access to genome
@@ -102,37 +99,35 @@ export const APIRoute = createAPIFileRoute('/api/export/doctor')({
       const access = await canAccessGenome(auth.id, genomeId);
 
       if (!access.canAccess) {
-        return json({ success: false, error: 'Access denied to this genome' }, { status: 403 });
+        return Response.json({ success: false, error: 'Access denied to this genome' }, { status: 403 });
       }
 
       // Get genome data
       const genome = getGenome(genomeId);
       if (!genome) {
-        return json({ success: false, error: 'Genome not found' }, { status: 404 });
+        return Response.json({ success: false, error: 'Genome not found' }, { status: 404 });
       }
 
-      // Get SNP data
-      const snps = getUserSNPs(genomeId);
-
       // Generate report
-      const report = generateDoctorReport(auth.id, genomeId, [], snps);
+      const previewSnps = genome.snps || genome;
+      const report = generateDoctorReport(auth.id, previewSnps);
 
       // Log the preview
       logActivity(auth.id, 'doctor_report_previewed', 'genome', genomeId, {
-        variantsAnalyzed: snps.length,
-        findingsCount: report.clinicallySignificantFindings.length,
+        variantsAnalyzed: report.clinicalSummary.totalVariantsAnalyzed,
+        findingsCount: report.carrierResults.length,
       }, ipAddress);
 
-      return json({
+      return Response.json({
         success: true,
         report,
       });
     } catch (error) {
       if (error instanceof Error && error.message === 'Unauthorized') {
-        return json({ success: false, error: 'Unauthorized' }, { status: 401 });
+        return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
       }
       console.error('Doctor report preview error:', error);
-      return json({ success: false, error: 'An unexpected error occurred' }, { status: 500 });
+      return Response.json({ success: false, error: 'An unexpected error occurred' }, { status: 500 });
     }
   },
 });

@@ -5,26 +5,74 @@
  * MCP (Model Context Protocol) server for Genetic Explorer.
  */
 
-import { StdioServerTransport } from '@anthropic-ai/sdk';
-import { McpServer } from '@anthropic-ai/sdk';
-import { loadConfig, isAuthenticated } from './config';
+import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import type { CallToolRequest, ListToolsRequest } from '@modelcontextprotocol/sdk/types.js';
+import { isAuthenticated } from './config';
 import { executeTool } from './tools';
 
-const server = new McpServer({
-  name: 'Genetic Explorer',
-  version: '1.0.0',
-  description: 'Query your genetic data from Genetic Explorer',
+const server = new Server(
+  {
+    name: 'genetic-explorer-mcp',
+    version: '1.0.0',
+  },
+  {
+    capabilities: {
+      tools: {},
+    },
+  }
+);
+
+// Handle list tools request
+server.setRequestHandler('tools/list' as any, async (_request: ListToolsRequest) => {
+  return {
+    tools: [
+      {
+        name: 'get_genome_summary',
+        description: 'Get a summary of your uploaded genome data',
+        inputSchema: { type: 'object', properties: {}, required: [] },
+      },
+      {
+        name: 'get_genome_stats',
+        description: 'Get detailed statistics about your genome coverage and quality',
+        inputSchema: { type: 'object', properties: {}, required: [] },
+      },
+      {
+        name: 'search_snps',
+        description: 'Search for specific SNP variations by RSID or gene',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            query: { type: 'string', description: 'RSID (e.g., rs12345) or gene symbol (e.g., BRCA1)' },
+          },
+          required: ['query'],
+        },
+      },
+      {
+        name: 'get_health_profile',
+        description: 'Get your health profile including genetic traits',
+        inputSchema: { type: 'object', properties: {}, required: [] },
+      },
+      {
+        name: 'get_carrier_status',
+        description: 'Get your carrier status for genetic conditions',
+        inputSchema: { type: 'object', properties: {}, required: [] },
+      },
+      {
+        name: 'get_ancestry_composition',
+        description: 'Get your ancestry composition breakdown',
+        inputSchema: { type: 'object', properties: {}, required: [] },
+      },
+    ],
+  };
 });
 
-// Genome tools
-server.tool('get_genome_summary', 'Get a summary of your uploaded genome data', {}, async () => executeTool('genome_summary', {}));
-server.tool('get_genome_stats', 'Get detailed statistics about your genome coverage and quality', {}, async () => executeTool('genome_stats', {}));
-server.tool('search_snps', 'Search for specific SNP variations by RSID or gene', { query: { type: 'string', description: 'RSID (e.g., rs12345) or gene symbol (e.g., BRCA1)' } }, async (args: any) => executeTool('search_snps', args));
-
-// Health tools
-server.tool('get_health_profile', 'Get your health profile including genetic traits', {}, async () => executeTool('health_profile', {}));
-server.tool('get_carrier_status', 'Get your carrier status for genetic conditions', {}, async () => executeTool('carrier_status', {}));
-server.tool('get_ancestry_composition', 'Get your ancestry composition breakdown', {}, async () => executeTool('ancestry_composition', {}));
+// Handle tool call request
+server.setRequestHandler('tools/call' as any, async (request: CallToolRequest) => {
+  const { name, arguments: args } = request.params;
+  const result = await executeTool(name, args || {});
+  return { content: result };
+});
 
 async function main() {
   if (!isAuthenticated()) {

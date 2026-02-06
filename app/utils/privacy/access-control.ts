@@ -370,9 +370,11 @@ export async function performSecureDelete(
   switch (verification.resourceType) {
     case 'genome':
       query = 'DELETE FROM genomes WHERE id = ? AND user_id = ?';
+      params = [verification.resourceId, verification.userId];
       break;
     case 'report':
       query = 'DELETE FROM reports WHERE id = ? AND user_id = ?';
+      params = [verification.resourceId, verification.userId];
       break;
     case 'activity_log':
       query = 'DELETE FROM activity_logs WHERE user_id = ?';
@@ -381,8 +383,6 @@ export async function performSecureDelete(
     default:
       return { success: false, error: `Cannot delete ${verification.resourceType}` };
   }
-
-  if (!params) params = [verification.resourceId, verification.userId];
 
   const result = db.prepare(query).run(...params);
 

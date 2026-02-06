@@ -395,7 +395,7 @@ describe('Genome Parser', () => {
         { rsid: 'rs1799983', chromosome: '7', position: 150696111, genotype: 'TT' }
       );
 
-      const result = validateGenomeData(snps);
+      const result = validateGenomeData(snps as SNP[]);
 
       expect(result.valid).toBe(true);
       expect(result.errors).toHaveLength(0);
@@ -424,7 +424,7 @@ describe('Genome Parser', () => {
     it('warns about missing expected SNPs', () => {
       const snps = generateLargeSNPSet(100000);
 
-      const result = validateGenomeData(snps);
+      const result = validateGenomeData(snps as SNP[]);
 
       expect(result.valid).toBe(false);
       expect(result.errors.some(e => e.includes('Could not identify common SNPs'))).toBe(true);
@@ -434,7 +434,7 @@ describe('Genome Parser', () => {
       const snps = generateLargeSNPSet(100000);
       snps.push({ rsid: 'rs1801133', chromosome: '1', position: 11856378, genotype: 'GG' });
 
-      const result = validateGenomeData(snps);
+      const result = validateGenomeData(snps as SNP[]);
 
       expect(result.valid).toBe(true);
       expect(result.errors).toHaveLength(0);

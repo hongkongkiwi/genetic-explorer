@@ -48,7 +48,7 @@ function NotificationsPage() {
   const { user, isAuthenticated, isLoading, refreshUser } = useAuth();
   const [preferences, setPreferences] = useState<NotificationPreferences>(defaultPreferences);
   const [isSaving, setIsSaving] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [message, setMessage] = useState<{ type: 'success' | 'destructive'; text: string } | null>(null);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -82,10 +82,10 @@ function NotificationsPage() {
         setMessage({ type: 'success', text: 'Notification preferences saved!' });
         await refreshUser();
       } else {
-        setMessage({ type: 'error', text: 'Failed to save preferences' });
+        setMessage({ type: 'destructive', text: 'Failed to save preferences' });
       }
     } catch {
-      setMessage({ type: 'error', text: 'An unexpected error occurred' });
+      setMessage({ type: 'destructive', text: 'An unexpected error occurred' });
     }
 
     setIsSaving(false);

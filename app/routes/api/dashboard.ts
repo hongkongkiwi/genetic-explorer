@@ -1,7 +1,6 @@
-import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
 import { getDb } from '~/utils/database';
-import { requireAuth } from '~/utils/auth';
+import { requireAuth } from '~/utils/auth.server';
 
 export const APIRoute = createAPIFileRoute('/api/dashboard')({
   GET: async ({ request }) => {
@@ -115,7 +114,7 @@ FROM research_updates
         recommendations.push('Share your genetic data with family members');
       }
 
-      return json({
+      return Response.json({
         success: true,
         data: {
           stats: {
@@ -136,7 +135,7 @@ FROM research_updates
       });
     } catch (error) {
       console.error('Dashboard API error:', error);
-      return json(
+      return Response.json(
         { success: false, error: 'Failed to fetch dashboard data' },
         { status: 500 }
       );

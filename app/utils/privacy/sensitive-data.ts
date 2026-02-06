@@ -295,7 +295,7 @@ export function filterSNPsBySensitivity(
     );
 
     const sensitivityLevel = category?.level || 'normal';
-    const isHidden = category?.requiresDisclaimer && !canViewAll;
+    const isHidden = !!(category?.requiresDisclaimer && !canViewAll);
 
     return {
       rsid: snp.rsid,

@@ -1,6 +1,5 @@
-import { json } from '@tanstack/start'
 import { createAPIFileRoute } from '@tanstack/start/api'
-import { parseGeneticData, validateGenomeData } from '~/utils/genomeParser'
+import { parseGeneticData, validateGenomeData } from '~/utils/genome/parser'
 import {
   saveGenome,
   getAccessibleGenomes,
@@ -12,7 +11,7 @@ import {
   setPrimaryGenome,
   logActivity,
 } from '~/utils/database'
-import { requireAuth } from '~/utils/auth'
+import { requireAuth } from '~/utils/auth.server'
 import { csrfProtection } from '~/utils/csrf'
 import {
   decompressBuffer,
@@ -21,34 +20,52 @@ import {
   formatFileSize,
   validateGeneticContent,
   validateFileMagic,
-} from '~/utils/fileCompression'
+} from '~/utils/genome/file-compression'
 
 // Maximum file size: 100MB compressed, ~500MB decompressed
 const MAX_FILE_SIZE = 100 * 1024 * 1024
 const MAX_DECOMPRESSED_SIZE = 500 * 1024 * 1024
 
+interface GenomeRecord {
+  id: string
+  original_filename: string
+  filename: string
+  source: string
+  snp_count: number
+  stored_snps: number
+  file_size: number
+  compression_type: string | null
+  checksum_sha256: string
+  processed_at: string
+  status: string
+  is_primary: number
+  nickname: string | null
+  accessLevel?: string
+  sharedBy?: string
+}
+
 export const APIRoute = createAPIFileRoute('/api/genomes')({
-  GET: async ({ request }) => {
+  GET: async ({ request }: { request: Request }) => {
     try {
       const auth = requireAuth(request)
 
       // If authenticated, return user's genomes and shared genomes
-      let genomes
+      let genomes: GenomeRecord[]
       if (auth) {
         const url = new URL(request.url)
         const mineOnly = url.searchParams.get('mine') === 'true'
-        genomes = mineOnly
+        genomes = (mineOnly
           ? getUserGenomes(auth.id)
-          : getAccessibleGenomes(auth.id)
+          : getAccessibleGenomes(auth.id)) as GenomeRecord[]
       } else {
-        genomes = getAccessibleGenomes('') // Empty string will return empty array
+        genomes = getAccessibleGenomes('') as GenomeRecord[] // Empty string will return empty array
       }
 
       const stats = getDatabaseStats()
 
-      return json({
+      return Response.json({
         success: true,
-        genomes: genomes.map((g: any) => ({
+        genomes: genomes.map((g: GenomeRecord) => ({
           id: g.id,
           filename: g.original_filename,
           internalFilename: g.filename,
@@ -69,33 +86,30 @@ export const APIRoute = createAPIFileRoute('/api/genomes')({
       })
     } catch (error) {
       console.error('Failed to fetch genomes:', error)
-      return json(
+      return Response.json(
         { success: false, error: 'Failed to fetch genomes' },
         { status: 500 },
       )
     }
   },
 
-  POST: async ({ request }) => {
-    const auth = requireAuth(request)
-    if (!auth) {
-      return json({ success: false, error: 'Unauthorized' }, { status: 401 })
-    }
-
-    // CSRF protection for state-changing operation
-    const csrfCheck = csrfProtection(request, request.headers.get('cookie'))
-    if (!csrfCheck.valid) {
-      return json({ success: false, error: csrfCheck.error }, { status: csrfCheck.status })
-    }
-
-    const processingStart = Date.now()
-
+  POST: async ({ request }: { request: Request }) => {
     try {
+      const auth = requireAuth(request)
+
+      // CSRF protection for state-changing operation
+      const csrfCheck = csrfProtection(request)
+      if (!csrfCheck.valid) {
+        return Response.json({ success: false, error: csrfCheck.error }, { status: csrfCheck.status || 403 })
+      }
+
+      const processingStart = Date.now()
+
       const formData = await request.formData()
       const file = formData.get('file') as File
 
       if (!file) {
-        return json(
+        return Response.json(
           { success: false, error: 'No file provided' },
           { status: 400 },
         )
@@ -103,7 +117,7 @@ export const APIRoute = createAPIFileRoute('/api/genomes')({
 
       // Server-side file size validation
       if (file.size > MAX_FILE_SIZE) {
-        return json(
+        return Response.json(
           {
             success: false,
             error: `File size (${formatFileSize(file.size)}) exceeds maximum allowed (${formatFileSize(MAX_FILE_SIZE)})`,
@@ -119,7 +133,7 @@ export const APIRoute = createAPIFileRoute('/api/genomes')({
       const compressionType = detectCompressionType(file.name)
       const magicValid = validateFileMagic(fileBuffer, compressionType);
       if (!magicValid) {
-        return json(
+        return Response.json(
           {
             success: false,
             error: `File type validation failed. The file does not appear to be a valid ${compressionType === 'none' ? 'text' : compressionType} file.`,
@@ -140,7 +154,7 @@ export const APIRoute = createAPIFileRoute('/api/genomes')({
         content = decompressed.content
         originalFilename = decompressed.originalFilename
       } catch (decompressError) {
-        return json(
+        return Response.json(
           {
             success: false,
             error:
@@ -155,7 +169,7 @@ export const APIRoute = createAPIFileRoute('/api/genomes')({
       // Validate decompressed size
       const decompressedSize = Buffer.byteLength(content, 'utf8')
       if (decompressedSize > MAX_DECOMPRESSED_SIZE) {
-        return json(
+        return Response.json(
           {
             success: false,
             error: `Decompressed file size (${formatFileSize(decompressedSize)}) exceeds maximum allowed (${formatFileSize(MAX_DECOMPRESSED_SIZE)})`,
@@ -167,7 +181,7 @@ export const APIRoute = createAPIFileRoute('/api/genomes')({
       // Validate content looks like genetic data
       const contentValidation = validateGeneticContent(content)
       if (!contentValidation.valid) {
-        return json(
+        return Response.json(
           {
             success: false,
             error: contentValidation.error,
@@ -182,7 +196,7 @@ export const APIRoute = createAPIFileRoute('/api/genomes')({
       // Validate SNP data
       const validation = validateGenomeData(parseResult.snps)
       if (!validation.valid) {
-        return json(
+        return Response.json(
           {
             success: false,
             errors: validation.errors,
@@ -211,7 +225,7 @@ export const APIRoute = createAPIFileRoute('/api/genomes')({
 
       const processingTime = Date.now() - processingStart
 
-      return json({
+      return Response.json({
         success: true,
         genomeId: result.id,
         stats: {
@@ -229,7 +243,7 @@ export const APIRoute = createAPIFileRoute('/api/genomes')({
       })
     } catch (error) {
       console.error('Upload error:', error)
-      return json(
+      return Response.json(
         {
           success: false,
           error:
@@ -242,24 +256,21 @@ export const APIRoute = createAPIFileRoute('/api/genomes')({
     }
   },
 
-  DELETE: async ({ request }) => {
+  DELETE: async ({ request }: { request: Request }) => {
     try {
       const auth = requireAuth(request)
-      if (!auth) {
-        return json({ success: false, error: 'Unauthorized' }, { status: 401 })
-      }
 
       // CSRF protection for state-changing operation
-      const csrfCheck = csrfProtection(request, request.headers.get('cookie'))
+      const csrfCheck = csrfProtection(request)
       if (!csrfCheck.valid) {
-        return json({ success: false, error: csrfCheck.error }, { status: csrfCheck.status })
+        return Response.json({ success: false, error: csrfCheck.error }, { status: csrfCheck.status || 403 })
       }
 
       const { searchParams } = new URL(request.url)
       const id = searchParams.get('id')
 
       if (!id) {
-        return json(
+        return Response.json(
           { success: false, error: 'No ID provided' },
           { status: 400 },
         )
@@ -268,7 +279,7 @@ export const APIRoute = createAPIFileRoute('/api/genomes')({
       // Check ownership
       const access = canAccessGenome(auth.id, id)
       if (!access.canAccess || access.permissionLevel !== 'owner') {
-        return json(
+        return Response.json(
           {
             success: false,
             error: 'You do not have permission to delete this genome',
@@ -282,10 +293,10 @@ export const APIRoute = createAPIFileRoute('/api/genomes')({
       // Log activity
       logActivity(auth.id, 'genome_deleted', 'genome', id)
 
-      return json({ success: true, message: 'Genome deleted successfully' })
+      return Response.json({ success: true, message: 'Genome deleted successfully' })
     } catch (error) {
       console.error('Delete error:', error)
-      return json(
+      return Response.json(
         { success: false, error: 'Failed to delete genome' },
         { status: 500 },
       )

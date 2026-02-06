@@ -1,4 +1,3 @@
-import { json } from '@tanstack/start'
 import { createAPIFileRoute } from '@tanstack/start/api'
 import { getDb } from '~/utils/database'
 import crypto from 'crypto'
@@ -22,7 +21,7 @@ export const APIRoute = createAPIFileRoute('/api/auth/reset-password')({
       const { token, password } = body
 
       if (!token || !password) {
-        return json(
+        return Response.json(
           { success: false, error: 'Token and password are required' },
           { status: 400 },
         )
@@ -30,7 +29,7 @@ export const APIRoute = createAPIFileRoute('/api/auth/reset-password')({
 
       // Validate password strength
       if (password.length < 8) {
-        return json(
+        return Response.json(
           { success: false, error: 'Password must be at least 8 characters' },
           { status: 400 },
         )
@@ -49,7 +48,7 @@ export const APIRoute = createAPIFileRoute('/api/auth/reset-password')({
         .get(token) as any
 
       if (!resetRecord) {
-        return json(
+        return Response.json(
           { success: false, error: 'Invalid or expired token' },
           { status: 400 },
         )
@@ -87,14 +86,14 @@ export const APIRoute = createAPIFileRoute('/api/auth/reset-password')({
         userAgent || undefined
       );
 
-      return json({ 
+      return Response.json({ 
         success: true, 
         message: 'Password reset successfully',
         terminatedSessions: terminatedCount,
       })
     } catch (error) {
       console.error('Reset password error:', error)
-      return json(
+      return Response.json(
         { success: false, error: 'An unexpected error occurred' },
         { status: 500 },
       )
@@ -109,7 +108,7 @@ export const APIRouteValidate = createAPIFileRoute('/api/auth/reset-password')({
       const token = url.searchParams.get('token')
 
       if (!token) {
-        return json(
+        return Response.json(
           { success: false, error: 'Token is required' },
           { status: 400 },
         )
@@ -126,16 +125,16 @@ export const APIRouteValidate = createAPIFileRoute('/api/auth/reset-password')({
         .get(token) as any
 
       if (!resetRecord) {
-        return json(
+        return Response.json(
           { success: false, error: 'Invalid or expired token' },
           { status: 400 },
         )
       }
 
-      return json({ success: true, message: 'Token is valid' })
+      return Response.json({ success: true, message: 'Token is valid' })
     } catch (error) {
       console.error('Validate token error:', error)
-      return json(
+      return Response.json(
         { success: false, error: 'An unexpected error occurred' },
         { status: 500 },
       )

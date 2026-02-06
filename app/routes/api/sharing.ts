@@ -1,6 +1,5 @@
-import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
-import { requireAuth } from '~/utils/auth';
+import { requireAuth } from '~/utils/auth.server';
 import { csrfProtection } from '~/utils/csrf';
 import { 
   getSharedWithMe, 
@@ -19,7 +18,7 @@ export const APIRoute = createAPIFileRoute('/api/sharing')({
     try {
       const auth = requireAuth(request);
       if (!auth) {
-        return json({ success: false, error: 'Unauthorized' }, { status: 401 });
+        return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
       }
 
       const url = new URL(request.url);
@@ -27,15 +26,15 @@ export const APIRoute = createAPIFileRoute('/api/sharing')({
 
       if (type === 'shared-with-me') {
         const shared = getSharedWithMe(auth.id);
-        return json({ success: true, data: shared });
+        return Response.json({ success: true, data: shared });
       }
 
       // Default: get my shares
       const shares = getMyShares(auth.id);
-      return json({ success: true, data: shares });
+      return Response.json({ success: true, data: shares });
     } catch (error) {
       console.error('Get sharing API error:', error);
-      return json({ success: false, error: 'An unexpected error occurred' }, { status: 500 });
+      return Response.json({ success: false, error: 'An unexpected error occurred' }, { status: 500 });
     }
   },
 
@@ -43,26 +42,26 @@ export const APIRoute = createAPIFileRoute('/api/sharing')({
     try {
       const auth = requireAuth(request);
       if (!auth) {
-        return json({ success: false, error: 'Unauthorized' }, { status: 401 });
+        return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
       }
 
       // CSRF protection
       const cookieHeader = request.headers.get('cookie');
       const csrfCheck = csrfProtection(request, cookieHeader);
       if (csrfCheck.valid === false) {
-        return json({ success: false, error: csrfCheck.error }, { status: csrfCheck.status });
+        return Response.json({ success: false, error: csrfCheck.error }, { status: csrfCheck.status });
       }
 
       const body = await request.json();
       const { email, genomeId, permissionLevel = 'view', expiresAt, message } = body;
 
       if (!email) {
-        return json({ success: false, error: 'Email is required' }, { status: 400 });
+        return Response.json({ success: false, error: 'Email is required' }, { status: 400 });
       }
 
       // Validate permission level
       if (!['view', 'download', 'manage'].includes(permissionLevel)) {
-        return json({ success: false, error: 'Invalid permission level' }, { status: 400 });
+        return Response.json({ success: false, error: 'Invalid permission level' }, { status: 400 });
       }
 
       // Check if user exists
@@ -72,7 +71,7 @@ export const APIRoute = createAPIFileRoute('/api/sharing')({
       if (genomeId) {
         const genome = getGenome(genomeId);
         if (!genome) {
-          return json({ success: false, error: 'Genome not found' }, { status: 404 });
+          return Response.json({ success: false, error: 'Genome not found' }, { status: 404 });
         }
         // Verify the requester owns this genome
         // Note: getGenome doesn't return user_id in the result, need to query directly
@@ -81,7 +80,7 @@ export const APIRoute = createAPIFileRoute('/api/sharing')({
         `).get(genomeId, auth.id);
 
         if (!ownershipCheck) {
-          return json({ success: false, error: 'You do not own this genome' }, { status: 403 });
+          return Response.json({ success: false, error: 'You do not own this genome' }, { status: 403 });
         }
       }
 
@@ -110,10 +109,10 @@ export const APIRoute = createAPIFileRoute('/api/sharing')({
         result = { inviteToken: invite.inviteToken };
       }
 
-      return json({ success: true, data: result }, { status: 201 });
+      return Response.json({ success: true, data: result }, { status: 201 });
     } catch (error) {
       console.error('Create sharing API error:', error);
-      return json({ success: false, error: 'An unexpected error occurred' }, { status: 500 });
+      return Response.json({ success: false, error: 'An unexpected error occurred' }, { status: 500 });
     }
   },
 
@@ -121,33 +120,33 @@ export const APIRoute = createAPIFileRoute('/api/sharing')({
     try {
       const auth = requireAuth(request);
       if (!auth) {
-        return json({ success: false, error: 'Unauthorized' }, { status: 401 });
+        return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
       }
 
       // CSRF protection
       const cookieHeader = request.headers.get('cookie');
       const csrfCheck = csrfProtection(request, cookieHeader);
       if (csrfCheck.valid === false) {
-        return json({ success: false, error: csrfCheck.error }, { status: csrfCheck.status });
+        return Response.json({ success: false, error: csrfCheck.error }, { status: csrfCheck.status });
       }
 
       const url = new URL(request.url);
       const permissionId = url.searchParams.get('id');
 
       if (!permissionId) {
-        return json({ success: false, error: 'Permission ID is required' }, { status: 400 });
+        return Response.json({ success: false, error: 'Permission ID is required' }, { status: 400 });
       }
 
       const success = revokeSharingPermission(permissionId, auth.id);
 
       if (!success) {
-        return json({ success: false, error: 'Permission not found or you do not have permission to revoke it' }, { status: 404 });
+        return Response.json({ success: false, error: 'Permission not found or you do not have permission to revoke it' }, { status: 404 });
       }
 
-      return json({ success: true });
+      return Response.json({ success: true });
     } catch (error) {
       console.error('Revoke sharing API error:', error);
-      return json({ success: false, error: 'An unexpected error occurred' }, { status: 500 });
+      return Response.json({ success: false, error: 'An unexpected error occurred' }, { status: 500 });
     }
   },
 });

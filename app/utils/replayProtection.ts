@@ -14,6 +14,7 @@
  */
 
 import { getDb } from '~/db';
+import { registerInterval, unregisterInterval } from './intervalRegistry';
 
 // Configuration - matches Lightway's 64-packet window
 const WINDOW_SIZE = 64;
@@ -38,13 +39,25 @@ export class SlidingReplayWindow {
   private windows: Map<string, ReplayWindow> = new Map();
   private readonly windowSize: number;
   private readonly ttlMs: number;
+  private cleanupInterval?: ReturnType<typeof setInterval>;
   
   constructor(windowSize: number = WINDOW_SIZE, ttlSeconds: number = DEFAULT_TTL_SECONDS) {
     this.windowSize = windowSize;
     this.ttlMs = ttlSeconds * 1000;
     
     // Periodic cleanup of expired windows
-    setInterval(() => this.cleanup(), 60000);
+    this.cleanupInterval = registerInterval(setInterval(() => this.cleanup(), 60000));
+  }
+  
+  /**
+   * Cleanup resources when instance is no longer needed
+   */
+  destroy(): void {
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval);
+      unregisterInterval(this.cleanupInterval);
+      this.cleanupInterval = undefined;
+    }
   }
   
   /**
@@ -82,7 +95,7 @@ export class SlidingReplayWindow {
       
       if (diff < BigInt(this.windowSize)) {
         // Shift bitmap left by diff positions
-        window.bitmap <<= Number(diff);
+        window.bitmap = window.bitmap << diff;
       } else {
         // Packet is way ahead, reset the window
         window.bitmap = 0n;

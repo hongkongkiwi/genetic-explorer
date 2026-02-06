@@ -3,7 +3,8 @@
  */
 
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
-import { join, homedir } from 'path';
+import { join } from 'path';
+import { homedir } from 'os';
 
 const CONFIG_DIR = join(homedir(), '.config', 'genetic-mcp');
 const CONFIG_FILE = join(CONFIG_DIR, 'config.json');
@@ -14,7 +15,7 @@ function ensureConfigDir() {
   if (!existsSync(CONFIG_DIR)) mkdirSync(CONFIG_DIR, { recursive: true });
 }
 
-function loadConfig(): Config {
+export function loadConfig(): Config {
   ensureConfigDir();
   if (!existsSync(CONFIG_FILE)) return { apiUrl: 'https://genetic-explorer.app', token: null, tokenStoredAt: null };
   try { return JSON.parse(readFileSync(CONFIG_FILE, 'utf-8')); }

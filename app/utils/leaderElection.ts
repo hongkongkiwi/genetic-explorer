@@ -11,7 +11,9 @@
  * For production with many instances, consider Redis Redlock or Consul.
  */
 
+import crypto from 'crypto';
 import { getDb } from '~/db';
+import { registerInterval } from './intervalRegistry';
 
 interface LockOptions {
   ttlSeconds: number;  // Time-to-live for the lock
@@ -24,7 +26,7 @@ interface LeaderLock {
 }
 
 // This instance's unique ID
-const INSTANCE_ID = `instance-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+const INSTANCE_ID = `instance-${Date.now()}-${crypto.randomUUID().replace(/-/g, '').substring(0, 9)}`;
 
 // Track locks held by this instance
 const heldLocks = new Set<string>();
@@ -239,4 +241,4 @@ export function releaseAllLocks(): void {
 }
 
 // Periodic cleanup of expired locks
-setInterval(cleanupExpiredLocks, 60000); // Every minute
+registerInterval(setInterval(cleanupExpiredLocks, 60000)); // Every minute

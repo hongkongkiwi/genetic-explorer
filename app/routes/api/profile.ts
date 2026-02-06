@@ -1,6 +1,5 @@
-import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
-import { requireAuth } from '~/utils/auth';
+import { requireAuth } from '~/utils/auth.server';
 import { getUserProfile, updateUserProfile, updateUser } from '~/utils/database';
 
 export const APIRoute = createAPIFileRoute('/api/profile')({
@@ -8,12 +7,12 @@ export const APIRoute = createAPIFileRoute('/api/profile')({
     try {
       const auth = requireAuth(request);
       if (!auth) {
-        return json({ success: false, error: 'Unauthorized' }, { status: 401 });
+        return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
       }
 
       const profile = getUserProfile(auth.id);
 
-      return json({
+      return Response.json({
         success: true,
         profile: profile ? {
           bio: profile.bio,
@@ -27,7 +26,7 @@ export const APIRoute = createAPIFileRoute('/api/profile')({
       });
     } catch (error) {
       console.error('Get profile API error:', error);
-      return json({ success: false, error: 'An unexpected error occurred' }, { status: 500 });
+      return Response.json({ success: false, error: 'An unexpected error occurred' }, { status: 500 });
     }
   },
 
@@ -35,7 +34,7 @@ export const APIRoute = createAPIFileRoute('/api/profile')({
     try {
       const auth = requireAuth(request);
       if (!auth) {
-        return json({ success: false, error: 'Unauthorized' }, { status: 401 });
+        return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
       }
 
       const body = await request.json();
@@ -57,10 +56,10 @@ export const APIRoute = createAPIFileRoute('/api/profile')({
         privacySettings,
       });
 
-      return json({ success: true });
+      return Response.json({ success: true });
     } catch (error) {
       console.error('Update profile API error:', error);
-      return json({ success: false, error: 'An unexpected error occurred' }, { status: 500 });
+      return Response.json({ success: false, error: 'An unexpected error occurred' }, { status: 500 });
     }
   },
 });

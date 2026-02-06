@@ -335,6 +335,7 @@ export interface UserProfile {
     shareAnonymized: boolean;
     allowFamilySharing: boolean;
   };
+  notificationPreferences?: NotificationPreferences;
 }
 
 export interface NotificationPreferences {

@@ -1,6 +1,5 @@
-import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
-import { logoutUser, requireAuth } from '~/utils/auth';
+import { logoutUser, requireAuth } from '~/utils/auth.server';
 import { logActivity } from '~/utils/database';
 
 export const APIRoute = createAPIFileRoute('/api/auth/logout')({
@@ -26,18 +25,18 @@ export const APIRoute = createAPIFileRoute('/api/auth/logout')({
         logoutUser(token);
       }
 
-      if (auth?.user) {
+      if (auth?.id) {
         logActivity(auth.id, 'user_logout', 'user', auth.id);
       }
 
-      return json({ success: true }, {
+      return Response.json({ success: true }, {
         headers: {
           'Set-Cookie': 'session_token=; HttpOnly; Secure; SameSite=Strict; Max-Age=0; Path=/',
         },
       });
     } catch (error) {
       console.error('Logout API error:', error);
-      return json({ success: false, error: 'An unexpected error occurred' }, { status: 500 });
+      return Response.json({ success: false, error: 'An unexpected error occurred' }, { status: 500 });
     }
   },
 });

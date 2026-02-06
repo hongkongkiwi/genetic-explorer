@@ -152,9 +152,9 @@ export function RelativeDetailModal({
                   {match.relativeName}
                 </h2>
                 {match.optInStatus ? (
-                  <ShieldCheck className="w-5 h-5 text-emerald-500" title="Opted in" />
+                  <ShieldCheck className="w-5 h-5 text-emerald-500" />
                 ) : (
-                  <Shield className="w-5 h-5 text-slate-400" title="Not opted in" />
+                  <Shield className="w-5 h-5 text-slate-400" />
                 )}
               </div>
 

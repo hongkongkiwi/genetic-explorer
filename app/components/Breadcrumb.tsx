@@ -20,6 +20,7 @@ import { cn } from '~/utils/shared/cn';
 interface BreadcrumbItem {
   label: string;
   href?: string;
+  to?: string;
 }
 
 interface BreadcrumbProps {

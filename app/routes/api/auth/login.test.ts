@@ -39,7 +39,7 @@ describe('Login API Schema', () => {
       const withoutRememberMe = { email: 'test@example.com', password: 'pass' };
 
       expect(withRememberMe.rememberMe).toBe(true);
-      expect(withoutRememberMe.rememberMe).toBeUndefined();
+      expect((withoutRememberMe as Record<string, unknown>).rememberMe).toBeUndefined();
     });
   });
 

@@ -58,7 +58,7 @@ describe('Auth Utilities', () => {
         updatedAt: new Date().toISOString(),
       };
 
-      vi.mocked(getUserByEmail).mockReturnValue(undefined);
+      vi.mocked(getUserByEmail).mockReturnValue(null as any);
       vi.mocked(createUser).mockReturnValue(mockUser as any);
 
       const data: RegisterData = {
@@ -183,7 +183,7 @@ describe('Auth Utilities', () => {
     });
 
     it('should use constant-time response for non-existent user', async () => {
-      vi.mocked(getUserByEmail).mockReturnValue(undefined);
+      vi.mocked(getUserByEmail).mockReturnValue(null as any);
 
       const data: LoginData = {
         email: 'nonexistent@example.com',
@@ -257,7 +257,7 @@ describe('Auth Utilities', () => {
     });
 
     it('should reject invalid session token', () => {
-      vi.mocked(getSessionByToken).mockReturnValue(undefined);
+      vi.mocked(getSessionByToken).mockReturnValue(null as any);
 
       const result = validateSession('invalid-token');
 
@@ -375,7 +375,7 @@ describe('Auth Utilities', () => {
     });
 
     it('should return null for invalid session', () => {
-      vi.mocked(getSessionByToken).mockReturnValue(undefined);
+      vi.mocked(getSessionByToken).mockReturnValue(null as any);
 
       const user = getCurrentUser('invalid-token');
 
@@ -507,7 +507,7 @@ describe('Auth Utilities', () => {
 
   describe('Password Change', () => {
     it('should reject password change for non-existent user', () => {
-      vi.mocked(getUserById).mockReturnValue(undefined);
+      vi.mocked(getUserById).mockReturnValue(null as any);
 
       const result = changePassword('non-existent', 'current', 'NewPass123');
 

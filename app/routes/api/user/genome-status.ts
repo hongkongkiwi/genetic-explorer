@@ -1,6 +1,5 @@
-import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
-import { requireAuth } from '~/utils/auth';
+import { requireAuth } from '~/utils/auth.server';
 import { getGenomeStatus, getGatedFeaturesList } from '~/utils/genomeGate';
 
 /**
@@ -14,7 +13,7 @@ export const APIRoute = createAPIFileRoute('/api/user/genome-status')({
     try {
       const auth = requireAuth(request);
       if (!auth) {
-        return json(
+        return Response.json(
           { success: false, error: 'Unauthorized' },
           { status: 401 }
         );
@@ -23,7 +22,7 @@ export const APIRoute = createAPIFileRoute('/api/user/genome-status')({
       const genomeStatus = getGenomeStatus(auth.id);
       const gatedFeatures = getGatedFeaturesList();
 
-      return json({
+      return Response.json({
         success: true,
         data: {
           ...genomeStatus,
@@ -41,7 +40,7 @@ export const APIRoute = createAPIFileRoute('/api/user/genome-status')({
 
     } catch (error) {
       console.error('Genome status error:', error);
-      return json(
+      return Response.json(
         {
           success: false,
           error: 'Failed to get genome status',

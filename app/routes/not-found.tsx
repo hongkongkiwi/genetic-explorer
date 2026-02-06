@@ -9,7 +9,7 @@ import { motion } from 'framer-motion';
 import { FileQuestion, Home, ArrowLeft, Search } from 'lucide-react';
 import { Button } from '~/components/ui/Button';
 
-export const Route = createFileRoute('/not-found')({
+export const Route = createFileRoute('/not-found' as any)({
   component: NotFoundPage,
 });
 

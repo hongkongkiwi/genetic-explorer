@@ -1,6 +1,5 @@
-import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
-import { requireAuth } from '~/utils/auth';
+import { requireAuth } from '~/utils/auth.server';
 import { csrfProtection } from '~/utils/csrf';
 import { getDb } from '~/utils/database';
 import { existsSync, unlinkSync } from 'fs';
@@ -20,21 +19,21 @@ export const APIRoute = createAPIFileRoute('/api/auth/delete-account')({
     try {
       const auth = requireAuth(request);
       if (!auth) {
-        return json({ success: false, error: 'Unauthorized' }, { status: 401 });
+        return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
       }
 
       // CSRF protection
       const cookieHeader = request.headers.get('cookie');
       const csrfCheck = csrfProtection(request, cookieHeader);
       if (csrfCheck.valid === false) {
-        return json({ success: false, error: csrfCheck.error }, { status: csrfCheck.status });
+        return Response.json({ success: false, error: csrfCheck.error }, { status: csrfCheck.status });
       }
 
       const body = await request.json();
       const { password } = body;
 
       if (!password) {
-        return json({ success: false, error: 'Password is required' }, { status: 400 });
+        return Response.json({ success: false, error: 'Password is required' }, { status: 400 });
       }
 
       const db = getDb();
@@ -42,12 +41,12 @@ export const APIRoute = createAPIFileRoute('/api/auth/delete-account')({
       // Verify password
       const user = db.prepare(`SELECT password_hash FROM users WHERE id = ?`).get(auth.id) as any;
       if (!user) {
-        return json({ success: false, error: 'User not found' }, { status: 404 });
+        return Response.json({ success: false, error: 'User not found' }, { status: 404 });
       }
 
       const [salt, hash] = user.password_hash.split(':');
       if (!verifyPassword(password, hash, salt)) {
-        return json({ success: false, error: 'Incorrect password' }, { status: 401 });
+        return Response.json({ success: false, error: 'Incorrect password' }, { status: 401 });
       }
 
       // Get all user's genomes to delete files
@@ -108,13 +107,13 @@ export const APIRoute = createAPIFileRoute('/api/auth/delete-account')({
       // Finally, delete the user
       db.prepare(`DELETE FROM users WHERE id = ?`).run(auth.id);
 
-      return json({ 
+      return Response.json({ 
         success: true, 
         message: 'Account and all associated data have been permanently deleted' 
       });
     } catch (error) {
       console.error('Delete account error:', error);
-      return json({ success: false, error: 'An unexpected error occurred' }, { status: 500 });
+      return Response.json({ success: false, error: 'An unexpected error occurred' }, { status: 500 });
     }
   },
 });

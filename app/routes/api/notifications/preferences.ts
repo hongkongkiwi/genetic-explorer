@@ -1,6 +1,5 @@
-import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
-import { requireAuth } from '~/utils/auth';
+import { requireAuth } from '~/utils/auth.server';
 import {
   getNotificationPreferences,
   updateNotificationPreferences,
@@ -23,7 +22,7 @@ export const APIRouteGet = createAPIFileRoute('/api/notifications/preferences')(
       const preferences = getNotificationPreferences(auth.id);
       const options = getPreferenceOptions();
 
-      return json({
+      return Response.json({
         success: true,
         preferences: {
           categories: preferences.categories,
@@ -33,10 +32,10 @@ export const APIRouteGet = createAPIFileRoute('/api/notifications/preferences')(
       });
     } catch (error) {
       if (error instanceof Error && error.message === 'Unauthorized') {
-        return json({ success: false, error: 'Unauthorized' }, { status: 401 });
+        return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
       }
       console.error('Get notification preferences error:', error);
-      return json(
+      return Response.json(
         { success: false, error: 'An unexpected error occurred' },
         { status: 500 }
       );
@@ -56,7 +55,7 @@ export const APIRouteUpdate = createAPIFileRoute('/api/notifications/preferences
       const { categories } = body;
 
       if (!categories) {
-        return json(
+        return Response.json(
           { success: false, error: 'No preferences provided' },
           { status: 400 }
         );
@@ -70,7 +69,7 @@ export const APIRouteUpdate = createAPIFileRoute('/api/notifications/preferences
           const channels = (prefs as CategoryPreference).channels;
           
           if (!Array.isArray(channels)) {
-            return json(
+            return Response.json(
               { success: false, error: `Invalid channels for ${category}` },
               { status: 400 }
             );
@@ -78,7 +77,7 @@ export const APIRouteUpdate = createAPIFileRoute('/api/notifications/preferences
           
           for (const channel of channels) {
             if (!validChannels.includes(channel)) {
-              return json(
+              return Response.json(
                 { success: false, error: `Invalid channel: ${channel}` },
                 { status: 400 }
               );
@@ -93,7 +92,7 @@ export const APIRouteUpdate = createAPIFileRoute('/api/notifications/preferences
       );
 
       if (!result.success) {
-        return json(
+        return Response.json(
           { success: false, error: result.error },
           { status: 500 }
         );
@@ -102,7 +101,7 @@ export const APIRouteUpdate = createAPIFileRoute('/api/notifications/preferences
       // Get updated preferences
       const updated = getNotificationPreferences(auth.id);
 
-      return json({
+      return Response.json({
         success: true,
         message: 'Preferences updated successfully',
         preferences: {
@@ -112,10 +111,10 @@ export const APIRouteUpdate = createAPIFileRoute('/api/notifications/preferences
       });
     } catch (error) {
       if (error instanceof Error && error.message === 'Unauthorized') {
-        return json({ success: false, error: 'Unauthorized' }, { status: 401 });
+        return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
       }
       console.error('Update notification preferences error:', error);
-      return json(
+      return Response.json(
         { success: false, error: 'An unexpected error occurred' },
         { status: 500 }
       );
@@ -139,7 +138,7 @@ export const APIRouteUnsubscribe = createAPIFileRoute('/api/notifications/prefer
         // Token-based unsubscribe (from email link)
         // Verify token here if implementing token verification
         // For now, require auth
-        return json(
+        return Response.json(
           { success: false, error: 'Authentication required' },
           { status: 401 }
         );
@@ -151,22 +150,22 @@ export const APIRouteUnsubscribe = createAPIFileRoute('/api/notifications/prefer
       const success = unsubscribeFromMarketing(auth.id);
 
       if (success) {
-        return json({
+        return Response.json({
           success: true,
           message: 'You have been unsubscribed from marketing emails',
         });
       } else {
-        return json(
+        return Response.json(
           { success: false, error: 'Failed to unsubscribe' },
           { status: 500 }
         );
       }
     } catch (error) {
       if (error instanceof Error && error.message === 'Unauthorized') {
-        return json({ success: false, error: 'Unauthorized' }, { status: 401 });
+        return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
       }
       console.error('Unsubscribe error:', error);
-      return json(
+      return Response.json(
         { success: false, error: 'An unexpected error occurred' },
         { status: 500 }
       );

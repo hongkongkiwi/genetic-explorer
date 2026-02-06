@@ -7,7 +7,7 @@ import {
   getCoverageIcon,
   type GenomeCoverage 
 } from '../utils/genomeCoverage';
-import type { SNP } from '../utils/genomeParser';
+import type { SNP } from '~/types/genetics';
 import { 
   Activity, 
   Dna, 

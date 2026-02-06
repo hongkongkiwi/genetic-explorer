@@ -302,6 +302,23 @@ export function analyzeTables(db: Database): void {
   }
 }
 
+// Drop all indexes
+export function dropIndexes(db: Database): void {
+  for (const index of databaseIndexes) {
+    try {
+      db.exec(`DROP INDEX IF EXISTS ${index.name}`);
+    } catch (error) {
+      console.warn(`Failed to drop index ${index.name}:`, error);
+    }
+  }
+}
+
+// Rebuild all indexes (drop and recreate)
+export function rebuildIndexes(db: Database): void {
+  dropIndexes(db);
+  createIndexes(db);
+}
+
 // Get query performance stats
 export function getQueryStats(db: Database): Array<{
   query: string;

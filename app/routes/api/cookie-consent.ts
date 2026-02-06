@@ -1,4 +1,3 @@
-import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
 
 /**
@@ -11,7 +10,7 @@ export const APIRoute = createAPIFileRoute('/api/cookie-consent')({
     const cookieHeader = request.headers.get('cookie');
     
     if (!cookieHeader) {
-      return json({ consent: null });
+      return Response.json({ consent: null });
     }
     
     // Parse cookies
@@ -24,14 +23,14 @@ export const APIRoute = createAPIFileRoute('/api/cookie-consent')({
     const consentCookie = cookies['cookie_consent'];
     
     if (!consentCookie) {
-      return json({ consent: null });
+      return Response.json({ consent: null });
     }
     
     try {
       const consent = JSON.parse(decodeURIComponent(consentCookie));
-      return json({ consent });
+      return Response.json({ consent });
     } catch {
-      return json({ consent: null });
+      return Response.json({ consent: null });
     }
   },
   
@@ -68,9 +67,9 @@ export const APIRoute = createAPIFileRoute('/api/cookie-consent')({
         'HttpOnly'
       );
       
-      return json({ success: true }, { headers });
+      return Response.json({ success: true }, { headers });
     } catch (error) {
-      return json(
+      return Response.json(
         { success: false, error: 'Failed to save consent' },
         { status: 500 }
       );

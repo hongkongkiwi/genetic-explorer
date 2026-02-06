@@ -1,7 +1,6 @@
-import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
 import { getUserTermsStatus } from '~/utils/terms';
-import { getAuthUserSafe } from '~/utils/auth';
+import { getAuthUserSafe } from '~/utils/auth.server';
 
 export const APIRoute = createAPIFileRoute('/api/terms/status')({
   GET: async ({ request }) => {
@@ -9,7 +8,7 @@ export const APIRoute = createAPIFileRoute('/api/terms/status')({
       const auth = getAuthUserSafe(request);
       
       if (!auth) {
-        return json({ 
+        return Response.json({ 
           success: false, 
           error: 'Authentication required' 
         }, { status: 401 });
@@ -17,13 +16,13 @@ export const APIRoute = createAPIFileRoute('/api/terms/status')({
       
       const status = getUserTermsStatus(auth.user.id);
       
-      return json({
+      return Response.json({
         success: true,
         status,
       }, { status: 200 });
     } catch (error) {
       console.error('Error fetching terms status:', error);
-      return json({ 
+      return Response.json({ 
         success: false, 
         error: 'An unexpected error occurred' 
       }, { status: 500 });

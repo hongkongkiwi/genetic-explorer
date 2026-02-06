@@ -157,9 +157,9 @@ export const RelativeMatchCard = memo(function RelativeMatchCard({
               
               {/* Opt-in Status */}
               {match.optInStatus ? (
-                <ShieldCheck className="w-4 h-4 text-emerald-500" title="Opted in to matching" />
+                <ShieldCheck className="w-4 h-4 text-emerald-500" aria-label="Opted in to matching" />
               ) : (
-                <Shield className="w-4 h-4 text-slate-400" title="Not opted in" />
+                <Shield className="w-4 h-4 text-slate-400" aria-label="Not opted in" />
               )}
 
               {/* Hidden Badge */}

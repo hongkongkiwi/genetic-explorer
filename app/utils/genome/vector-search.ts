@@ -128,10 +128,11 @@ export async function indexGenomeInVectorDB(genomeId: string): Promise<void> {
   );
 
   // Generate embedding
-  const embedding = generateGenomeEmbedding(snps.results);
+  const embedding = generateGenomeEmbedding(snps);
 
   // Store in Zilliz
   await insertGenomeEmbedding({
+    id: uuidv4(),
     genomeId: genome.id,
     embedding,
     metadata: {
@@ -162,7 +163,7 @@ export async function findSimilarGenomes(
     [genomeId]
   );
 
-  const embedding = generateGenomeEmbedding(snps.results);
+  const embedding = generateGenomeEmbedding(snps);
 
   // Search Zilliz
   const results = await searchSimilarGenomes(embedding, limit + 1); // +1 to exclude self
@@ -173,9 +174,9 @@ export async function findSimilarGenomes(
     .slice(0, limit)
     .map(r => ({
       genomeId: r.id,
-      filename: (r.payload?.filename as string) || '',
-      source: (r.payload?.source as string) || '',
-      snpCount: (r.payload?.snp_count as number) || 0,
+      filename: '',
+      source: '',
+      snpCount: 0,
       similarity: r.score,
     }));
 }
@@ -219,7 +220,8 @@ export async function indexSNPsInVectorDB(snpLimit: number = 10000): Promise<num
   `, [snpLimit]);
 
   // Convert to vector format
-  const vectors: SNPVector[] = snps.results.map(snp => ({
+  const vectors: SNPVector[] = snps.map(snp => ({
+    id: uuidv4(),
     rsid: snp.rsid,
     embedding: generateSNPEmbedding(snp.rsid, snp.genotype, {
       gene: snp.gene,
@@ -308,19 +310,15 @@ export async function findSimilarSNPs(
   }
 
   // Search Zilliz
-  const results = await searchSimilarSNPs(searchEmbedding, limit, {
-    chromosome: query.chromosome,
-    clinicalImpact: query.clinicalImpact,
-    category: query.category,
-  });
+  const results = await searchSimilarSNPs(searchEmbedding, limit);
 
   return results.map(r => ({
     rsid: r.id,
-    gene: (r.payload?.gene as string) || null,
-    chromosome: (r.payload?.chromosome as string) || '',
-    position: (r.payload?.position as number) || 0,
-    clinicalImpact: (r.payload?.clinical_impact as string) || '',
-    category: (r.payload?.category as string) || '',
+    gene: null,
+    chromosome: '',
+    position: 0,
+    clinicalImpact: '',
+    category: '',
     similarity: r.score,
   }));
 }
@@ -365,8 +363,14 @@ export async function searchResearchBySemanticQuery(
     LIMIT ?
   `, [`%${queryText}%`, `%${queryText}%`, `%${queryText}%`, limit]);
 
-  return results.results.map(r => ({
-    ...r,
+  return results.map(r => ({
+    id: r.id,
+    rsid: r.rsid,
+    geneName: r.gene_name,
+    changeType: r.change_type,
+    description: r.description,
+    source: r.source,
+    date: r.date,
     relevance: 0.8, // Placeholder - would be actual vector similarity
   }));
 }
@@ -436,7 +440,7 @@ export async function reindexAllGenomes(): Promise<void> {
     `SELECT id FROM genomes WHERE status = 'completed'`
   );
 
-  for (const genome of genomes.results) {
+  for (const genome of genomes) {
     try {
       await indexGenomeInVectorDB(genome.id);
     } catch (error) {

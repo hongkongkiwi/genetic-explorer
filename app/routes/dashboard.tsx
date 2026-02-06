@@ -336,7 +336,7 @@ function DashboardPage() {
                             <div className="flex items-center gap-4 mt-2">
                               {update.rsid && (
                                 <Link
-                                  to={`/explorer?rsid=${update.rsid}`}
+                                  to={`/explorer?rsid=${update.rsid}` as any}
                                   className="text-xs text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 font-mono"
                                 >
                                   {update.rsid}
@@ -383,7 +383,7 @@ function DashboardPage() {
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: 0.4 + index * 0.05 }}
                     >
-                      <Link to={`/report/${genome.id}`}>
+                      <Link to={`/report/${genome.id}` as any}>
                         <Card className="p-4 hover:shadow-md transition-all group">
                           <div className="flex items-start gap-3">
                             <div className="w-10 h-10 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -453,7 +453,7 @@ function DashboardPage() {
                     {data.recentReports.slice(0, 5).map((report) => (
                       <Link
                         key={report.id}
-                        to={`/report/${report.genomeId}`}
+                        to={`/report/${report.genomeId}` as any}
                         className="flex items-center gap-3 p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
                       >
                         <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">

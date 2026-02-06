@@ -1,4 +1,3 @@
-import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
 import { getUserByEmail, generatePasswordResetToken, storePasswordResetToken } from '~/utils/database';
 import { sendEmail } from '~/utils/email';
@@ -14,7 +13,7 @@ export const APIRoute = createAPIFileRoute('/api/auth/forgot-password')({
       const { email } = body;
 
       if (!email) {
-        return json({ success: false, error: 'Email is required' }, { status: 400 });
+        return Response.json({ success: false, error: 'Email is required' }, { status: 400 });
       }
 
       // Check if user exists
@@ -22,19 +21,19 @@ export const APIRoute = createAPIFileRoute('/api/auth/forgot-password')({
       
       // Always return success to prevent email enumeration
       if (!user) {
-        return json({ 
+        return Response.json({ 
           success: true, 
           message: 'If an account exists, reset instructions have been sent' 
         });
       }
 
       // Generate reset token
-      const token = generatePasswordResetToken();
+      const token = generatePasswordResetToken(user.id);
       
       // Store token in database with expiration (24 hours)
       const expiresAt = new Date();
       expiresAt.setHours(expiresAt.getHours() + 24);
-      storePasswordResetToken(user.id, token, expiresAt.toISOString());
+      storePasswordResetToken(user.id, token, expiresAt);
       
       // Build reset URL
       const baseUrl = process.env.APP_URL || 'http://localhost:3000';
@@ -68,13 +67,13 @@ export const APIRoute = createAPIFileRoute('/api/auth/forgot-password')({
         userAgent || undefined
       );
 
-      return json({ 
+      return Response.json({ 
         success: true, 
         message: 'If an account exists, reset instructions have been sent' 
       });
     } catch (error) {
       console.error('Forgot password error:', error);
-      return json({ success: false, error: 'An unexpected error occurred' }, { status: 500 });
+      return Response.json({ success: false, error: 'An unexpected error occurred' }, { status: 500 });
     }
   },
 });

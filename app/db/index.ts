@@ -3,7 +3,11 @@
  * 
  * This module re-exports from database-legacy.ts during the transition period.
  * The database is being refactored into domain-specific modules.
+ * 
+ * @server-only This module can only be used on the server.
  */
+
+'use server';
 
 export { getDb } from './database-legacy';
 
@@ -78,6 +82,7 @@ export {
   getAccessibleGenomes,
   setPrimaryGenome,
   canAccessGenome,
+  deleteAllUserGenomes,
   generatePasswordResetToken,
   generateEmailVerificationToken,
   batchInsertSNPs,
@@ -110,6 +115,9 @@ export {
   shareCarrierResults,
   getCarrierSharingByToken,
   recordCarrierSharingAccess,
+  deleteSystemSetting,
+  saveEncryptedDataKey,
+  loadEncryptedDataKey,
 } from './database-legacy';
 
 // Re-export from indexes and migrations

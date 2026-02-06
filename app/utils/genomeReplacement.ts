@@ -19,19 +19,44 @@
  */
 
 import { getDb } from '~/db';
-import { parseGeneticData, validateGenomeData, SNP } from './genomeParser';
+import { parseGeneticData, validateGenomeData, SNP } from './genome/parser';
 import { 
   decompressBuffer, 
   detectCompressionType, 
   calculateChecksum,
   validateFileMagic 
-} from './fileCompression';
+} from './genome/file-compression';
 import { logActivity } from '~/db';
 import { encryptForUser } from '~/security';
 import { secureDeleteGenome } from './secureDeletion';
-import { calculateQualityMetrics, compareGenomeQuality, QualityComparison } from './genomeQuality';
-import { verifyIdentity, IdentityVerificationResult, getDangerZoneConfig } from './identityVerification';
+import { calculateQualityMetrics, compareGenomeQuality, QualityComparison } from './genome/quality';
+import { verifyIdentity, IdentityVerificationResult, getDangerZoneConfig } from './identity/verification';
 import crypto from 'crypto';
+
+// Database result types
+interface GenomeRecord {
+  id: string;
+  user_id: string;
+  snp_count: number;
+  is_primary: boolean;
+  nickname: string | null;
+}
+
+interface SharingPermissionRecord {
+  owner_id: string;
+  shared_with_id: string;
+  share_type: string;
+  sensitivity_level: string;
+  include_raw_data: boolean;
+  allow_matching: boolean;
+  can_download: boolean;
+  can_share: boolean;
+  permission_level: string;
+  expires_at: string | null;
+  status: string;
+  message: string | null;
+  relationship_type: string | null;
+}
 
 // ============================================================================
 // Types
@@ -259,7 +284,7 @@ export async function replaceGenome(
     // Verify ownership
     const oldGenome = db.prepare(
       'SELECT * FROM genomes WHERE id = ? AND user_id = ?'
-    ).get(oldGenomeId, userId);
+    ).get(oldGenomeId, userId) as GenomeRecord | undefined;
     
     if (!oldGenome) {
       return {
@@ -467,7 +492,7 @@ export async function replaceGenome(
           'SELECT * FROM sharing_permissions WHERE genome_id = ?'
         ).all(oldGenomeId);
         
-        for (const perm of sharingPerms) {
+        for (const perm of sharingPerms as SharingPermissionRecord[]) {
           db.prepare(
             `INSERT INTO sharing_permissions 
              (id, owner_id, shared_with_id, genome_id, share_type, sensitivity_level,

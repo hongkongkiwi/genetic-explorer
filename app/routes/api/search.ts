@@ -1,7 +1,6 @@
-import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
 import { getDb } from '~/utils/database';
-import { requireAuth } from '~/utils/auth';
+import { requireAuth } from '~/utils/auth.server';
 
 /**
  * Sanitize search term to prevent LIKE wildcard injection
@@ -26,7 +25,7 @@ export const APIRoute = createAPIFileRoute('/api/search')({
       const limit = parseInt(url.searchParams.get('limit') || '10');
 
       if (!query.trim() || query.length < 2) {
-        return json({ success: true, results: [] });
+        return Response.json({ success: true, results: [] });
       }
 
       // Sanitize search term to prevent LIKE wildcard injection
@@ -106,13 +105,13 @@ export const APIRoute = createAPIFileRoute('/api/search')({
         results.push({ ...r, type: 'research' });
       });
 
-      return json({
+      return Response.json({
         success: true,
         results: results.slice(0, limit),
       });
     } catch (error) {
       console.error('Search API error:', error);
-      return json(
+      return Response.json(
         { success: false, error: 'Search failed' },
         { status: 500 }
       );

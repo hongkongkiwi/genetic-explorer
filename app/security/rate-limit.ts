@@ -13,6 +13,7 @@ import {
   resetDistributedRateLimit,
   getDistributedRateLimitStats,
 } from '~/utils/distributed-rate-limit';
+import { registerInterval, unregisterInterval } from '~/utils/intervalRegistry';
 
 interface RateLimitEntry {
   count: number;
@@ -45,11 +46,25 @@ const rateLimitStore = new Map<string, RateLimitEntry>();
 // Cleanup interval (runs every 5 minutes)
 const CLEANUP_INTERVAL = 5 * 60 * 1000;
 
+// Store interval reference for cleanup
+let cleanupInterval: NodeJS.Timeout | null = null;
+
 // Start cleanup interval (only for in-memory mode)
 if (!USE_DISTRIBUTED) {
-  setInterval(() => {
+  cleanupInterval = registerInterval(setInterval(() => {
     cleanupExpiredEntries();
-  }, CLEANUP_INTERVAL);
+  }, CLEANUP_INTERVAL));
+}
+
+/**
+ * Stop the cleanup interval (call during shutdown)
+ */
+export function stopRateLimitCleanup(): void {
+  if (cleanupInterval) {
+    clearInterval(cleanupInterval);
+    unregisterInterval(cleanupInterval);
+    cleanupInterval = null;
+  }
 }
 
 /**

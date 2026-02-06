@@ -137,7 +137,7 @@ describe('Relatives Compare API Schema', () => {
 
     it('should return 400 when genomeIdB is missing', () => {
       const body = { genomeIdA: 'genome-1' };
-      const hasBothFields = !!body.genomeIdA && !!body.genomeIdB;
+      const hasBothFields = !!(body as Record<string, string>).genomeIdA && !!(body as Record<string, string>).genomeIdB;
 
       expect(hasBothFields).toBe(false);
     });

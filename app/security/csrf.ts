@@ -90,6 +90,13 @@ export function getCsrfCookieOptions(): {
 }
 
 /**
+ * Validate CSRF token (alias for verifyCsrfToken for compatibility)
+ */
+export function validateCsrfToken(request: Request, cookieHeader: string | null): boolean {
+  return verifyCsrfToken(request, cookieHeader);
+}
+
+/**
  * CSRF protection middleware for API routes
  * Skips GET, HEAD, OPTIONS requests
  */

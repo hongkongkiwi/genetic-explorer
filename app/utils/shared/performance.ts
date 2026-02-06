@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+
 // Performance monitoring and optimization utilities
 
 interface PerformanceMetrics {
@@ -48,7 +50,7 @@ class PerformanceMonitor {
             dnsLookup: navigation.domainLookupEnd - navigation.domainLookupStart,
             tcpConnection: navigation.connectEnd - navigation.connectStart,
             serverResponse: navigation.responseEnd - navigation.responseStart,
-            domProcessing: navigation.domComplete - navigation.domLoading,
+            domProcessing: navigation.domComplete - navigation.domInteractive,
             resourceLoading: navigation.loadEventEnd - navigation.domContentLoadedEventEnd,
             totalLoadTime: navigation.loadEventEnd - navigation.startTime,
             ttfb: navigation.responseStart - navigation.startTime,

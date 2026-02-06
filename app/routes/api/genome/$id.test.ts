@@ -79,14 +79,14 @@ describe('Genome by ID API Schema', () => {
 
     it('should require ownership for deletion', () => {
       const permissionLevel = 'owner';
-      const canDelete = permissionLevel === 'owner';
+      const canDelete = (permissionLevel as string) === 'owner';
 
       expect(canDelete).toBe(true);
     });
 
     it('should deny deletion for non-owners', () => {
       const permissionLevel = 'view';
-      const canDelete = permissionLevel === 'owner';
+      const canDelete = (permissionLevel as string) === 'owner';
       const status = 403;
 
       expect(canDelete).toBe(false);
@@ -135,7 +135,7 @@ describe('Genome by ID API Schema', () => {
     it('should verify ownership before returning data', () => {
       const userId = 'user-123';
       const genomeOwnerId = 'user-123';
-      const isOwner = userId === genomeOwnerId;
+      const isOwner = (userId as string) === (genomeOwnerId as string);
 
       expect(isOwner).toBe(true);
     });
@@ -146,7 +146,7 @@ describe('Genome by ID API Schema', () => {
       const sharedWith = ['user-456', 'user-789'];
       
       const isShared = sharedWith.includes(userId);
-      const isOwner = userId === genomeOwnerId;
+      const isOwner = (userId as string) === (genomeOwnerId as string);
       const canAccess = isOwner || isShared;
 
       expect(canAccess).toBe(true);
@@ -254,7 +254,7 @@ describe('Genome by ID API Security', () => {
   it('should prevent access to other users genomes', () => {
     const requestingUser = 'user-123';
     const genomeOwner = 'user-456';
-    const hasAccess = requestingUser === genomeOwner;
+    const hasAccess = (requestingUser as string) === (genomeOwner as string);
 
     expect(hasAccess).toBe(false);
   });

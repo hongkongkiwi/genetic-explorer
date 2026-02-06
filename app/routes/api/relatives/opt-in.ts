@@ -1,7 +1,6 @@
-import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
 import { getUserProfile, updateUserProfile, logActivity } from '~/utils/database';
-import { requireAuth } from '~/utils/auth';
+import { requireAuth } from '~/utils/auth.server';
 import { rateLimitByUser, createRateLimitHeaders, rateLimitSensitive } from '~/utils/rateLimit';
 
 interface OptInSettings {
@@ -25,7 +24,7 @@ export const APIRoute = createAPIFileRoute('/api/relatives/opt-in')({
       // Check authentication
       const auth = requireAuth(request);
       if (!auth) {
-        return json(
+        return Response.json(
           { success: false, error: 'Unauthorized' },
           { status: 401 }
         );
@@ -34,16 +33,16 @@ export const APIRoute = createAPIFileRoute('/api/relatives/opt-in')({
       // Apply rate limiting
       const rateLimit = rateLimitByUser(auth.id, 60, 60 * 1000); // 60 requests per minute
       if (!rateLimit.allowed) {
-        return json(
+        return Response.json(
           { success: false, error: 'Rate limit exceeded. Please try again later.' },
-          { status: 429, headers: createRateLimitHeaders(rateLimit) }
+          { status: 429, headers: createRateLimitHeaders(rateLimit.remaining, rateLimit.resetTime, 60) }
         );
       }
 
       // Get user profile
       const profile = getUserProfile(auth.id);
       if (!profile) {
-        return json(
+        return Response.json(
           { success: false, error: 'User profile not found' },
           { status: 404 }
         );
@@ -60,7 +59,7 @@ export const APIRoute = createAPIFileRoute('/api/relatives/opt-in')({
         matchNotification: true,
       };
 
-      return json({
+      return Response.json({
         success: true,
         optIn: {
           enabled: relativeSettings.enabled,
@@ -74,11 +73,11 @@ export const APIRoute = createAPIFileRoute('/api/relatives/opt-in')({
           lastUpdated: profile.updatedAt,
         },
       }, {
-        headers: createRateLimitHeaders(rateLimit),
+        headers: createRateLimitHeaders(rateLimit.remaining, rateLimit.resetTime, 60),
       });
     } catch (error) {
       console.error('Opt-in status fetch error:', error);
-      return json(
+      return Response.json(
         {
           success: false,
           error: error instanceof Error ? error.message : 'Failed to fetch opt-in status',
@@ -93,7 +92,7 @@ export const APIRoute = createAPIFileRoute('/api/relatives/opt-in')({
       // Check authentication
       const auth = requireAuth(request);
       if (!auth) {
-        return json(
+        return Response.json(
           { success: false, error: 'Unauthorized' },
           { status: 401 }
         );
@@ -102,9 +101,9 @@ export const APIRoute = createAPIFileRoute('/api/relatives/opt-in')({
       // Apply strict rate limiting for status changes
       const rateLimit = rateLimitSensitive(auth.id);
       if (!rateLimit.allowed) {
-        return json(
+        return Response.json(
           { success: false, error: 'Rate limit exceeded. Please try again later.' },
-          { status: 429, headers: createRateLimitHeaders(rateLimit) }
+          { status: 429, headers: createRateLimitHeaders(rateLimit.remaining, rateLimit.resetTime, 60) }
         );
       }
 
@@ -113,7 +112,7 @@ export const APIRoute = createAPIFileRoute('/api/relatives/opt-in')({
       const { enabled, settings } = body as { enabled: boolean; settings?: Partial<OptInSettings> };
 
       if (typeof enabled !== 'boolean') {
-        return json(
+        return Response.json(
           { success: false, error: 'Missing or invalid "enabled" field' },
           { status: 400 }
         );
@@ -122,7 +121,7 @@ export const APIRoute = createAPIFileRoute('/api/relatives/opt-in')({
       // Get current profile
       const profile = getUserProfile(auth.id);
       if (!profile) {
-        return json(
+        return Response.json(
           { success: false, error: 'User profile not found' },
           { status: 404 }
         );
@@ -164,7 +163,7 @@ export const APIRoute = createAPIFileRoute('/api/relatives/opt-in')({
         settings: settings || {},
       });
 
-      return json({
+      return Response.json({
         success: true,
         message: enabled 
           ? 'You have opted in to relative matching' 
@@ -180,11 +179,11 @@ export const APIRoute = createAPIFileRoute('/api/relatives/opt-in')({
           },
         },
       }, {
-        headers: createRateLimitHeaders(rateLimit),
+        headers: createRateLimitHeaders(rateLimit.remaining, rateLimit.resetTime, 60),
       });
     } catch (error) {
       console.error('Opt-in update error:', error);
-      return json(
+      return Response.json(
         {
           success: false,
           error: error instanceof Error ? error.message : 'Failed to update opt-in status',
@@ -199,7 +198,7 @@ export const APIRoute = createAPIFileRoute('/api/relatives/opt-in')({
       // Check authentication
       const auth = requireAuth(request);
       if (!auth) {
-        return json(
+        return Response.json(
           { success: false, error: 'Unauthorized' },
           { status: 401 }
         );
@@ -208,9 +207,9 @@ export const APIRoute = createAPIFileRoute('/api/relatives/opt-in')({
       // Apply strict rate limiting for privacy changes
       const rateLimit = rateLimitSensitive(auth.id);
       if (!rateLimit.allowed) {
-        return json(
+        return Response.json(
           { success: false, error: 'Rate limit exceeded. Please try again later.' },
-          { status: 429, headers: createRateLimitHeaders(rateLimit) }
+          { status: 429, headers: createRateLimitHeaders(rateLimit.remaining, rateLimit.resetTime, 60) }
         );
       }
 
@@ -227,7 +226,7 @@ export const APIRoute = createAPIFileRoute('/api/relatives/opt-in')({
       // Get current profile
       const profile = getUserProfile(auth.id);
       if (!profile) {
-        return json(
+        return Response.json(
           { success: false, error: 'User profile not found' },
           { status: 404 }
         );
@@ -266,7 +265,7 @@ export const APIRoute = createAPIFileRoute('/api/relatives/opt-in')({
         changes: Object.keys(body),
       });
 
-      return json({
+      return Response.json({
         success: true,
         message: 'Privacy settings updated successfully',
         settings: {
@@ -277,11 +276,11 @@ export const APIRoute = createAPIFileRoute('/api/relatives/opt-in')({
           matchNotification: updatedSettings.relativeMatching!.matchNotification,
         },
       }, {
-        headers: createRateLimitHeaders(rateLimit),
+        headers: createRateLimitHeaders(rateLimit.remaining, rateLimit.resetTime, 60),
       });
     } catch (error) {
       console.error('Privacy settings update error:', error);
-      return json(
+      return Response.json(
         {
           success: false,
           error: error instanceof Error ? error.message : 'Failed to update privacy settings',

@@ -1,6 +1,5 @@
-import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
-import { requireAuth } from '~/utils/auth';
+import { requireAuth } from '~/utils/auth.server';
 import { exportUserDataAsZip, deleteAllUserData } from '~/utils/dataExport';
 import { rateLimitSensitive } from '~/utils/rateLimit';
 import { logSecurityEvent } from '~/utils/security';
@@ -11,13 +10,13 @@ export const APIRoute = createAPIFileRoute('/api/export-data')({
     try {
       const user = requireAuth(request);
       if (!user) {
-        return json({ success: false, error: 'Unauthorized' }, { status: 401 });
+        return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
       }
 
       // Rate limit sensitive data export
       const rateLimit = rateLimitSensitive(user.id);
       if (!rateLimit.allowed) {
-        return json({
+        return Response.json({
           success: false,
           error: `Too many export requests. Please try again in ${rateLimit.retryAfter} seconds.`,
         }, { status: 429 });
@@ -29,19 +28,21 @@ export const APIRoute = createAPIFileRoute('/api/export-data')({
       }, 'info');
 
       // Generate comprehensive export
-      const zipBlob = await exportUserDataAsZip(user.id);
+      const result = await exportUserDataAsZip(user.id, {});
 
-      return new Response(zipBlob, {
-        headers: {
-          'Content-Type': 'application/zip',
-          'Content-Disposition': `attachment; filename="genetic-explorer-export-${user.id}-${new Date().toISOString().split('T')[0]}.zip"`,
-          'X-RateLimit-Limit': rateLimit.limit.toString(),
-          'X-RateLimit-Remaining': rateLimit.remaining.toString(),
-        },
+      if (!result.success) {
+        return Response.json({ success: false, error: result.error }, { status: 500 });
+      }
+
+      // For now, return JSON instead of ZIP (ZIP requires additional setup)
+      return Response.json({
+        success: true,
+        message: 'Data export available in JSON format. ZIP export requires additional configuration.',
+        data: result.data,
       });
     } catch (error) {
       console.error('Export data error:', error);
-      return json({ success: false, error: 'An unexpected error occurred' }, { status: 500 });
+      return Response.json({ success: false, error: 'An unexpected error occurred' }, { status: 500 });
     }
   },
 
@@ -50,13 +51,13 @@ export const APIRoute = createAPIFileRoute('/api/export-data')({
     try {
       const user = requireAuth(request);
       if (!user) {
-        return json({ success: false, error: 'Unauthorized' }, { status: 401 });
+        return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
       }
 
       // Rate limit deletion requests
       const rateLimit = rateLimitSensitive(user.id);
       if (!rateLimit.allowed) {
-        return json({
+        return Response.json({
           success: false,
           error: `Too many deletion requests. Please try again in ${rateLimit.retryAfter} seconds.`,
         }, { status: 429 });
@@ -65,7 +66,7 @@ export const APIRoute = createAPIFileRoute('/api/export-data')({
       // Get confirmation from body
       const body = await request.json().catch(() => ({}));
       if (!body.confirm || body.confirm !== `DELETE ${user.email}`) {
-        return json({
+        return Response.json({
           success: false,
           error: 'Confirmation required. Send {confirm: "DELETE ' + user.email + '"}',
         }, { status: 400 });
@@ -86,7 +87,7 @@ export const APIRoute = createAPIFileRoute('/api/export-data')({
           deletedItems: result.deletedItems,
         }, 'warning');
 
-        return json({
+        return Response.json({
           success: true,
           message: 'All user data has been deleted',
           deletedItems: result.deletedItems,
@@ -97,7 +98,7 @@ export const APIRoute = createAPIFileRoute('/api/export-data')({
           },
         });
       } else {
-        return json({
+        return Response.json({
           success: false,
           error: 'Partial deletion completed with errors',
           deletedItems: result.deletedItems,
@@ -106,7 +107,7 @@ export const APIRoute = createAPIFileRoute('/api/export-data')({
       }
     } catch (error) {
       console.error('Delete data error:', error);
-      return json({ success: false, error: 'An unexpected error occurred' }, { status: 500 });
+      return Response.json({ success: false, error: 'An unexpected error occurred' }, { status: 500 });
     }
   },
 });

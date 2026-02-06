@@ -14,7 +14,7 @@ import { Card } from '~/components/ui/Card';
 import { DNALogo } from '~/components/DNALogo';
 import { useToastActions } from '~/components/Toast';
 
-export const Route = createFileRoute('/login/magic')({
+export const Route = createFileRoute('/login/magic' as any)({
   component: MagicLoginPage,
 });
 

@@ -1,7 +1,6 @@
-import { json } from '@tanstack/start'
 import { createAPIFileRoute } from '@tanstack/start/api'
 import { getSharingInviteByToken, acceptSharingInvite } from '~/utils/database'
-import { requireAuth } from '~/utils/auth'
+import { requireAuth } from '~/utils/auth.server'
 import { logActivity } from '~/utils/database'
 
 export const APIRoute = createAPIFileRoute('/api/sharing/invite')({
@@ -11,7 +10,7 @@ export const APIRoute = createAPIFileRoute('/api/sharing/invite')({
       const token = url.searchParams.get('token')
 
       if (!token) {
-        return json(
+        return Response.json(
           { success: false, error: 'Token is required' },
           { status: 400 },
         )
@@ -20,13 +19,13 @@ export const APIRoute = createAPIFileRoute('/api/sharing/invite')({
       const invite = getSharingInviteByToken(token)
 
       if (!invite) {
-        return json(
+        return Response.json(
           { success: false, error: 'Invalid or expired invitation' },
           { status: 404 },
         )
       }
 
-      return json({
+      return Response.json({
         success: true,
         invite: {
           ownerEmail: invite.ownerEmail,
@@ -36,7 +35,7 @@ export const APIRoute = createAPIFileRoute('/api/sharing/invite')({
       })
     } catch (error) {
       console.error('Get invite error:', error)
-      return json(
+      return Response.json(
         { success: false, error: 'An unexpected error occurred' },
         { status: 500 },
       )
@@ -49,14 +48,14 @@ export const APIRouteAccept = createAPIFileRoute('/api/sharing/invite')({
     try {
       const auth = requireAuth(request)
       if (!auth) {
-        return json({ success: false, error: 'Unauthorized' }, { status: 401 })
+        return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 })
       }
 
       const body = await request.json()
       const { token } = body
 
       if (!token) {
-        return json(
+        return Response.json(
           { success: false, error: 'Token is required' },
           { status: 400 },
         )
@@ -65,22 +64,22 @@ export const APIRouteAccept = createAPIFileRoute('/api/sharing/invite')({
       const success = acceptSharingInvite(token, auth.id)
 
       if (!success) {
-        return json(
+        return Response.json(
           { success: false, error: 'Invalid or expired invitation' },
           { status: 400 },
         )
       }
 
       // Log activity
-      logActivity(auth.id, 'sharing_accepted', 'sharing', null, { token })
+      logActivity(auth.id, 'sharing_accepted', 'sharing', undefined, { token })
 
-      return json({
+      return Response.json({
         success: true,
         message: 'Invitation accepted successfully',
       })
     } catch (error) {
       console.error('Accept invite error:', error)
-      return json(
+      return Response.json(
         { success: false, error: 'An unexpected error occurred' },
         { status: 500 },
       )

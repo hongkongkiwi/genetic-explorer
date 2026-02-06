@@ -41,7 +41,7 @@ function ProfilePage() {
     },
   });
   const [isSaving, setIsSaving] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [message, setMessage] = useState<{ type: 'success' | 'destructive'; text: string } | null>(null);
   
   // Email change state
   const [showEmailModal, setShowEmailModal] = useState(false);
@@ -89,10 +89,10 @@ function ProfilePage() {
         setMessage({ type: 'success', text: 'Profile updated successfully!' });
         await refreshUser();
       } else {
-        setMessage({ type: 'error', text: 'Failed to update profile' });
+        setMessage({ type: 'destructive', text: 'Failed to update profile' });
       }
     } catch (error) {
-      setMessage({ type: 'error', text: 'An unexpected error occurred' });
+      setMessage({ type: 'destructive', text: 'An unexpected error occurred' });
     }
 
     setIsSaving(false);
@@ -100,13 +100,13 @@ function ProfilePage() {
 
   const handleChangeEmail = async () => {
     if (!newEmail || !emailPassword) {
-      setMessage({ type: 'error', text: 'Please enter your new email and password' });
+      setMessage({ type: 'destructive', text: 'Please enter your new email and password' });
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(newEmail)) {
-      setMessage({ type: 'error', text: 'Invalid email format' });
+      setMessage({ type: 'destructive', text: 'Invalid email format' });
       return;
     }
 
@@ -129,10 +129,10 @@ function ProfilePage() {
         setEmailPassword('');
         await refreshUser();
       } else {
-        setMessage({ type: 'error', text: data.error || 'Failed to change email' });
+        setMessage({ type: 'destructive', text: data.error || 'Failed to change email' });
       }
     } catch (error) {
-      setMessage({ type: 'error', text: 'An unexpected error occurred' });
+      setMessage({ type: 'destructive', text: 'An unexpected error occurred' });
     }
 
     setIsChangingEmail(false);

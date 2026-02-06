@@ -83,7 +83,12 @@ export function OnboardingModal() {
       .then(data => {
         setHasGenome(data.genomes?.length > 0);
       })
-      .catch(() => {});
+      .catch((error) => {
+        // Silently ignore - user might not be authenticated
+        if (process.env.NODE_ENV === 'development') {
+          console.debug('Failed to check genomes:', error);
+        }
+      });
   }, []);
 
   const handleClose = () => {

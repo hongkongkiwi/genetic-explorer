@@ -9,8 +9,12 @@
  *   initMonitoring();
  */
 
-import { initSentry, isSentryConfigured } from './sentry';
-import { initSentryServer, isSentryConfigured as isSentryConfiguredServer } from './sentry.server';
+import { initSentry, isSentryEnabled as isSentryConfigured } from './sentry';
+import { initSentryServer } from './logging/sentry.server';
+
+function isSentryConfiguredServer(): boolean {
+  return !!process.env.SENTRY_DSN;
+}
 import { isAxiomConfigured, getAxiomStatus } from './axiomTransport';
 import { getLoggingStatus, logger } from './logging';
 
@@ -31,7 +35,7 @@ export function initMonitoring(): void {
   if (isServer()) {
     initSentryServer();
   } else {
-    initSentry();
+    initSentry({});
   }
 
   // Log initialization status
@@ -82,8 +86,8 @@ export async function shutdownMonitoring(): Promise<void> {
 
   // Flush Sentry
   if (isServer()) {
-    const { flushSentry: flushSentryServer } = await import('./sentry.server');
-    await flushSentryServer(5000);
+    const { flushSentry } = await import('./logging/sentry.server');
+    await flushSentry(5000);
   } else {
     const { flushSentry } = await import('./sentry');
     await flushSentry(5000);

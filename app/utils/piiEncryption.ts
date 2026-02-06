@@ -12,7 +12,16 @@
  */
 
 import crypto from 'crypto';
-import { getMasterKeySync, encrypt, decrypt, EncryptedData } from '~/security';
+import { encrypt, decrypt, type EncryptedData } from '~/security';
+
+// Get master key from environment or secure storage
+function getMasterKeySync(): Buffer {
+  const key = process.env.ENCRYPTION_MASTER_KEY;
+  if (!key) {
+    throw new Error('ENCRYPTION_MASTER_KEY not configured');
+  }
+  return Buffer.from(key, 'base64');
+}
 
 // PII fields configuration
 interface PIIFieldConfig {

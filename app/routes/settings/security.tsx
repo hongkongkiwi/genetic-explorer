@@ -29,7 +29,7 @@ function SecurityPage() {
   const [hasPassword, setHasPassword] = useState(false);
   const [isLoadingAccounts, setIsLoadingAccounts] = useState(true);
   const [disconnecting, setDisconnecting] = useState<string | null>(null);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [message, setMessage] = useState<{ type: 'success' | 'destructive'; text: string } | null>(null);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -52,7 +52,7 @@ function SecurityPage() {
       // Clear the URL params
       navigate({ to: '/settings/security', search: {} });
     } else if (search.oauth === 'error') {
-      setMessage({ type: 'error', text: search.error || 'Failed to connect account' });
+      setMessage({ type: 'destructive', text: search.error || 'Failed to connect account' });
       navigate({ to: '/settings/security', search: {} });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -85,7 +85,7 @@ function SecurityPage() {
       await loadAccounts();
       await refreshUser();
     } else {
-      setMessage({ type: 'error', text: result.error || 'Failed to disconnect account' });
+      setMessage({ type: 'destructive', text: result.error || 'Failed to disconnect account' });
     }
 
     setDisconnecting(null);

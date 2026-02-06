@@ -21,7 +21,9 @@ process.on('SIGINT', async () => {
   process.exit(0)
 })
 
-export default createStartHandler({
+const handler = createStartHandler({
   createRouter,
   getRouterManifest,
-})(defaultStreamHandler)
+} as any)
+
+export default handler(defaultStreamHandler as any) as any

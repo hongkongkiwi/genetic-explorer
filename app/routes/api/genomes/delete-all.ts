@@ -1,6 +1,5 @@
-import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
-import { requireAuth } from '~/utils/auth';
+import { requireAuth } from '~/utils/auth.server';
 import { csrfProtection } from '~/utils/csrf';
 import { deleteAllUserGenomes, logActivity } from '~/utils/database';
 
@@ -21,7 +20,7 @@ export const APIRoute = createAPIFileRoute('/api/genomes/delete-all')({
     try {
       const auth = requireAuth(request);
       if (!auth) {
-        return json(
+        return Response.json(
           { success: false, error: 'Unauthorized' },
           { status: 401 }
         );
@@ -31,7 +30,7 @@ export const APIRoute = createAPIFileRoute('/api/genomes/delete-all')({
       const cookieHeader = request.headers.get('cookie');
       const csrfCheck = csrfProtection(request, cookieHeader);
       if (csrfCheck.valid === false) {
-        return json({ success: false, error: csrfCheck.error }, { status: csrfCheck.status });
+        return Response.json({ success: false, error: csrfCheck.error }, { status: csrfCheck.status });
       }
 
       const userId = auth.id;
@@ -40,7 +39,7 @@ export const APIRoute = createAPIFileRoute('/api/genomes/delete-all')({
       const deleteResult = deleteAllUserGenomes(userId);
       
       if (deleteResult.deletedCount === 0) {
-        return json({
+        return Response.json({
           success: true,
           message: 'No genome data to delete',
           deletedCount: 0,
@@ -61,7 +60,7 @@ export const APIRoute = createAPIFileRoute('/api/genomes/delete-all')({
         }
       );
 
-      return json({
+      return Response.json({
         success: true,
         message: `Successfully deleted ${deleteResult.deletedCount} genome(s) and associated data`,
         deletedCount: deleteResult.deletedCount,
@@ -72,7 +71,7 @@ export const APIRoute = createAPIFileRoute('/api/genomes/delete-all')({
 
     } catch (error) {
       console.error('Delete all genomes error:', error);
-      return json(
+      return Response.json(
         {
           success: false,
           error: 'Failed to delete genome data',

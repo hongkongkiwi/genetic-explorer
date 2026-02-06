@@ -1,7 +1,6 @@
-import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
 import { getDb } from '~/utils/database';
-import { requireAuth } from '~/utils/auth';
+import { requireAuth } from '~/utils/auth.server';
 
 export const APIRoute = createAPIFileRoute('/api/compare-genomes')({
   GET: async ({ request }) => {
@@ -14,7 +13,7 @@ export const APIRoute = createAPIFileRoute('/api/compare-genomes')({
       const genomeB = url.searchParams.get('b');
       
       if (!genomeA || !genomeB) {
-        return json(
+        return Response.json(
           { success: false, error: 'Both genome IDs are required' },
           { status: 400 }
         );
@@ -27,7 +26,7 @@ export const APIRoute = createAPIFileRoute('/api/compare-genomes')({
       `).get(genomeA, genomeB, user.id) as { count: number };
       
       if (genomeCheck.count !== 2) {
-        return json(
+        return Response.json(
           { success: false, error: 'One or both genomes not found' },
           { status: 404 }
         );
@@ -92,7 +91,7 @@ export const APIRoute = createAPIFileRoute('/api/compare-genomes')({
         ? (sharedVariants / totalUniqueVariants) * 100
         : 0;
 
-      return json({
+      return Response.json({
         success: true,
         sharedVariants,
         uniqueToA,
@@ -102,7 +101,7 @@ export const APIRoute = createAPIFileRoute('/api/compare-genomes')({
       });
     } catch (error) {
       console.error('Compare genomes API error:', error);
-      return json(
+      return Response.json(
         { success: false, error: 'Comparison failed' },
         { status: 500 }
       );

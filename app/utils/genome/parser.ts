@@ -1,5 +1,8 @@
 import type { SNP } from '~/types/genetics';
 
+// Re-export SNP type for backward compatibility
+export type { SNP };
+
 export interface ParseResult {
   snps: SNP[];
   source: '23andme' | 'ancestry' | 'myheritage' | 'other';

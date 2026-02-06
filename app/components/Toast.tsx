@@ -59,9 +59,11 @@ interface ToastProviderProps {
 
 export function ToastProvider({ children }: ToastProviderProps) {
   const [toasts, setToasts] = React.useState<Toast[]>([]);
+  const idCounter = React.useRef(0);
 
   const addToast = React.useCallback((toast: Omit<Toast, 'id'>) => {
-    const id = Math.random().toString(36).substring(2, 9);
+    idCounter.current += 1;
+    const id = `toast-${Date.now()}-${idCounter.current}`;
     setToasts((prev) => [...prev, { ...toast, id }]);
   }, []);
 

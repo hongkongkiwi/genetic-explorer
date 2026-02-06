@@ -1,9 +1,9 @@
 import { Link, useRouterState } from '@tanstack/react-router';
 import { useState, useEffect, useRef } from 'react';
-import { DNALogo } from './DNALogo';
-import { UpdateNotificationCenter } from './UpdateNotification';
+import { DNALogo } from '~/components/DNALogo';
+import { UpdateNotificationCenter } from '~/components/UpdateNotification';
 import { useAuth } from '~/hooks/useAuth';
-import { GlobalSearch, useGlobalSearch } from './GlobalSearch';
+import { GlobalSearch, useGlobalSearch } from '~/components/GlobalSearch';
 import { 
   Upload, 
   FileText, 
@@ -11,7 +11,6 @@ import {
   Dna, 
   Home, 
   Search, 
-  Database, 
   Sparkles, 
   User, 
   LogOut, 
@@ -28,42 +27,7 @@ import {
   X
 } from 'lucide-react';
 import { cn } from '~/utils/shared/cn';
-import type { SNPStatus } from './SNPBadge';
 
-interface NotificationItem {
-  id: string;
-  type: SNPStatus;
-  title: string;
-  description: string;
-  relatedSnp?: string;
-  actionLink?: string;
-  actionText?: string;
-  timestamp: Date;
-}
-
-// Mock notifications - in production these would come from an API
-const mockNotifications: NotificationItem[] = [
-  {
-    id: '1',
-    type: 'major-update',
-    title: 'MTHFR Research Updated',
-    description: '3 new studies added for rs1801133',
-    relatedSnp: 'rs1801133',
-    actionLink: '/whats-new',
-    actionText: 'View details',
-    timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-  },
-  {
-    id: '2',
-    type: 'new',
-    title: 'New SNP Added',
-    description: 'FTO variant for weight management',
-    relatedSnp: 'rs9939609',
-    actionLink: '/whats-new',
-    actionText: 'Learn more',
-    timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-  },
-];
 
 interface NavItem {
   to: string;
@@ -76,7 +40,6 @@ export function Navbar() {
   const routerState = useRouterState();
   const currentPath = routerState.location.pathname;
   const { user, isAuthenticated, logout } = useAuth();
-  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isReportsDropdownOpen, setIsReportsDropdownOpen] = useState(false);
@@ -85,11 +48,6 @@ export function Navbar() {
   const userMenuRef = useRef<HTMLDivElement>(null);
   const reportsDropdownRef = useRef<HTMLDivElement>(null);
   const insightsDropdownRef = useRef<HTMLDivElement>(null);
-
-  // Load notifications on mount
-  useEffect(() => {
-    setNotifications(mockNotifications);
-  }, []);
 
   // Close user menu when clicking outside
   useEffect(() => {
@@ -107,14 +65,6 @@ export function Navbar() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  const handleDismiss = (id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
-  };
-
-  const handleDismissAll = () => {
-    setNotifications([]);
-  };
 
   const handleLogout = async () => {
     await logout();
@@ -143,7 +93,6 @@ export function Navbar() {
 
   const insightsDropdownItems = [
     { to: '/explorer', icon: Search, label: 'Explorer' },
-    { to: '/research', icon: Database, label: 'Research' },
     { to: '/relatives', icon: Users2, label: 'DNA Relatives' },
   ];
 
@@ -331,11 +280,7 @@ export function Navbar() {
 
               {/* Update Notifications */}
               <div className="ml-2 border-l border-slate-200 dark:border-slate-700 pl-2">
-                <UpdateNotificationCenter
-                  notifications={notifications}
-                  onDismiss={handleDismiss}
-                  onDismissAll={handleDismissAll}
-                />
+                <UpdateNotificationCenter />
               </div>
 
               {/* User Menu */}

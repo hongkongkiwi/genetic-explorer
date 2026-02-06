@@ -1,7 +1,6 @@
-import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
 import { getDb } from '~/utils/database';
-import { requireAuth } from '~/utils/auth';
+import { requireAuth } from '~/utils/auth.server';
 
 export const APIRoute = createAPIFileRoute('/api/whats-new')({
   GET: async ({ request }) => {
@@ -55,7 +54,7 @@ export const APIRoute = createAPIFileRoute('/api/whats-new')({
         ORDER BY ru.date DESC, ru.is_major DESC
       `).all(user.id, since);
 
-      return json({
+      return Response.json({
         success: true,
         data: {
           stats: {
@@ -82,7 +81,7 @@ export const APIRoute = createAPIFileRoute('/api/whats-new')({
       });
     } catch (error) {
       console.error('Whats New API error:', error);
-      return json(
+      return Response.json(
         { success: false, error: 'Failed to fetch updates' },
         { status: 500 }
       );

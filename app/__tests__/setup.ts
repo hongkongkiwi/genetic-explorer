@@ -1,6 +1,11 @@
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
 
+// Set required environment variables for tests
+process.env.SESSION_SECRET = 'test-session-secret-minimum-32-characters-long';
+process.env.ENCRYPTION_MASTER_KEY = 'test-encryption-key-minimum-32-characters-long';
+process.env.NODE_ENV = 'test';
+
 // Mock matchMedia
 Object.defineProperty(window, 'matchMedia', {
   writable: true,

@@ -52,7 +52,7 @@ function SessionsPage() {
   const [revokingSession, setRevokingSession] = useState<string | null>(null);
   const [isRevokingAll, setIsRevokingAll] = useState(false);
   const [showRevokeAllModal, setShowRevokeAllModal] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [message, setMessage] = useState<{ type: 'success' | 'destructive'; text: string } | null>(null);
   const [showHistory, setShowHistory] = useState(false);
 
   useEffect(() => {
@@ -107,10 +107,10 @@ function SessionsPage() {
           await loadSessions();
         }
       } else {
-        setMessage({ type: 'error', text: data.error || 'Failed to terminate session' });
+        setMessage({ type: 'destructive', text: data.error || 'Failed to terminate session' });
       }
     } catch (error) {
-      setMessage({ type: 'error', text: 'An unexpected error occurred' });
+      setMessage({ type: 'destructive', text: 'An unexpected error occurred' });
     }
 
     setRevokingSession(null);
@@ -133,10 +133,10 @@ function SessionsPage() {
         await loadSessions();
         setShowRevokeAllModal(false);
       } else {
-        setMessage({ type: 'error', text: data.error || 'Failed to terminate sessions' });
+        setMessage({ type: 'destructive', text: data.error || 'Failed to terminate sessions' });
       }
     } catch (error) {
-      setMessage({ type: 'error', text: 'An unexpected error occurred' });
+      setMessage({ type: 'destructive', text: 'An unexpected error occurred' });
     }
 
     setIsRevokingAll(false);
@@ -402,10 +402,9 @@ function SessionsPage() {
         title="Log Out From All Other Devices?"
         message={`This will terminate ${otherSessionsCount} active session(s) on other devices. You'll remain logged in on this device.`}
         confirmLabel="Log Out All Others"
-        confirmLabel="Log Out All Others"
         cancelLabel="Cancel"
-        variant="danger"
-        isLoading={isRevokingAll}
+        variant="destructive"
+
       />
     </div>
   );

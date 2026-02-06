@@ -21,7 +21,7 @@ import {
   Users2
 } from 'lucide-react';
 import { analyzeGenomeComprehensive, generateQuickSummary } from '~/utils/comprehensiveAnalysis';
-import { getGenome } from '~/utils/database';
+import { useQuery } from '@tanstack/react-query';
 // Lazy load PDF export to reduce initial bundle size
 const loadPDFExport = () => import('~/utils/pdfExport').then(m => ({
   downloadPDF: m.downloadPDF,
@@ -50,34 +50,44 @@ function ReportPage() {
     relatives: { available: false, href: `/relatives` },
   });
 
+  // Fetch genome from API
+  const { data: genomeData, isLoading: isGenomeLoading, error: genomeError } = useQuery({
+    queryKey: ['genome', id],
+    queryFn: async () => {
+      const response = await fetch(`/api/genome/${id}`);
+      if (!response.ok) throw new Error('Failed to fetch genome');
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error || 'Failed to fetch genome');
+      return data.genome;
+    },
+  });
+
   useEffect(() => {
-    loadReport();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
-
-  const loadReport = async () => {
-    try {
-      setIsLoading(true);
-      
-      // Get genome data
-      const genomeData = getGenome(id);
-      if (!genomeData) {
-        setError('Genome not found');
-        return;
-      }
-      
-      setGenome(genomeData);
-
-      // Run comprehensive analysis
-      const result = await analyzeGenomeComprehensive(genomeData);
-      setReport(result.report);
-    } catch (err) {
-      console.error('Report generation error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to generate report');
-    } finally {
-      setIsLoading(false);
+    if (genomeError) {
+      setError(genomeError instanceof Error ? genomeError.message : 'Failed to load genome');
+      return;
     }
-  };
+    if (!genomeData || isGenomeLoading) return;
+
+    const loadReport = async () => {
+      try {
+        setIsLoading(true);
+        
+        setGenome(genomeData);
+
+        // Run comprehensive analysis
+        const result = await analyzeGenomeComprehensive(genomeData);
+        setReport(result.report);
+      } catch (err) {
+        console.error('Report generation error:', err);
+        setError(err instanceof Error ? err.message : 'Failed to generate report');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadReport();
+  }, [id, genomeData, isGenomeLoading, genomeError]);
 
   const handlePrint = async () => {
     const { printToPDF } = await loadPDFExport();

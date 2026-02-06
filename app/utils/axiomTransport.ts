@@ -6,6 +6,7 @@
  */
 
 import { Axiom } from '@axiomhq/js';
+import { registerInterval, unregisterInterval } from './intervalRegistry';
 
 interface AxiomTransportConfig {
   /** Axiom API token */
@@ -57,7 +58,7 @@ export class AxiomTransport {
       this.defaultMetadata = config.defaultMetadata || {};
       
       // Start periodic flush
-      this.flushInterval = setInterval(() => this.flush(), this.FLUSH_INTERVAL_MS);
+      this.flushInterval = registerInterval(setInterval(() => this.flush(), this.FLUSH_INTERVAL_MS));
       
       console.log(`[AxiomTransport] Axiom logging enabled (dataset: ${dataset}, url: ${url || 'default'})`);
     } catch (error) {
@@ -124,6 +125,7 @@ export class AxiomTransport {
   async shutdown(): Promise<void> {
     if (this.flushInterval) {
       clearInterval(this.flushInterval);
+      unregisterInterval(this.flushInterval);
       this.flushInterval = null;
     }
     

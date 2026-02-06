@@ -11,12 +11,14 @@
  * - Right not to be subject to automated decision-making (Article 22)
  */
 
-import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
-import { requireAuth } from '~/utils/auth';
+import { requireAuth } from '~/utils/auth.server';
 import { csrfProtection } from '~/utils/csrf';
 import { getDb } from '~/utils/database';
+import { createComponentLogger } from '~/utils/logging';
 import { v4 as uuidv4 } from 'uuid';
+
+const logger = createComponentLogger('privacy-rights');
 import { 
   getApplicableJurisdictions, 
   getResponseDeadline,
@@ -126,7 +128,7 @@ export const APIRoute = createAPIFileRoute('/api/privacy/rights')({
     try {
       const auth = requireAuth(request);
       if (!auth) {
-        return json({ success: false, error: 'Unauthorized' }, { status: 401 });
+        return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
       }
       
       initDataSubjectRequestsTable();
@@ -138,13 +140,13 @@ export const APIRoute = createAPIFileRoute('/api/privacy/rights')({
         ORDER BY request_date DESC
       `).all(auth.id) as DataSubjectRequest[];
       
-      return json({
+      return Response.json({
         success: true,
         data: requests,
       });
     } catch (error) {
       console.error('Failed to fetch data subject requests:', error);
-      return json(
+      return Response.json(
         { success: false, error: 'Failed to fetch requests' },
         { status: 500 }
       );
@@ -156,21 +158,21 @@ export const APIRoute = createAPIFileRoute('/api/privacy/rights')({
     try {
       const auth = requireAuth(request);
       if (!auth) {
-        return json({ success: false, error: 'Unauthorized' }, { status: 401 });
+        return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
       }
       
       // CSRF protection
       const cookieHeader = request.headers.get('cookie');
       const csrfCheck = csrfProtection(request, cookieHeader);
       if (csrfCheck.valid === false) {
-        return json({ success: false, error: csrfCheck.error }, { status: csrfCheck.status });
+        return Response.json({ success: false, error: csrfCheck.error }, { status: csrfCheck.status });
       }
       
       const body = await request.json();
       const { right, jurisdiction, details } = body;
       
       if (!right || !jurisdiction) {
-        return json(
+        return Response.json(
           { success: false, error: 'Missing required fields: right, jurisdiction' },
           { status: 400 }
         );
@@ -178,7 +180,7 @@ export const APIRoute = createAPIFileRoute('/api/privacy/rights')({
       
       // Validate jurisdiction
       if (!JURISDICTION_CONFIG[jurisdiction as Jurisdiction]) {
-        return json(
+        return Response.json(
           { success: false, error: 'Invalid jurisdiction' },
           { status: 400 }
         );
@@ -196,10 +198,10 @@ export const APIRoute = createAPIFileRoute('/api/privacy/rights')({
       if (right === 'ACCESS') {
         // Trigger data export
         // In production, this would queue an async job
-        console.log(`Data export requested for user ${auth.id}`);
+        logger.withContext({ userId: auth.id, jurisdiction, right }).info('Data export requested');
       }
       
-      return json({
+      return Response.json({
         success: true,
         message: 'Request submitted successfully',
         data: {
@@ -211,7 +213,7 @@ export const APIRoute = createAPIFileRoute('/api/privacy/rights')({
       });
     } catch (error) {
       console.error('Failed to submit data subject request:', error);
-      return json(
+      return Response.json(
         { success: false, error: 'Failed to submit request' },
         { status: 500 }
       );

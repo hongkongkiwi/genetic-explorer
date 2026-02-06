@@ -426,3 +426,4 @@ export function getGenomeCoverage(genomeId: string, userId: string): Array<{
   
   return rows;
 }
+export type { DrugInteraction };

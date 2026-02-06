@@ -250,7 +250,7 @@ function hashPatientId(userId: string): string {
 
 function generateReportId(): string {
   const timestamp = Date.now().toString(36);
-  const random = Math.random().toString(36).substring(2, 8);
+  const random = crypto.randomUUID().replace(/-/g, '').substring(0, 8);
   return `GR-${timestamp}-${random}`.toUpperCase();
 }
 
@@ -313,7 +313,7 @@ function categorizeClinicallySignificant(variants: any[], snpData: any[]): Clini
         inheritance: clinicalInfo.inheritance!,
         genotype: snp.genotype || 'N/A',
         alleleFrequency: snp.frequency || 'Unknown',
-        recommendations: clinicalInfo.recommendation!,
+        recommendations: clinicalInfo.recommendations!,
       });
     }
   }
@@ -360,7 +360,7 @@ function categorizePharmacogenomic(variants: any[], snpData: any[]): Pharmacogen
         gene: pharmacoInfo.gene!,
         drug: pharmacoInfo.drug!,
         phenotype: pharmacoInfo.phenotype!,
-        recommendations: pharmacoInfo.recommendation!,
+        recommendations: pharmacoInfo.recommendations!,
       });
     }
   }

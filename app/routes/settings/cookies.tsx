@@ -7,10 +7,10 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '~/components/ui/card';
+} from '~/components/ui/Card';
 import { Cookie } from 'lucide-react';
 
-export const Route = createFileRoute('/settings/cookies')({
+export const Route = createFileRoute('/settings/cookies' as any)({
   component: CookieSettingsPage,
 });
 

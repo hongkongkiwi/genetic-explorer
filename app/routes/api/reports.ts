@@ -1,8 +1,8 @@
-import { json } from '@tanstack/start';
 import { createAPIFileRoute } from '@tanstack/start/api';
 import { getAllReports, getAccessibleGenomes } from '~/utils/database';
-import { requireAuth } from '~/utils/auth';
-import { requireGenome, GATED_FEATURES } from '~/utils/requireGenome';
+import { requireAuth } from '~/utils/auth.server';
+import { requireGenome } from '~/utils/requireGenome';
+import { GATED_FEATURES } from '~/utils/genomeGate';
 
 export const APIRoute = createAPIFileRoute('/api/reports')({
   GET: async ({ request }) => {
@@ -11,7 +11,7 @@ export const APIRoute = createAPIFileRoute('/api/reports')({
       
       // Check genome gate - reports require genome upload
       const gateCheck = requireGenome(auth.id, GATED_FEATURES.HEALTH_REPORTS);
-      if (!gateCheck.allowed) {
+      if (!gateCheck.allowed && gateCheck.response) {
         return gateCheck.response;
       }
       
@@ -28,7 +28,7 @@ export const APIRoute = createAPIFileRoute('/api/reports')({
         reports = [];
       }
 
-      return json({ 
+      return Response.json({ 
         success: true, 
         reports: reports.map(r => ({
           id: r.id,
@@ -38,7 +38,7 @@ export const APIRoute = createAPIFileRoute('/api/reports')({
       });
     } catch (error) {
       console.error('Failed to fetch reports:', error);
-      return json({ success: false, error: 'Failed to fetch reports' }, { status: 500 });
+      return Response.json({ success: false, error: 'Failed to fetch reports' }, { status: 500 });
     }
   },
 });

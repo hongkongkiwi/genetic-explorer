@@ -16,7 +16,7 @@ interface AuthorizedApp {
   expiresAt: string | null;
 }
 
-export const Route = createFileRoute('/settings/authorized-apps')({
+export const Route = createFileRoute('/settings/authorized-apps' as any)({
   component: AuthorizedAppsPage,
 });
 

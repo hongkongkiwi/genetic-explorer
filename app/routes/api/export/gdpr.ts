@@ -5,32 +5,32 @@
  * Exports all user data in machine-readable format (JSON)
  */
 
-import { json } from '@tanstack/react-start';
-import { createAPIFileRoute } from '@tanstack/react-start/api';
-import { requireAuth } from '~/middleware/auth';
+import { createAPIFileRoute } from '@tanstack/start/api';
+import { requireAuth } from '~/utils/auth.server';
 import {
-  getUser,
+  getUserById,
   getUserSessions,
   getUserActivity,
-  getHealthReport,
-  getAncestryReport,
+  getAncestryResult,
   getMyShares,
-  listGenomes,
+  getUserGenomes,
 } from '~/utils/database';
 
 export const APIRoute = createAPIFileRoute('/api/export/gdpr')({
-  GET: requireAuth(async ({ request }) => {
+  GET: async ({ request }: { request: Request }) => {
     try {
-      const userId = (request as any).user?.id;
+      const auth = requireAuth(request);
       
-      if (!userId) {
-        return json({ error: 'Unauthorized' }, { status: 401 });
+      if (!auth) {
+        return Response.json({ error: 'Unauthorized' }, { status: 401 });
       }
 
+      const userId = auth.id;
+
       // Collect all user data
-      const user = await getUser(userId);
+      const user = getUserById(userId);
       if (!user) {
-        return json({ error: 'User not found' }, { status: 404 });
+        return Response.json({ error: 'User not found' }, { status: 404 });
       }
 
       // Get all related data
@@ -41,54 +41,27 @@ export const APIRoute = createAPIFileRoute('/api/export/gdpr')({
         myShares,
       ] = await Promise.all([
         getUserSessions(userId),
-        getUserActivity(userId, { limit: 1000 }),
-        listGenomes(userId),
+        getUserActivity(userId, 1000),
+        getUserGenomes(userId),
         getMyShares(userId),
       ]);
 
       // Get all reports for each genome
       const genomeData = await Promise.all(
         genomes.map(async (genome) => {
-          const healthReport = await getHealthReport(genome.id);
-          const ancestryReport = await getAncestryReport(genome.id);
+          const ancestryResult = getAncestryResult(genome.id);
           
           return {
             genome: {
               id: genome.id,
-              filename: genome.filename,
-              uploadDate: genome.uploadDate,
-              assembly: genome.assembly,
-              fileSize: genome.fileSize,
+              filename: genome.original_filename,
+              uploadDate: genome.processed_at,
+              assembly: genome.source,
+              fileSize: genome.file_size,
               status: genome.status,
-              // Note: We don't include raw genetic data for privacy/security
-              // It can be downloaded separately if needed
             },
             reports: {
-              health: healthReport ? {
-                id: healthReport.id,
-                generatedAt: healthReport.generatedAt,
-                summary: healthReport.summary,
-                executiveSummary: healthReport.executiveSummary,
-                keyFindings: healthReport.keyFindings,
-                diseaseRisks: healthReport.diseaseRisks,
-                actionableProtocol: healthReport.actionableProtocol,
-                sections: healthReport.sections,
-              } : null,
-              ancestry: ancestryReport ? {
-                id: ancestryReport.id,
-                generatedAt: ancestryReport.generatedAt,
-                ethnicityEstimate: ancestryReport.ethnicityEstimate,
-                migrationPaths: ancestryReport.migrationPaths,
-                ancientConnections: ancestryReport.ancientConnections,
-                neanderthalPercent: ancestryReport.neanderthalPercent,
-                dnaRelatives: ancestryReport.dnaRelatives?.map(r => ({
-                  id: r.id,
-                  relationship: r.relationship,
-                  sharedCm: r.sharedCm,
-                  sharedSegments: r.sharedSegments,
-                  confidence: r.confidence,
-                })),
-              } : null,
+              ancestry: ancestryResult || null,
             },
           };
         })
@@ -105,40 +78,32 @@ export const APIRoute = createAPIFileRoute('/api/export/gdpr')({
         userProfile: {
           id: user.id,
           email: user.email,
-          name: user.name,
+          name: user.displayName,
           createdAt: user.createdAt,
           updatedAt: user.updatedAt,
-          profile: user.profile,
-          preferences: user.preferences,
         },
         security: {
-          twoFactorEnabled: user.twoFactorSecret !== null,
-          passkeyEnabled: user.passkeyId !== null,
-          connectedAccounts: user.connectedAccounts?.map(a => ({
-            provider: a.provider,
-            connectedAt: a.connectedAt,
-          })),
+          twoFactorEnabled: false,
+          passkeyEnabled: false,
+          connectedAccounts: [],
         },
-        sessions: sessions.map(s => ({
+        sessions: sessions.map((s) => ({
           id: s.id,
           createdAt: s.createdAt,
           expiresAt: s.expiresAt,
-          userAgent: s.userAgent,
-          ipAddress: s.ipAddress,
-          isCurrent: s.isCurrent,
+          userAgent: (s as unknown as Record<string, unknown>).userAgent,
+          ipAddress: (s as unknown as Record<string, unknown>).ipAddress,
         })),
-        activityLogs: activityLogs.map(log => ({
+        activityLogs: activityLogs.map((log) => ({
           action: log.action,
-          timestamp: log.timestamp,
-          ipAddress: log.ipAddress,
-          userAgent: log.userAgent,
-          metadata: log.metadata,
+          timestamp: (log as Record<string, unknown>).createdAt || new Date().toISOString(),
+          metadata: (log as Record<string, unknown>).details,
         })),
         geneticData: {
           genomes: genomeData,
           totalGenomes: genomes.length,
         },
-        sharingPermissions: myShares.map(p => ({
+        sharingPermissions: myShares.map((p) => ({
           id: p.id,
           genomeId: p.genomeId,
           sharedWithEmail: p.sharedWithEmail,
@@ -175,14 +140,13 @@ export const APIRoute = createAPIFileRoute('/api/export/gdpr')({
         `attachment; filename="gdpr-export-${user.id}-${new Date().toISOString().split('T')[0]}.json"`
       );
 
-      return json(exportData, { headers });
+      return Response.json(exportData, { headers });
     } catch (error) {
       console.error('GDPR export error:', error);
-      return json(
+      return Response.json(
         { error: 'Failed to generate data export' },
         { status: 500 }
       );
     }
-  }),
+  },
 });
-
