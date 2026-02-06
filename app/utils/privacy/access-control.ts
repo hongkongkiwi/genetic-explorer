@@ -11,6 +11,7 @@
 import { getDb, logActivity } from '~/db';
 import { getAuthUser, requireAuth } from '~/auth';
 import type { User } from '~/db';
+import type { IdRow, PermissionLevelRow } from '~/db/types';
 
 // ============================================================================
 // Access Control Errors
@@ -131,7 +132,7 @@ export async function verifyOwnership(
 
   if (!query) return;
 
-  const result = db.prepare(query).get(...params) as any;
+  const result = db.prepare(query).get(...params) as IdRow | undefined;
 
   if (!result) {
     throw new DataAccessError(
@@ -155,7 +156,7 @@ export async function canAccessGenome(
   // Check ownership first
   const owner = db.prepare(`
     SELECT id FROM genomes WHERE id = ? AND user_id = ?
-  `).get(genomeId, userId) as any;
+  `).get(genomeId, userId) as IdRow | undefined;
 
   if (owner) {
     return { canAccess: true, permissionLevel: 'owner' };
@@ -167,7 +168,7 @@ export async function canAccessGenome(
     WHERE genome_id = ? AND shared_with_id = ?
     AND status = 'active'
     AND (expires_at IS NULL OR expires_at > datetime('now'))
-  `).get(genomeId, userId) as any;
+  `).get(genomeId, userId) as PermissionLevelRow | undefined;
 
   if (shared) {
     return { canAccess: true, permissionLevel: shared.permission_level };
@@ -179,7 +180,7 @@ export async function canAccessGenome(
     WHERE genome_id IS NULL AND shared_with_id = ?
     AND status = 'active'
     AND (expires_at IS NULL OR expires_at > datetime('now'))
-  `).get(userId) as any;
+  `).get(userId) as PermissionLevelRow | undefined;
 
   if (globalShared) {
     return { canAccess: true, permissionLevel: globalShared.permission_level };
