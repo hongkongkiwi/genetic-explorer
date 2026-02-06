@@ -12,6 +12,7 @@
  */
 
 import crypto from 'crypto';
+import { logInfo } from './logger';
 
 // ============================================================================
 // CONSTANTS - These are enforced by the type system
@@ -85,7 +86,7 @@ export function validateCryptoSupport(): void {
     }
   }
   
-  console.log('✅ All required cryptographic algorithms are supported');
+  logInfo('✅ All required cryptographic algorithms are supported');
 }
 
 /**
@@ -205,7 +206,7 @@ export function decryptAES256GCM(
  * Call this during application initialization
  */
 export function initializeCryptoAssertions(): void {
-  console.log('🔐 Initializing cryptographic assertions...');
+  logInfo('🔐 Initializing cryptographic assertions...');
   
   // Validate crypto support
   validateCryptoSupport();
@@ -244,14 +245,14 @@ export function initializeCryptoAssertions(): void {
       throw new Error('Encryption round-trip test failed');
     }
     
-    console.log('✅ Encryption round-trip test passed');
+    logInfo('✅ Encryption round-trip test passed');
   } catch (error) {
     throw new Error(
       `CRITICAL: Encryption test failed: ${error instanceof Error ? error.message : 'Unknown error'}`
     );
   }
   
-  console.log('✅ All cryptographic assertions passed');
+  logInfo('✅ All cryptographic assertions passed');
 }
 
 // ============================================================================

@@ -16,6 +16,7 @@ import { setupGracefulShutdown } from './gracefulShutdown';
 import { isApplicationReady } from './health';
 import { cleanupExpiredRateLimits } from './distributed-rate-limit';
 import { cleanupExpiredLocks } from './leaderElection';
+import { logInfo, logError } from './logger';
 
 interface StartupConfig {
   // Database
@@ -64,29 +65,29 @@ async function initializeDatabase(runMigrations: boolean): Promise<void> {
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      console.log(`📦 Database initialization attempt ${attempt}/${maxRetries}...`);
+      logInfo(`📦 Database initialization attempt ${attempt}/${maxRetries}...`);
       
       const db = getDb();
       
       // Test connection
       db.prepare('SELECT 1').get();
       
-      console.log('✅ Database connected');
+      logInfo('✅ Database connected');
       
       // Note: Migrations are run automatically in getDb() via databaseMigrations.ts
       if (runMigrations) {
-        console.log('✅ Migrations checked');
+        logInfo('✅ Migrations checked');
       }
       
       return;
     } catch (error) {
-      console.error(`❌ Database initialization failed (attempt ${attempt}/${maxRetries}):`, error);
+      logError(`❌ Database initialization failed (attempt ${attempt}/${maxRetries}):`, error);
       
       if (attempt === maxRetries) {
         throw new Error(`Failed to initialize database after ${maxRetries} attempts`);
       }
       
-      console.log(`⏳ Retrying in ${retryDelayMs}ms...`);
+      logInfo(`⏳ Retrying in ${retryDelayMs}ms...`);
       await new Promise(resolve => setTimeout(resolve, retryDelayMs));
     }
   }
@@ -97,11 +98,11 @@ async function initializeDatabase(runMigrations: boolean): Promise<void> {
  */
 async function initializeEncryptionSystem(): Promise<void> {
   try {
-    console.log('🔐 Initializing encryption...');
+    logInfo('🔐 Initializing encryption...');
     await initializeEncryption();
-    console.log('✅ Encryption initialized');
+    logInfo('✅ Encryption initialized');
   } catch (error) {
-    console.error('❌ Encryption initialization failed:', error);
+    logError('❌ Encryption initialization failed:', error);
     throw error;
   }
 }
@@ -115,7 +116,7 @@ function setupPeriodicCleanup(): void {
     try {
       cleanupExpiredRateLimits();
     } catch (error) {
-      console.error('Failed to cleanup rate limits:', error);
+      logError('Failed to cleanup rate limits:', error);
     }
   }, 5 * 60 * 1000);
   
@@ -124,7 +125,7 @@ function setupPeriodicCleanup(): void {
     try {
       cleanupExpiredLocks();
     } catch (error) {
-      console.error('Failed to cleanup leader locks:', error);
+      logError('Failed to cleanup leader locks:', error);
     }
   }, 60000);
   
@@ -180,7 +181,7 @@ export async function startup(config: StartupConfig = {}): Promise<StartupResult
     }
     
     // Step 5: Wait for application to be ready
-    console.log('⏳ Waiting for application to be ready...');
+    logInfo('⏳ Waiting for application to be ready...');
     const startTime = Date.now();
     const maxWaitTime = 30000; // 30 seconds
     
@@ -195,20 +196,14 @@ export async function startup(config: StartupConfig = {}): Promise<StartupResult
     startupComplete = true;
     startupResult = result;
     
-    console.log('\n' + '='.repeat(60));
-    console.log('✅ STARTUP COMPLETE');
-    console.log('='.repeat(60) + '\n');
+    logInfo('✅ STARTUP COMPLETE');
     
   } catch (error) {
     result.success = false;
     startupComplete = true;
     startupResult = result;
     
-    console.error('\n' + '='.repeat(60));
-    console.error('❌ STARTUP FAILED');
-    console.error('='.repeat(60));
-    console.error('Errors:', result.errors);
-    console.error('='.repeat(60) + '\n');
+    logError('❌ STARTUP FAILED', undefined, { errors: result.errors });
     
     throw error;
   }

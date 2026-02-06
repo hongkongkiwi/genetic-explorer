@@ -203,7 +203,7 @@ export function logSecurityEvent(
     ...details,
   };
   
-  // Log to console for development/debugging
+  // Log security events (console kept for infrastructure visibility)
   if (severity === 'critical') {
     console.error('[SECURITY]', JSON.stringify(logEntry));
   } else if (severity === 'warning') {

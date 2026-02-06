@@ -6,6 +6,7 @@
  */
 
 import { env } from '~/utils/shared/env';
+import { logInfo, logError } from '~/utils/logger';
 
 export type AlertSeverity = 'low' | 'medium' | 'high' | 'critical';
 
@@ -40,7 +41,7 @@ class ConsoleAlertChannel implements AlertChannel {
       low: 'ℹ️',
     }[alert.severity];
 
-    console.log(
+    logInfo(
       `${icon} [SECURITY ${alert.severity.toUpperCase()}] ${alert.category}: ${alert.message}`,
       {
         id: alert.id,
@@ -69,7 +70,7 @@ class EmailAlertChannel implements AlertChannel {
     // Example: await sendEmail({ to: this.to, subject, html });
     
     if (env.NODE_ENV === 'development') {
-      console.log(`[Email Alert] Would send to ${this.to}:`, alert);
+      logInfo(`[Email Alert] Would send to ${this.to}:`, { alert });
     }
   }
 }
@@ -148,7 +149,7 @@ class AlertManager {
     // Send to all channels
     const promises = Array.from(this.channels.values()).map((channel) =>
       channel.send(alert).catch((error) => {
-        console.error(`Failed to send alert to ${channel.name}:`, error);
+        logError(`Failed to send alert to ${channel.name}:`, error);
       })
     );
 

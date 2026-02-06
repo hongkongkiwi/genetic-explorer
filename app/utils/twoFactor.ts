@@ -63,7 +63,7 @@ export async function verifyBackupCode(userId: string, code: string): Promise<Ba
   // 2. Hash the provided code and compare
   // 3. If valid, remove the used code
   // 4. Return remaining code count
-  console.log(`Verifying backup code for user ${userId}`);
+  // Backup code verification attempt logged via activity system
   
   // Stub: always return invalid
   return { valid: false };

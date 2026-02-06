@@ -7,6 +7,7 @@
 
 import * as SentryNode from '@sentry/node';
 import type { NodeOptions } from '@sentry/node';
+import { logInfo, logError } from './logger';
 
 /**
  * Check if Sentry is configured
@@ -78,7 +79,7 @@ function getSentryServerConfig(): NodeOptions | null {
  */
 export function initSentryServer(): void {
   if (!isSentryConfigured()) {
-    console.log('[Sentry Server] Error tracking disabled (SENTRY_DSN not set)');
+    logInfo('[Sentry Server] Error tracking disabled (SENTRY_DSN not set)');
     return;
   }
 
@@ -89,9 +90,9 @@ export function initSentryServer(): void {
 
   try {
     SentryNode.init(config);
-    console.log(`[Sentry Server] Error tracking enabled (${process.env.SENTRY_URL || 'default URL'})`);
+    logInfo(`[Sentry Server] Error tracking enabled (${process.env.SENTRY_URL || 'default URL'})`);
   } catch (error) {
-    console.error('[Sentry Server] Failed to initialize:', error);
+    logError('[Sentry Server] Failed to initialize:', error);
   }
 }
 

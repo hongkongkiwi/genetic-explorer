@@ -3,6 +3,7 @@
  */
 
 import { logActivity } from '~/db';
+import { logInfo } from './logger';
 
 interface DisableRequest {
   userId: string;
@@ -52,7 +53,7 @@ export function cancelDisableRequest(userId: string): void {
 
 export function terminateAllUserSessions(userId: string, reason: string): void {
   // This would terminate all sessions - stub implementation
-  console.log(`Terminating all sessions for user ${userId}: ${reason}`);
+  logInfo(`Terminating all sessions for user ${userId}: ${reason}`);
 }
 
 export function sendSecurityNotification(
@@ -90,7 +91,7 @@ export function getPasskeyRegistrationOptions(
 
 export function savePasskeyChallenge(userId: string, challenge: string): void {
   // Stub implementation
-  console.log(`Saving passkey challenge for ${userId}: ${challenge}`);
+  logInfo(`Saving passkey challenge for ${userId}: ${challenge}`);
 }
 
 export function verifyPasskeyRegistration(

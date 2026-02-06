@@ -9,6 +9,8 @@
  * - HALF_OPEN: Testing if service has recovered
  */
 
+import { logInfo, logWarn } from './logger';
+
 type CircuitState = 'CLOSED' | 'OPEN' | 'HALF_OPEN';
 
 interface CircuitBreakerOptions {
@@ -59,7 +61,7 @@ class CircuitBreaker {
       // Try HALF_OPEN
       this.state = 'HALF_OPEN';
       this.halfOpenCalls = 0;
-      console.log('🔌 Circuit breaker entering HALF_OPEN state');
+      logInfo('🔌 Circuit breaker entering HALF_OPEN state');
     }
 
     // Limit calls in HALF_OPEN state
@@ -94,7 +96,7 @@ class CircuitBreaker {
         this.state = 'CLOSED';
         this.successes = 0;
         this.halfOpenCalls = 0;
-        console.log('✅ Circuit breaker CLOSED');
+      logInfo('✅ Circuit breaker CLOSED');
       }
     }
   }

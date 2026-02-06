@@ -6,6 +6,7 @@
 
 import { logActivity } from '~/db';
 import { encryptForUser, decryptForUser, getMasterKeySync } from './encryption';
+import { logInfo, logError } from './logger';
 
 interface SecurityEvent {
   type: string;
@@ -25,7 +26,11 @@ export function logSecurityEvent(
   details: Record<string, unknown>,
   severity: 'info' | 'warning' | 'error' = 'info'
 ): void {
-  console.log(`[Security ${severity.toUpperCase()}] ${type}:`, details);
+  if (severity === 'error') {
+    logError(`[Security ${severity.toUpperCase()}] ${type}:`, undefined, details);
+  } else {
+    logInfo(`[Security ${severity.toUpperCase()}] ${type}:`, details);
+  }
   
   // Also log to database if it's a warning or error
   if (severity !== 'info' && details.userId) {
@@ -113,9 +118,9 @@ export function initializeEncryption(): void {
   // Verify master key is configured
   try {
     getMasterKeySync();
-    console.log('[Security] Encryption initialized');
+    logInfo('[Security] Encryption initialized');
   } catch (error) {
-    console.error('[Security] Encryption initialization failed:', error);
+    logError('[Security] Encryption initialization failed:', error);
     throw error;
   }
 }

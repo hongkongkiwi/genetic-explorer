@@ -21,6 +21,7 @@ import {
   generateSecureToken 
 } from '~/security';
 import { logActivity } from '~/db';
+import { logInfo, logError } from './logger';
 
 // ============================================================================
 // Configuration
@@ -199,7 +200,7 @@ async function rotateGenomeEncryption(
         reencrypted++;
       } else {
         failed++;
-        console.error(`Failed to rotate SNP ${snp.id}:`, result.error);
+        logError(`Failed to rotate SNP ${snp.id}:`, new Error(result.error || 'Unknown error'));
       }
     }
     
@@ -245,7 +246,7 @@ function rotateTotpSecret(
     
     return true;
   } catch (error) {
-    console.error('Failed to rotate TOTP secret:', error);
+    logError('Failed to rotate TOTP secret:', error);
     return false;
   }
 }
@@ -279,7 +280,7 @@ function rotateBackupCodes(
         'UPDATE backup_codes SET code_encrypted = ? WHERE id = ?'
       ).run(JSON.stringify(newEncrypted), row.id);
     } catch (error) {
-      console.error(`Failed to rotate backup code ${row.id}:`, error);
+      logError(`Failed to rotate backup code ${row.id}:`, error);
       allSuccess = false;
     }
   }
@@ -377,7 +378,7 @@ export async function startKeyRotation(userId: string): Promise<RotationResult> 
   const oldVersion = getCurrentKeyVersion(userId);
   const newVersion = incrementKeyVersion(userId);
   
-  console.log(`Starting key rotation for user ${userId}: v${oldVersion} → v${newVersion}`);
+  logInfo(`Starting key rotation for user ${userId}: v${oldVersion} → v${newVersion}`);
   
   let totalReencrypted = 0;
   let totalFailed = 0;
@@ -424,7 +425,7 @@ export async function startKeyRotation(userId: string): Promise<RotationResult> 
       failed: totalFailed,
     });
     
-    console.log(`Key rotation completed: ${totalReencrypted} items re-encrypted, ${totalFailed} failed`);
+    logInfo(`Key rotation completed: ${totalReencrypted} items re-encrypted, ${totalFailed} failed`);
     
     return {
       success,
@@ -492,7 +493,7 @@ export async function runAutomaticKeyRotation(): Promise<void> {
      LIMIT 10` // Process in small batches
   ).all() as Array<{ id: string }>;
   
-  console.log(`Found ${users.length} users needing key rotation`);
+  logInfo(`Found ${users.length} users needing key rotation`);
   
   for (const user of users) {
     try {
@@ -500,7 +501,7 @@ export async function runAutomaticKeyRotation(): Promise<void> {
       // Delay between users
       await delay(5000);
     } catch (error) {
-      console.error(`Failed to rotate keys for user ${user.id}:`, error);
+      logError(`Failed to rotate keys for user ${user.id}:`, error);
     }
   }
 }

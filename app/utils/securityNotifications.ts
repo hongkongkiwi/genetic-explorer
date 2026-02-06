@@ -5,6 +5,7 @@
  */
 
 import { logActivity } from '~/db';
+import { logInfo } from './logger';
 
 export function sendSecurityNotification(
   userId: string,
@@ -22,7 +23,7 @@ export function sendSecurityNotification(
     ipAddress
   );
   
-  console.log(`Security notification sent to ${userId}: ${type}`);
+  logInfo(`Security notification sent to ${userId}: ${type}`);
 }
 
 // Device tracking

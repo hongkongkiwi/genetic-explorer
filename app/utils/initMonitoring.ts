@@ -17,6 +17,7 @@ function isSentryConfiguredServer(): boolean {
 }
 import { isAxiomConfigured, getAxiomStatus } from './axiomTransport';
 import { getLoggingStatus, logger } from './logging';
+import { logInfo } from './logger';
 
 /**
  * Check if running on server
@@ -29,7 +30,7 @@ function isServer(): boolean {
  * Initialize all monitoring systems
  */
 export function initMonitoring(): void {
-  console.log('[Monitoring] Initializing...');
+  logInfo('[Monitoring] Initializing...');
 
   // Initialize Sentry
   if (isServer()) {
@@ -53,7 +54,7 @@ export function initMonitoring(): void {
     },
   }).info('Monitoring systems initialized');
 
-  console.log('[Monitoring] Status:', {
+  logInfo('[Monitoring] Status:', {
     console: loggingStatus.consoleEnabled ? 'enabled' : 'disabled',
     axiom: axiomStatus.enabled ? `enabled (${axiomStatus.dataset})` : 'disabled',
     sentry: sentryStatus ? 'enabled' : 'disabled',
@@ -93,7 +94,7 @@ export async function shutdownMonitoring(): Promise<void> {
     await flushSentry(5000);
   }
 
-  console.log('[Monitoring] Shutdown complete');
+  logInfo('[Monitoring] Shutdown complete');
 }
 
 export default initMonitoring;
