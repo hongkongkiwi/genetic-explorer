@@ -13,6 +13,7 @@
 
 import crypto from 'crypto';
 import { getMasterKey as getKMSMasterKey, isCloudKMSEnabled, getKMSProvider } from '~/utils/kms';
+import { logger } from '~/utils/logger';
 
 // ============================================================================
 // Configuration
@@ -123,9 +124,9 @@ export async function initializeEncryption(): Promise<void> {
   const provider = getKMSProvider();
   
   if (isCloudKMSEnabled()) {
-    console.log(`✅ Encryption initialized with ${provider} KMS (envelope encryption)`);
+    logger.encryption(`Initialized with ${provider} KMS (envelope encryption)`);
   } else {
-    console.log('✅ Encryption initialized with environment key');
+    logger.encryption('Initialized with environment key');
   }
 }
 

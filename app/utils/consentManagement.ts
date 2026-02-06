@@ -7,6 +7,7 @@
 
 import { getDb } from '~/db';
 import { v4 as uuidv4 } from 'uuid';
+import { logger } from '~/utils/logger';
 
 export type ConsentPurpose = 
   | 'CORE_SERVICES'           // Essential for service operation
@@ -442,12 +443,12 @@ function handleConsentWithdrawal(userId: string, purpose: ConsentPurpose): void 
   switch (purpose) {
     case 'MARKETING':
       // Unsubscribe from marketing lists
-      console.log(`User ${userId} unsubscribed from marketing`);
+      logger.info(`User ${userId} unsubscribed from marketing`, { userId, purpose });
       break;
       
     case 'RESEARCH_PARTICIPATION':
       // Remove from active research studies
-      console.log(`User ${userId} withdrawn from research participation`);
+      logger.info(`User ${userId} withdrawn from research participation`, { userId, purpose });
       break;
       
     case 'RELATIVE_MATCHING':
@@ -461,12 +462,12 @@ function handleConsentWithdrawal(userId: string, purpose: ConsentPurpose): void 
       
     case 'HEALTH_INSIGHTS':
       // Mark health reports as unavailable
-      console.log(`User ${userId} withdrawn from health insights`);
+      logger.info(`User ${userId} withdrawn from health insights`, { userId, purpose });
       break;
       
     case 'THIRD_PARTY_SHARING':
       // Revoke third-party access
-      console.log(`User ${userId} revoked third-party sharing`);
+      logger.info(`User ${userId} revoked third-party sharing`, { userId, purpose });
       break;
   }
 }

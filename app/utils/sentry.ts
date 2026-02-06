@@ -3,6 +3,7 @@
  */
 
 import * as Sentry from '@sentry/react';
+import { logInfo, logWarn, logError } from './logger';
 
 export interface SentryConfig {
   dsn?: string;
@@ -30,7 +31,7 @@ export function initSentry(config: Partial<SentryConfig> = {}): void {
   const finalConfig = { ...defaultConfig, ...config };
   
   if (!finalConfig.dsn) {
-    console.log('[Sentry] No DSN provided, skipping initialization');
+    logInfo('[Sentry] No DSN provided, skipping initialization');
     return;
   }
 
@@ -57,7 +58,7 @@ export function initSentry(config: Partial<SentryConfig> = {}): void {
   });
 
   isInitialized = true;
-  console.log('[Sentry] Client initialized');
+  logInfo('[Sentry] Client initialized');
 }
 
 /**
@@ -65,7 +66,7 @@ export function initSentry(config: Partial<SentryConfig> = {}): void {
  */
 export function captureException(error: Error, context?: Record<string, unknown>): string {
   if (!isInitialized) {
-    console.error('[Sentry] Exception:', error, context);
+    logError('[Sentry] Exception:', error, context);
     return 'not-initialized';
   }
   return Sentry.captureException(error, { extra: context });
@@ -76,7 +77,13 @@ export function captureException(error: Error, context?: Record<string, unknown>
  */
 export function captureMessage(message: string, level: 'info' | 'warning' | 'error' = 'info'): string {
   if (!isInitialized) {
-    console.log(`[Sentry ${level}]`, message);
+    if (level === 'error') {
+      logError(`[Sentry ${level}] ${message}`);
+    } else if (level === 'warning') {
+      logWarn(`[Sentry ${level}] ${message}`);
+    } else {
+      logInfo(`[Sentry ${level}] ${message}`);
+    }
     return 'not-initialized';
   }
   return Sentry.captureMessage(message, level);

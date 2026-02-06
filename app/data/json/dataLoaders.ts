@@ -39,11 +39,10 @@ export async function loadReferencePopulations(): Promise<{
   };
 }> {
   if (dataCache.has('referencePopulations')) {
-    return dataCache.get('referencePopulations') as any;
+    return dataCache.get('referencePopulations') as ReturnType<typeof loadReferencePopulations> extends Promise<infer T> ? T : never;
   }
   
-  // For now, still load from TypeScript module
-  // TODO: Convert to JSON and load dynamically
+  // Load from TypeScript module (JSON conversion planned for future optimization)
   const data = await import('../referencePopulations');
   dataCache.set('referencePopulations', data);
   return data;
@@ -57,7 +56,7 @@ export async function loadHaplogroups(): Promise<{
   MT_HAPLOGROUPS: Record<string, MtHaplogroupDefinition>;
 }> {
   if (dataCache.has('haplogroups')) {
-    return dataCache.get('haplogroups') as any;
+    return dataCache.get('haplogroups') as ReturnType<typeof loadHaplogroups> extends Promise<infer T> ? T : never;
   }
   
   const data = await import('../haplogroups');
@@ -72,7 +71,7 @@ export async function loadCarrierConditions(): Promise<{
   CARRIER_CONDITIONS: CarrierCondition[];
 }> {
   if (dataCache.has('carrierConditions')) {
-    return dataCache.get('carrierConditions') as any;
+    return dataCache.get('carrierConditions') as ReturnType<typeof loadCarrierConditions> extends Promise<infer T> ? T : never;
   }
   
   const data = await import('../carrierConditions');
@@ -87,7 +86,7 @@ export async function loadTraitsDatabase(): Promise<{
   TRAITS_DATABASE: Record<string, Trait>;
 }> {
   if (dataCache.has('traitsDatabase')) {
-    return dataCache.get('traitsDatabase') as any;
+    return dataCache.get('traitsDatabase') as ReturnType<typeof loadTraitsDatabase> extends Promise<infer T> ? T : never;
   }
   
   const data = await import('../traitsDatabase');

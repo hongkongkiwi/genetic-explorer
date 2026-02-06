@@ -9,6 +9,7 @@
  */
 
 import crypto from 'crypto';
+import { logger } from '~/utils/logger';
 
 // Types for KMS providers
 type KMSProvider = 'aws' | 'azure' | 'gcp' | 'none';
@@ -293,7 +294,7 @@ export async function getDataKey(): Promise<Buffer> {
   }
 
   // Generate new data key (requires KMS encrypt call)
-  console.log('Generating new data key with cloud KMS...');
+  logger.encryption('Generating new data key with cloud KMS');
   cachedDataKey = await generateDataKeyWithKMS();
   
   // Store encrypted key for persistence
@@ -382,7 +383,7 @@ async function saveEncryptedDataKeyToDatabase(encryptedKey: Buffer): Promise<voi
  * Call this periodically (e.g., via cron job) for key rotation
  */
 export async function rotateDataKey(): Promise<void> {
-  console.log('Rotating data key...');
+  logger.encryption('Rotating data key');
   cachedDataKey = null;
   
   // Delete the old key from database to force generation of new key
@@ -394,5 +395,5 @@ export async function rotateDataKey(): Promise<void> {
   }
   
   await getDataKey();
-  console.log('Data key rotated successfully');
+  logger.encryption('Data key rotated successfully');
 }
