@@ -8,24 +8,25 @@ import { lazy, Suspense } from 'react';
 import { CardSkeleton } from '../Skeleton';
 
 // Lazy load the heavy component
-const ChromosomeVisualizerComponent = lazy(() => import('./ChromosomeVisualizer'));
+const ChromosomeVisualizerComponent = lazy(() => import('../ChromosomeVisualizer'));
 
 interface ChromosomeVisualizerLazyProps {
-  genomeData?: {
-    snps: Array<{
-      chromosome: string;
-      position: number;
-      rsid: string;
-    }>;
-  };
-  selectedChromosome?: string;
-  onChromosomeSelect?: (chromosome: string) => void;
+  chromosome: string;
+  snps?: Array<{
+    rsid: string;
+    position: number;
+    genotype: string;
+    category?: string;
+    gene?: string;
+    impact?: string;
+  }>;
   height?: number;
+  onSnpClick?: (snp: { rsid: string; position: number }) => void;
 }
 
 export function ChromosomeVisualizerLazy(props: ChromosomeVisualizerLazyProps) {
   return (
-    <Suspense fallback={<CardSkeleton className="h-96" />}>
+    <Suspense fallback={<div style={{ height: '24rem' }}><CardSkeleton /></div>}>
       <ChromosomeVisualizerComponent {...props} />
     </Suspense>
   );

@@ -1,5 +1,5 @@
 /**
- * Data Loaders for Static JSON Data
+ * Data Loaders for Static Data
  * 
  * Provides lazy loading of large static data files to reduce initial bundle size.
  * 
@@ -11,7 +11,7 @@
  */
 
 import type { AIM, ReferencePopulation, PopulationGroup } from '~/types/ancestry';
-import type { YHaplogroup, MtHaplogroup } from '~/types/ancestry';
+import type { YHaplogroupDefinition, MtHaplogroupDefinition } from '~/types/ancestry';
 import type { CarrierCondition } from '~/types/carrier';
 import type { Trait } from '~/types/traits';
 
@@ -53,8 +53,8 @@ export async function loadReferencePopulations(): Promise<{
  * Load haplogroups data
  */
 export async function loadHaplogroups(): Promise<{
-  Y_HAPLOGROUPS: YHaplogroup[];
-  MT_HAPLOGROUPS: MtHaplogroup[];
+  Y_HAPLOGROUPS: Record<string, YHaplogroupDefinition>;
+  MT_HAPLOGROUPS: Record<string, MtHaplogroupDefinition>;
 }> {
   if (dataCache.has('haplogroups')) {
     return dataCache.get('haplogroups') as any;
@@ -70,7 +70,6 @@ export async function loadHaplogroups(): Promise<{
  */
 export async function loadCarrierConditions(): Promise<{
   CARRIER_CONDITIONS: CarrierCondition[];
-  CARRIER_CONDITIONS_BY_CATEGORY: Record<string, CarrierCondition[]>;
 }> {
   if (dataCache.has('carrierConditions')) {
     return dataCache.get('carrierConditions') as any;
@@ -85,8 +84,7 @@ export async function loadCarrierConditions(): Promise<{
  * Load traits database
  */
 export async function loadTraitsDatabase(): Promise<{
-  TRAITS_DATABASE: Trait[];
-  TRAITS_BY_CATEGORY: Record<string, Trait[]>;
+  TRAITS_DATABASE: Record<string, Trait>;
 }> {
   if (dataCache.has('traitsDatabase')) {
     return dataCache.get('traitsDatabase') as any;

@@ -5,21 +5,25 @@
  * Uses the @tanstack/react-virtual library for virtualization.
  */
 
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { cn } from '~/utils/shared/cn';
 
 interface VirtualListProps<T> {
   items: T[];
   renderItem: (item: T, index: number) => React.ReactNode;
-  getItemKey: (item: T, index: number) => string;
+  getItemKey?: (item: T, index: number) => string;
   estimateSize?: number;
+  itemHeight?: number; // Alias for estimateSize for backward compatibility
   overscan?: number;
   className?: string;
   itemClassName?: string;
   emptyMessage?: string;
   loading?: boolean;
   loadingSkeleton?: React.ReactNode;
+  onEndReached?: () => void;
+  isLoadingMore?: boolean;
+  hasMore?: boolean;
 }
 
 export function VirtualList<T>({
@@ -27,15 +31,22 @@ export function VirtualList<T>({
   renderItem,
   getItemKey,
   estimateSize = 50,
+  itemHeight,
   overscan = 5,
   className,
   itemClassName,
   emptyMessage = 'No items to display',
   loading = false,
   loadingSkeleton,
+  onEndReached,
+  isLoadingMore,
+  hasMore,
 }: VirtualListProps<T>) {
   const parentRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
+  const endReachedRef = useRef(false);
+
+  const sizeEstimate = itemHeight || estimateSize;
 
   useEffect(() => {
     setMounted(true);
@@ -44,10 +55,26 @@ export function VirtualList<T>({
   const virtualizer = useVirtualizer({
     count: items.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => estimateSize,
+    estimateSize: () => sizeEstimate,
     overscan,
-    getItemKey: (index) => getItemKey(items[index], index),
+    getItemKey: getItemKey ? (index) => getItemKey(items[index], index) : undefined,
   });
+
+  // Handle end reached callback
+  const virtualItems = virtualizer.getVirtualItems();
+  useEffect(() => {
+    if (!onEndReached || !hasMore || isLoadingMore) return;
+    
+    const [lastItem] = [...virtualItems].reverse();
+    if (!lastItem) return;
+
+    if (lastItem.index >= items.length - 1 && !endReachedRef.current) {
+      endReachedRef.current = true;
+      onEndReached();
+    } else if (lastItem.index < items.length - 1) {
+      endReachedRef.current = false;
+    }
+  }, [virtualItems, items.length, onEndReached, hasMore, isLoadingMore]);
 
   if (!mounted) {
     return (
@@ -96,6 +123,11 @@ export function VirtualList<T>({
             </div>
           );
         })}
+        {isLoadingMore && (
+          <div className="absolute bottom-0 left-0 w-full p-4 text-center">
+            <div className="animate-pulse text-slate-500">Loading more...</div>
+          </div>
+        )}
       </div>
     </div>
   );
