@@ -23,13 +23,14 @@ function UploadPage() {
     setIsUploading(true);
     setUploadProgress(0);
     setError(null);
+    let progressInterval: ReturnType<typeof setInterval> | null = null;
 
     try {
       // Simulate upload progress
-      const progressInterval = setInterval(() => {
+      progressInterval = setInterval(() => {
         setUploadProgress(prev => {
           if (prev >= 90) {
-            clearInterval(progressInterval);
+            if (progressInterval) clearInterval(progressInterval);
             return 90;
           }
           return prev + 10;
@@ -46,7 +47,7 @@ function UploadPage() {
         body: formData,
       });
 
-      clearInterval(progressInterval);
+      if (progressInterval) clearInterval(progressInterval);
       setUploadProgress(100);
 
       const data = await response.json();
@@ -64,6 +65,7 @@ function UploadPage() {
       }, 500);
 
     } catch (err) {
+      if (progressInterval) clearInterval(progressInterval);
       setIsUploading(false);
       setError(err instanceof Error ? err.message : 'Upload failed');
     }

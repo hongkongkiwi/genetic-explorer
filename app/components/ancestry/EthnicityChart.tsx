@@ -13,7 +13,6 @@ import {
   Cell,
   ResponsiveContainer,
   Tooltip as RechartsTooltip,
-  Legend as RechartsLegend,
 } from 'recharts';
 import { Info, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '~/lib/utils';

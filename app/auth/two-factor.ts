@@ -17,13 +17,6 @@ const BACKUP_CODE_COUNT = 10;
 const BACKUP_CODE_LENGTH = 10;
 const EMAIL_CODE_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes
 
-// Create TOTP instance with default options
-const totp = new TOTP({
-  algorithm: 'sha1',
-  digits: 6,
-  period: 30,
-});
-
 /**
  * Generate backup codes for 2FA recovery
  */

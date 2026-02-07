@@ -5,7 +5,7 @@
  * Generates detailed health reports with AI insights
  */
 
-import type { SNP, GenomeData, HealthReport, ReportSection } from '~/types/genetics';
+import type { GenomeData, HealthReport, ReportSection } from '~/types/genetics';
 import { logger } from '~/utils/logger';
 
 // Local type for RiskAssessment

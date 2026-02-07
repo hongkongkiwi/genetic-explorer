@@ -42,7 +42,6 @@ export function storeMagicLinkToken(token: string, userId: string, email: string
  */
 export function verifyMagicLinkToken(token: string): { userId: string; email: string } | null {
   const db = getDb();
-  const now = new Date().toISOString();
   
   // Get token data
   const result = db.prepare(`

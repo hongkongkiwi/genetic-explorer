@@ -9,10 +9,7 @@
  */
 
 import crypto from 'crypto';
-import type { 
-  GenomeData, 
-  SNP 
-} from '~/types/genetics';
+import type { GenomeData } from '~/types/genetics';
 import type { 
   CarrierCondition, 
   CarrierResult, 
@@ -27,8 +24,7 @@ import type {
 import { InheritancePattern } from '~/types/carrier';
 import { 
   CARRIER_CONDITIONS, 
-  CARRIER_DISCLAIMER,
-  getConditionById 
+  CARRIER_DISCLAIMER
 } from '~/data/carrierConditions';
 
 /**

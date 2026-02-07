@@ -51,9 +51,6 @@ const POPULATION_GROUPS: PopulationGroup[] = [
 export function analyzeAncestry(genome: GenomeData): AncestryResult {
   const snps = genome.snps;
   
-  // Create lookup map for faster access
-  const snpMap = new Map<string, SNP>(snps.map(s => [s.rsid.toLowerCase(), s]));
-  
   // Estimate ethnicity proportions
   const ethnicity = estimateEthnicity(snps);
   

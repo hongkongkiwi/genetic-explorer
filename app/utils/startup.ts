@@ -17,6 +17,7 @@ import { isApplicationReady } from './health';
 import { cleanupExpiredRateLimits } from './distributed-rate-limit';
 import { cleanupExpiredLocks } from './leaderElection';
 import { logInfo, logError } from './logger';
+import { registerInterval } from './intervalRegistry';
 
 interface StartupConfig {
   // Database
@@ -112,22 +113,22 @@ async function initializeEncryptionSystem(): Promise<void> {
  */
 function setupPeriodicCleanup(): void {
   // Clean up expired rate limits every 5 minutes
-  setInterval(() => {
+  registerInterval(setInterval(() => {
     try {
       cleanupExpiredRateLimits();
     } catch (error) {
       logError('Failed to cleanup rate limits:', error instanceof Error ? error : undefined);
     }
-  }, 5 * 60 * 1000);
+  }, 5 * 60 * 1000));
   
   // Clean up expired leader locks every minute
-  setInterval(() => {
+  registerInterval(setInterval(() => {
     try {
       cleanupExpiredLocks();
     } catch (error) {
       logError('Failed to cleanup leader locks:', error instanceof Error ? error : undefined);
     }
-  }, 60000);
+  }, 60000));
   
   console.log('✅ Periodic cleanup tasks scheduled');
 }

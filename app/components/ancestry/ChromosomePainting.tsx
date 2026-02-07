@@ -5,7 +5,7 @@
  * ancestry segments. Includes hover tooltips and legend.
  */
 
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Info, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 import { cn } from '~/lib/utils';

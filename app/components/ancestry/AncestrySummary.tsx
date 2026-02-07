@@ -13,7 +13,6 @@ import {
   TrendingUp, 
   Award,
   Users,
-  Clock,
   CheckCircle,
   AlertCircle,
   Sparkles,
