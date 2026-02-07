@@ -120,7 +120,7 @@ export function initializeEncryption(): void {
     getMasterKeySync();
     logInfo('[Security] Encryption initialized');
   } catch (error) {
-    logError('[Security] Encryption initialization failed:', error);
+    logError('[Security] Encryption initialization failed:', error instanceof Error ? error : undefined);
     throw error;
   }
 }

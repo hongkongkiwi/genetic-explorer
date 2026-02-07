@@ -92,7 +92,7 @@ export function initSentryServer(): void {
     SentryNode.init(config);
     logInfo(`[Sentry Server] Error tracking enabled (${process.env.SENTRY_URL || 'default URL'})`);
   } catch (error) {
-    logError('[Sentry Server] Failed to initialize:', error);
+    logError('[Sentry Server] Failed to initialize:', error instanceof Error ? error : undefined);
   }
 }
 

@@ -246,7 +246,7 @@ function rotateTotpSecret(
     
     return true;
   } catch (error) {
-    logError('Failed to rotate TOTP secret:', error);
+    logError('Failed to rotate TOTP secret:', error instanceof Error ? error : undefined);
     return false;
   }
 }
@@ -280,7 +280,7 @@ function rotateBackupCodes(
         'UPDATE backup_codes SET code_encrypted = ? WHERE id = ?'
       ).run(JSON.stringify(newEncrypted), row.id);
     } catch (error) {
-      logError(`Failed to rotate backup code ${row.id}:`, error);
+      logError(`Failed to rotate backup code ${row.id}:`, error instanceof Error ? error : undefined);
       allSuccess = false;
     }
   }
@@ -501,7 +501,7 @@ export async function runAutomaticKeyRotation(): Promise<void> {
       // Delay between users
       await delay(5000);
     } catch (error) {
-      logError(`Failed to rotate keys for user ${user.id}:`, error);
+      logError(`Failed to rotate keys for user ${user.id}:`, error instanceof Error ? error : undefined);
     }
   }
 }

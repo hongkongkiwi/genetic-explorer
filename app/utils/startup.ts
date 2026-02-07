@@ -81,7 +81,7 @@ async function initializeDatabase(runMigrations: boolean): Promise<void> {
       
       return;
     } catch (error) {
-      logError(`❌ Database initialization failed (attempt ${attempt}/${maxRetries}):`, error);
+      logError(`❌ Database initialization failed (attempt ${attempt}/${maxRetries}):`, error instanceof Error ? error : undefined);
       
       if (attempt === maxRetries) {
         throw new Error(`Failed to initialize database after ${maxRetries} attempts`);
@@ -102,7 +102,7 @@ async function initializeEncryptionSystem(): Promise<void> {
     await initializeEncryption();
     logInfo('✅ Encryption initialized');
   } catch (error) {
-    logError('❌ Encryption initialization failed:', error);
+    logError('❌ Encryption initialization failed:', error instanceof Error ? error : undefined);
     throw error;
   }
 }
@@ -116,7 +116,7 @@ function setupPeriodicCleanup(): void {
     try {
       cleanupExpiredRateLimits();
     } catch (error) {
-      logError('Failed to cleanup rate limits:', error);
+      logError('Failed to cleanup rate limits:', error instanceof Error ? error : undefined);
     }
   }, 5 * 60 * 1000);
   
@@ -125,7 +125,7 @@ function setupPeriodicCleanup(): void {
     try {
       cleanupExpiredLocks();
     } catch (error) {
-      logError('Failed to cleanup leader locks:', error);
+      logError('Failed to cleanup leader locks:', error instanceof Error ? error : undefined);
     }
   }, 60000);
   
