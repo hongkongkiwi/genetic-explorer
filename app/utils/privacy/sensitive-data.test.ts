@@ -83,11 +83,10 @@ describe('Sensitive Data', () => {
         'normal',
         'sensitive',
         'highly_sensitive',
-        'critical',
       ];
 
       validLevels.forEach(level => {
-        expect(['normal', 'sensitive', 'highly_sensitive', 'critical']).toContain(level);
+        expect(['normal', 'sensitive', 'highly_sensitive']).toContain(level);
       });
     });
   });
